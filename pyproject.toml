@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "simvue-integrations"
+version = "0.1.0"
+description = ""
+authors = ["Matthew Field <matthew.field@ukaea.uk>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+simvue = {git = "https://github.com/simvue-io/client.git", rev = "dev"}
+
+[tool.poetry.group.tensorflow.dependencies]
+tensorflow = "^2.16.1"
+mnist = "^0.2.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
