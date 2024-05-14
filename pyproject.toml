@@ -6,7 +6,7 @@ authors = ["Matthew Field <matthew.field@ukaea.uk>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.9"
 simvue = {git = "https://github.com/simvue-io/client.git", rev = "dev"}
 
 [tool.poetry.group.tensorflow.dependencies]
