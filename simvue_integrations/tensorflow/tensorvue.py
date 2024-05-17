@@ -147,7 +147,7 @@ class TensorVue(Callback):
             description=self.run_description,
         )
         for alert_name in self.manifest_alerts:
-            manifest_run.add_alert(
+            manifest_run.create_alert(
                 name=alert_name, **self.alert_definitions[alert_name]
             )
 
@@ -195,7 +195,7 @@ class TensorVue(Callback):
         self.simulation_run.update_metadata(self.params)
 
         for alert_name in self.simulation_alerts:
-            self.simulation_run.add_alert(
+            self.simulation_run.create_alert(
                 name=alert_name, **self.alert_definitions[alert_name]
             )
 
@@ -246,7 +246,7 @@ class TensorVue(Callback):
 
         if epoch + 1 >= self.start_alerts_from_epoch:
             for alert_name in self.epoch_alerts:
-                self.epoch_run.add_alert(
+                self.epoch_run.create_alert(
                     name=alert_name, **self.alert_definitions[alert_name]
                 )
 
@@ -373,7 +373,7 @@ class TensorVue(Callback):
                 )
 
             for alert_name in self.evaluation_alerts:
-                self.eval_run.add_alert(
+                self.eval_run.create_alert(
                     name=alert_name, **self.alert_definitions[alert_name]
                 )
 
