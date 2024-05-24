@@ -152,8 +152,8 @@ class TensorVue(Callback):
             )
 
         if self.script_filepath:
-            manifest_run.save(
-                filename=self.script_filepath,
+            manifest_run.save_file(
+                file_path=self.script_filepath,
                 category="code",
             )
         return manifest_run
@@ -200,16 +200,15 @@ class TensorVue(Callback):
             )
 
         if self.script_filepath:
-            self.simulation_run.save(
-                filename=self.script_filepath,
+            self.simulation_run.save_file(
+                file_path=self.script_filepath,
                 category="code",
             )
         model_config = self.model.get_config()
-        self.simulation_run.save(
-            filename=model_config,
+        self.simulation_run.save_object(
+            obj=model_config,
             category="input",
             name="model_config",
-            allow_pickle=True,
         )
 
     def on_train_end(self, logs):
@@ -222,11 +221,10 @@ class TensorVue(Callback):
                     pathlib.Path(self.model_final_filepath).parent, exist_ok=True
                 )
             self.model.save(self.model_final_filepath)
-            self.simulation_run.save(
-                filename=self.model_final_filepath,
+            self.simulation_run.save_file(
+                file_path=self.model_final_filepath,
                 category="output",
                 name="final_model.keras",
-                allow_pickle=True,
             )
         if not self.optimisation_framework:
             self.simulation_run.close()
@@ -307,7 +305,7 @@ class TensorVue(Callback):
                 raise RuntimeError(
                     f"Model checkpoint has not been created at {self.model_checkpoint_filepath}. Have you enabled the ModelCheckpoint callback? "
                 )
-            self.epoch_run.save(self.model_checkpoint_filepath, category="output")
+            self.epoch_run.save_file(self.model_checkpoint_filepath, category="output")
 
         self.epoch_run.close()
 
@@ -378,16 +376,15 @@ class TensorVue(Callback):
                 )
 
             if self.script_filepath:
-                self.eval_run.save(
-                    filename=self.script_filepath,
+                self.eval_run.save_file(
+                    file_path=self.script_filepath,
                     category="code",
                 )
             model_config = self.model.get_config()
-            self.eval_run.save(
-                filename=model_config,
+            self.eval_run.save_object(
+                obj=model_config,
                 category="input",
                 name="model_config",
-                allow_pickle=True,
             )
 
     def on_test_end(self, logs):
