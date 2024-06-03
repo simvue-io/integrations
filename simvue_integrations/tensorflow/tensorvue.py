@@ -35,6 +35,7 @@ class TensorVue(Callback):
         model_final_filepath: str = "/tmp/simvue/final_model.keras",
         evaluation_parameter: str = None,
         evaluation_target: float = None,
+        create_epoch_runs: typing.Optional[bool] = True,
         evaluation_condition: validators.Operator = None,
         optimisation_framework: bool = False,
         simulation_run: typing.Optional[simvue.Run] = None,
@@ -82,6 +83,8 @@ class TensorVue(Callback):
             The target value of the parameter, which will cause the training to stop if satisfied
         evaluation_condition: validators.Operator, optional
             How you wish to compare the latest value of the parameter to the target value
+        create_epoch_runs: bool, optional
+            Whether to create runs for the training data for each Epoch individually, by default True
         optimisation_framework : bool, optional
             Whether to use the Simvue ML Optimisation framework, by default False
         simulation_run : typing.Optional[simvue.Run], optional
@@ -114,6 +117,7 @@ class TensorVue(Callback):
         self.evaluation_parameter = evaluation_parameter
         self.evaluation_condition = evaluation_condition
         self.evaluation_target = evaluation_target
+        self.create_epoch_runs = create_epoch_runs
         self.optimisation_framework = optimisation_framework
         self.simulation_run = simulation_run
         self.eval_run = evaluation_run
@@ -238,6 +242,9 @@ class TensorVue(Callback):
     def on_epoch_begin(self, epoch, logs):
         self.simulation_run.log_event(f"Starting Epoch {epoch+1}:")
 
+        if not self.create_epoch_runs:
+            return
+
         self.epoch_run = simvue.Run(mode=self.run_mode)
         self.epoch_run.init(
             name=self.run_name + f"_epoch_{epoch+1}",
@@ -267,8 +274,9 @@ class TensorVue(Callback):
             if logs.get("val_accuracy") and logs.get("val_loss")
             else ["accuracy", "loss"]
         )
+        runs_to_update = (self.epoch_run, self.simulation_run) if self.create_epoch_runs else (self.simulation_run,)
 
-        for run in (self.epoch_run, self.simulation_run):
+        for run in runs_to_update:
             run.log_event(f"Epoch {epoch+1} training complete!")
             run.log_event("Accuracy and Loss values after epoch training:")
             run.log_event(f"Accuracy: {logs.get('accuracy')}, Loss: {logs.get('loss')}")
@@ -277,14 +285,17 @@ class TensorVue(Callback):
                     f"Validation Accuracy: {logs.get('val_accuracy')}, Validation Loss: {logs.get('val_loss')}"
                 )
 
-        if epoch > 0:
+        if epoch > 0 and self.create_epoch_runs:
             self.epoch_run.log_event(
                 "Improvements in Accuracy and Loss after epoch training:"
             )
 
         for metric in available_metrics:
             value = logs.get(metric)
-            if epoch > 0:
+            self.simulation_run.log_metrics({metric: value}, step=epoch + 1)
+            if not self.create_epoch_runs:
+                continue
+            elif epoch > 0:
                 change: float = value - getattr(self, metric)
                 if (metric in ["accuracy", "val_accuracy"] and change > 0) or (
                     metric in ["loss", "val_loss"] and change < 0
@@ -296,8 +307,10 @@ class TensorVue(Callback):
                 self.epoch_run.log_event(
                     f"Improved {metric}: {improved}. Change in {metric}: {change}"
                 )
-            self.simulation_run.log_metrics({metric: value}, step=epoch + 1)
             self.epoch_run.update_metadata({f"final_{metric}": value})
+        
+        if self.create_epoch_runs:
+            return
 
         self.accuracy = logs.get("accuracy")
         self.loss = logs.get("loss")
@@ -333,6 +346,8 @@ class TensorVue(Callback):
 
     def on_train_batch_begin(self, batch, logs):
         # Print progress in 10% increments, to prevent message spam
+        if not self.create_epoch_runs:
+            return
         if int((batch) / (self.params.get("steps") / 10)) != int(
             (batch + 1) / (self.params.get("steps") / 10)
         ):
@@ -341,6 +356,8 @@ class TensorVue(Callback):
             )
 
     def on_train_batch_end(self, batch, logs):
+        if not self.create_epoch_runs:
+            return
         self.epoch_run.log_metrics(
             {
                 "accuracy": logs.get("accuracy"),
@@ -350,7 +367,7 @@ class TensorVue(Callback):
 
     def on_test_begin(self, logs):
         if (
-            self.simulation_run
+            self.simulation_run and self.create_epoch_runs
         ):  # This is here because these can be called during training if validation set provided
             self.epoch_run.log_event("Validating results...")
         else:
@@ -413,7 +430,7 @@ class TensorVue(Callback):
                 )
 
     def on_test_batch_end(self, batch, logs):
-        if self.simulation_run:
+        if self.simulation_run and self.create_epoch_runs:
             self.epoch_run.log_metrics(
                 {
                     "validation_accuracy": logs.get("accuracy"),
