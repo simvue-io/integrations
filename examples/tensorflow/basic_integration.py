@@ -29,7 +29,7 @@ model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.01),
             metrics=['accuracy'])
 
 # At the most basic level, all we need to do is initialize our callback, providing a run name
-tensorvue = sv_tf.TensorVue("tf_demo_basic")
+tensorvue = sv_tf.TensorVue("recognising_clothes_basic")
 
 # Train the model.
 model.fit(
