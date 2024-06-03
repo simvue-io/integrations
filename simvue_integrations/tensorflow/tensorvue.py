@@ -21,6 +21,7 @@ class TensorVue(Callback):
         run_folder: typing.Optional[str] = None,
         run_description: typing.Optional[str] = None,
         run_tags: typing.Optional[list[str]] = None,
+        run_mode: typing.Literal["online", "offline"] = "online",
         alert_definitions: typing.Optional[
             dict[str, dict[str, typing.Union[str, int, float]]]
         ] = None,
@@ -55,6 +56,8 @@ class TensorVue(Callback):
             If using the optimisation framework, any description provided here will be overriden by the description from the Workspace
         run_tags : list[str], optional
             Tags associated with the run, by default None
+        run_mode : typing.Literal["online", "offline"]
+            Whether Simvue should run in Online or Offline mode, by default Online
         alert_definitions : dict[str, dict[str, typing.Union[str, int, float]]], optional
             Definitions of any alerts to add to the run, by default None
         manifest_alerts : list[str], optional
@@ -104,6 +107,7 @@ class TensorVue(Callback):
             or f"Tracking and monitoring of the training and evaluation of {self.run_name} Tensorflow algorithm."
         )
         self.run_tags = run_tags or []
+        self.run_mode = run_mode
         self.script_filepath = script_filepath
         self.model_checkpoint_filepath = model_checkpoint_filepath
         self.model_final_filepath = model_final_filepath
@@ -136,7 +140,7 @@ class TensorVue(Callback):
         super().__init__()
 
     def create_manifest_run(self):
-        manifest_run = simvue.Run()
+        manifest_run = simvue.Run(mode=self.run_mode)
         manifest_run.init(
             name=f"{self.run_name}_manifest",
             tags=self.run_tags
@@ -162,7 +166,7 @@ class TensorVue(Callback):
 
         if not self.optimisation_framework:
 
-            self.simulation_run = simvue.Run()
+            self.simulation_run = simvue.Run(mode=self.run_mode)
             self.simulation_run.init(
                 name=self.run_name + "_simulation",
                 description=self.run_description,
@@ -234,7 +238,7 @@ class TensorVue(Callback):
     def on_epoch_begin(self, epoch, logs):
         self.simulation_run.log_event(f"Starting Epoch {epoch+1}:")
 
-        self.epoch_run = simvue.Run()
+        self.epoch_run = simvue.Run(mode=self.run_mode)
         self.epoch_run.init(
             name=self.run_name + f"_epoch_{epoch+1}",
             folder=self.run_folder,
@@ -351,7 +355,7 @@ class TensorVue(Callback):
             self.epoch_run.log_event("Validating results...")
         else:
             if not self.optimisation_framework:
-                self.eval_run = simvue.Run()
+                self.eval_run = simvue.Run(mode=self.run_mode)
                 self.eval_run.init(
                     name=self.run_name + "_evaluation",
                     folder=self.run_folder,
