@@ -11,7 +11,8 @@ simvue = {git = "https://github.com/simvue-io/client.git", rev = "v1.0-rc"}
 
 [tool.poetry.group.tensorflow.dependencies]
 tensorflow = "^2.16.1"
-mnist = "^0.2.2"
+matplotlib = "^3.9.0"
+
 
 [build-system]
 requires = ["poetry-core"]

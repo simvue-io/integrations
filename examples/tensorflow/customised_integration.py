@@ -37,7 +37,7 @@ class MyTensorVue(sv_tf.TensorVue):
 
     # This method will be called whenever a training session ends
     def on_train_end(self, logs):
-        predictions = model.predict(self.img_predict)
+        predictions = self.model.predict(self.img_predict)
         overall_guess = numpy.argmax(predictions, axis=1)
 
         # Change colours of labels based on whether prediction is correct / incorrect
@@ -55,7 +55,7 @@ class MyTensorVue(sv_tf.TensorVue):
         plt.savefig("predictions.png")
 
         # Upload as artifact to simulation run
-        self.simulation_run.save("predictions.png", "output")
+        self.simulation_run.save_file("predictions.png", "output")
 
         # Don't forget to then call the base TensorVue method!
         super().on_train_end(logs)
@@ -74,7 +74,7 @@ tensorvue.class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat', 
 model.fit(
     img_train,
     label_train,
-    epochs=10,
+    epochs=5,
     validation_split=0.2,
     # Add the tensorvue class as a callback
     callbacks=[tensorvue,]

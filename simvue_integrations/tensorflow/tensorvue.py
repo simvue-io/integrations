@@ -80,7 +80,7 @@ class TensorVue(Callback):
             The parameter to check the value of after each Epoch, eitheer accuracy, loss, val_accuracy, or val_loss
         evaluation_target: float. optional
             The target value of the parameter, which will cause the training to stop if satisfied
-        evaluation_condition: common.Operator, optional
+        evaluation_condition: validators.Operator, optional
             How you wish to compare the latest value of the parameter to the target value
         optimisation_framework : bool, optional
             Whether to use the Simvue ML Optimisation framework, by default False
@@ -322,7 +322,7 @@ class TensorVue(Callback):
         ):
             if not logs.get(self.evaluation_parameter):
                 raise RuntimeError("Evaluation parameter not found in log file!")
-            terminate: bool = common.OPERATORS[self.evaluation_condition](
+            terminate: bool = validators.OPERATORS[self.evaluation_condition](
                 logs.get(self.evaluation_parameter), self.evaluation_target
             )
             if terminate:

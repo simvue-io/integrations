@@ -5,6 +5,7 @@ import tensorflow as tf
 from tensorflow import keras
 import numpy
 import matplotlib.pyplot as plt
+from tensorflow.keras.callbacks import ModelCheckpoint
 
 # Firstly we import our Tensorflow integration:
 import simvue_integrations.tensorflow.tensorvue as sv_tf
@@ -76,7 +77,7 @@ tensorvue = sv_tf.TensorVue(
 model.fit(
     img_train,
     label_train,
-    epochs=10,
+    epochs=5,
     validation_split=0.2,
     # Specify the model callback, BEFORE the tensorvue callback in the list:
     callbacks=[model_checkpoint_callback, tensorvue,]

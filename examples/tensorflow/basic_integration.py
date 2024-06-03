@@ -35,7 +35,7 @@ tensorvue = sv_tf.TensorVue("recognising_clothes_basic")
 model.fit(
     img_train,
     label_train,
-    epochs=10,
+    epochs=5,
     validation_split=0.2,
     # Add the tensorvue class as a callback
     callbacks=[tensorvue,]
