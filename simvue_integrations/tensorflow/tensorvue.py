@@ -309,7 +309,7 @@ class TensorVue(Callback):
                 )
             self.epoch_run.update_metadata({f"final_{metric}": value})
         
-        if self.create_epoch_runs:
+        if not self.create_epoch_runs:
             return
 
         self.accuracy = logs.get("accuracy")
@@ -366,10 +366,9 @@ class TensorVue(Callback):
         )
 
     def on_test_begin(self, logs):
-        if (
-            self.simulation_run and self.create_epoch_runs
-        ):  # This is here because these can be called during training if validation set provided
-            self.epoch_run.log_event("Validating results...")
+        if self.simulation_run:  # This is here because these can be called during training if validation set provided
+            if self.create_epoch_runs:
+                self.epoch_run.log_event("Validating results...")
         else:
             if not self.optimisation_framework:
                 self.eval_run = simvue.Run(mode=self.run_mode)
@@ -430,14 +429,15 @@ class TensorVue(Callback):
                 )
 
     def on_test_batch_end(self, batch, logs):
-        if self.simulation_run and self.create_epoch_runs:
-            self.epoch_run.log_metrics(
-                {
-                    "validation_accuracy": logs.get("accuracy"),
-                    "validation_loss": logs.get("loss"),
-                },
-                step=batch,
-            )
+        if self.simulation_run:
+            if self.create_epoch_runs:
+                self.epoch_run.log_metrics(
+                    {
+                        "validation_accuracy": logs.get("accuracy"),
+                        "validation_loss": logs.get("loss"),
+                    },
+                    step=batch,
+                )
         else:
             self.eval_run.log_metrics(
                 {
