@@ -7,15 +7,16 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
-simvue = {git = "https://github.com/simvue-io/client.git", rev = "v1.0-rc"}
+simvue = {git = "https://github.com/simvue-io/client.git", rev = "v1.0-rc3"}
 
-[tool.poetry.group.tensorflow.dependencies]
-tensorflow = "^2.16.1"
-mnist = "^0.2.2"
+tensorflow = {version="^2.16.1", optional=true}
+mnist = {version="^0.2.2", optional=true}
+ukaea-multiparser = {version="^1.0.1", optional=true}
 
 
-[tool.poetry.group.moose.dependencies]
-ukaea-multiparser = "^1.0.1"
+[tool.poetry.extras]
+tensorflow = ["tensorflow", "mnist"]
+moose = ["ukaea-multiparser"]
 
 [build-system]
 requires = ["poetry-core"]

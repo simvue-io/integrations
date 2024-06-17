@@ -9,45 +9,44 @@ import multiprocessing
 import time
 import re
 
+@mp_file_parser.file_parser
+def _moose_header_parser(
+    input_file: str,
+    **_) -> typing.Dict[str, str]:
+    """Method which parses the header of the MOOSE log file and returns the data from it as a dictionary.
 
+    Parameters
+    ----------
+    input_file : str
+        The path to the file where the console log is stored.
+
+    Returns
+    -------
+    typing.Dict[str, str]
+        The parsed data from the header of the MOOSE log file
+    """
+    # Open the log file, and read lines 1-7 (which contains information about the MOOSE version used etc)
+    with open(input_file) as file:
+        file_lines = file.readlines()
+    file_lines = list(filter(None, file_lines))
+
+    # Add the data from each line of the header into a dictionary as a key/value pair
+    header_data = {}
+    for line in file_lines:
+        # Ignore blank lines
+        if not line.strip():
+            continue
+        key, value = line.split(":", 1)
+        # Ignore lines which correspond to 'titles'
+        if not value:
+            continue
+        value = value.strip()
+        if not value:
+            continue
+        header_data[key] = value
+
+    return {}, header_data
 class MooseRun(simvue.Run):
-    @mp_file_parser.file_parser
-    def _moose_header_parser(
-        self, 
-        input_file: str,
-        **_) -> typing.Dict[str, str]:
-        """Method which parses the header of the MOOSE log file and returns the data from it as a dictionary.
-
-        Parameters
-        ----------
-        console_file : str
-            The path to the file where the console log is stored.
-
-        Returns
-        -------
-        typing.Dict[str, str]
-            The parsed data from the header of the MOOSE log file
-        """
-        # Open the log file, and read lines 1-7 (which contains information about the MOOSE version used etc)
-        with open(input_file) as file:
-            file_lines = file.readlines()
-        file_lines = list(filter(None, file_lines))
-
-        # Add the data from each line of the header into a dictionary as a key/value pair
-        header_data = {}
-        for line in file_lines:
-            # Ignore blank lines
-            if not line.strip():
-                continue
-            key, value = line.split(":", 1)
-            # Ignore lines which correspond to 'titles'
-            if not value:
-                continue
-            value = value.strip()
-            header_data[key] = value
-
-        return {}, header_data
-    
     def _per_event_callback(self, log_data, _):
         """_summary_
 
@@ -148,7 +147,7 @@ class MooseRun(simvue.Run):
             file_monitor.track(
                 path_glob_exprs = os.path.join(self.output_dir_path, f"{self.results_prefix}.txt"), 
                 callback = lambda header_data, metadata: self.update_metadata({**header_data, **metadata}), 
-                parser_func = self._moose_header_parser, 
+                parser_func = _moose_header_parser, 
                 static = True,
             )
             # Monitor each line added to the MOOSE log file as the simulation proceeds and look out for certain phrases to upload to Simvue
@@ -170,10 +169,12 @@ with MooseRun() as run:
     run.init(
         name="testing_moose_wrapper_1",
     )
-
+    run.update_metadata({"test": 123})
     run.launch(
         moose_application_path='app/moose_tutorial-opt',
-        moose_file_path=os.path.join(os.path.dirname(__file__), 'steel_mug.i'),
-        output_dir_path=os.path.join(os.path.dirname(__file__), 'results', 'steel'),
+        moose_file_path=os.path.join(os.path.dirname(__file__), 'example', 'steel_mug.i'),
+        output_dir_path=os.path.join(os.path.dirname(__file__), 'example', 'results', 'steel'),
         results_prefix="mug_thermal",
     )
+    run.log_event("Simulation is finished!")
+    run.update_tags(["converged"])
