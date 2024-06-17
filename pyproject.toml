@@ -7,7 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-simvue = {git = "https://github.com/simvue-io/client.git", rev = "v1.0-rc"}
+simvue = {git = "https://github.com/simvue-io/client.git", rev = "v1.0-rc3"}
 
 [tool.poetry.group.tensorflow.dependencies]
 tensorflow = "^2.16.1"
