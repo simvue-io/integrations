@@ -11,9 +11,6 @@ class WrappedRun(simvue.Run):
         if not self._simvue:
             self._error("Run must be initialized before launching the simulation.")
             return False
-        
-        # Save user's Simvue script
-        self.save_file(os.path.abspath(__file__), "code") 
 
     def during_simulation(self):
         pass
