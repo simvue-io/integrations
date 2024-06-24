@@ -47,20 +47,17 @@ def _moose_header_parser(
     return {}, header_data        
 
 class MooseRun(WrappedRun):
-    def _per_event_callback(self, log_data, _):
-        """_summary_
+    def _per_event_callback(self, log_data: typing.Dict[str, str], _):
+        """Method which looks out for certain phrases in the MOOSE log, and adds them to the Events log
 
         Parameters
         ----------
-        log_data : _type_
-            _description_
-        _ : _type_
-            _description_
-
+        log_data : typing.Dict[str, str]
+            Phrases of interest identified by the file monitor
         Returns
         -------
-        _type_
-            _description_
+        bool
+            Returns False if unable to upload events, to signal an error
         """
 
         # Look for relevant keys in the dictionary of data which we are passed in, and log the event with Simvue

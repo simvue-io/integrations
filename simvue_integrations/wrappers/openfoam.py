@@ -16,12 +16,8 @@ class OpenfoamRun(WrappedRun):
             "^(.+):  Solving for (.+), Initial residual = (.+), Final residual = (.+), No Iterations (.+)$"
         )
         exp2: re.Pattern[str] = re.compile("^ExecutionTime = ([0-9.]+) s")
-        out_data = {
-            "metrics": {},
-            "events": [],
-            "header_metadata": {},
-        }
         metrics = {}
+        header_metadata = {}
         header = False
         solver_info = False
 
@@ -30,9 +26,14 @@ class OpenfoamRun(WrappedRun):
             if line.startswith('\*-'):
                 header = True
                 solver_info = False
+                continue
             elif line.startswith('// *'):
                 header = False
+                if not self.metadata_uploaded:
+                    self.update_metadata(header_metadata)
+                    self.metadata_uploaded = True
                 solver_info = True
+                continue
 
             # Get metrics
             match = exp1.match(line)
@@ -50,41 +51,33 @@ class OpenfoamRun(WrappedRun):
                 if not line:
                     continue
                 key, value = line.split(":", 1)
-                key = key.strip().replace(" ","_").lower()
+                key = key.strip().replace(" ","_").replace("/", "-").lower()
                 value = value.strip()
                 # If the line corresponds to the 'exec' parameter, store this as an event instead of a piece of metadata
                 # since we will be storing data from multiple log files which are executing different things
                 if key == 'exec':
-                    out_data["events"] += ['----------------------------', f'Executing {value} solver...', '----------------------------']
+                    current_process = value
                 else:
-                    out_data["header_metadata"][key] = value
+                    header_metadata[key] = value
 
             # Log events for any initial solver info
-            if solver_info:
-                out_data["events"].append(line)
+            if solver_info and line:
+                self.log_event(f"[{current_process}]: {line}")
 
             # Get time, store metrics
             match = exp2.match(line)
             if match:
                 ttime = match.group(1)
                 if metrics:
-                    out_data["metrics"][ttime] = metrics
+                    self.log_metrics(metrics, time=ttime)
                     metrics = {}
 
-        return {}, out_data
-    
-    def _upload(self, data):
-        if header_metadata := data.get("header_metadata"):
-            self.update_metadata(header_metadata)
-        if events := data.get("events"):
-            for event in events:
-                self.log_event(event)
-        if metrics := data.get("metrics"):
-            for time, metric in metrics:
-                self.log_metrics(metric, time=time)
+        return {}, metrics
 
     def pre_simulation(self):
         super().pre_simulation()
+
+        self.metadata_uploaded = False
 
         # Save the files in the System directory
         if os.path.exists(os.path.join(self.openfoam_case_dir, 'system')):
@@ -109,7 +102,6 @@ class OpenfoamRun(WrappedRun):
             self.file_monitor.tail(
                 parser_func=self._log_parser,
                 path_glob_exprs=[os.path.join(self.openfoam_case_dir, "log.*")],
-                callback=lambda data, _: self._upload(data)
             )
 
     def post_simulation(self):
