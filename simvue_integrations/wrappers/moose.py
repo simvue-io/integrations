@@ -47,6 +47,16 @@ def _moose_header_parser(
     return {}, header_data        
 
 class MooseRun(WrappedRun):
+    """Class for setting up Simvue tracking and monitoring of a MOOSE simulation.
+
+    Use this class as a context manager, in the same way you use default Simvue runs, and call run.launch(). Eg:
+
+    with MooseRun() as run:
+        run.init(
+            name="moose_simulation",
+        )
+        run.launch(...)
+    """
     def _per_event_callback(self, log_data: typing.Dict[str, str], _):
         """Method which looks out for certain phrases in the MOOSE log, and adds them to the Events log
 
@@ -79,9 +89,16 @@ class MooseRun(WrappedRun):
             time.sleep(1) # To allow other processes to complete
             self._trigger.set()
 
-    def _per_metric_callback(self, csv_data, sim_metadata):
-        """Monitor each line in the results CSV file, and add data from it to Simvue Metrics."""
+    def _per_metric_callback(self, csv_data: typing.Dict[str, float], sim_metadata: typing.Dict[str, str]):
+        """Monitor each line in the results CSV file, and add data from it to Simvue Metrics.
 
+        Parameters
+        ----------
+        csv_data : typing.Dict[str, float]
+            The data from the latest line in the CSV file
+        sim_metadata : typing.Dict[str, str]
+            The metadata about when this line was read by Multiparser
+        """
         metric_time = csv_data.pop('time')
 
         # Log all results for this timestep as Metrics
@@ -92,6 +109,8 @@ class MooseRun(WrappedRun):
         )
 
     def pre_simulation(self):
+        """Simvue commands which are ran before the MOOSE simulation begins.
+        """
         super().pre_simulation()
 
         # Add alert for a non converging step
@@ -121,6 +140,8 @@ class MooseRun(WrappedRun):
             )
     
     def during_simulation(self):
+        """Describes which files should be monitored during the simulation by Multiparser
+        """
         # Read the initial information within the log file when it is first created, to parse the header information
         self.file_monitor.track(
             path_glob_exprs = os.path.join(self.output_dir_path, f"{self.results_prefix}.txt"),
@@ -143,6 +164,8 @@ class MooseRun(WrappedRun):
         )
 
     def post_simulation(self):
+        """Simvue commands which are ran after the MOOSE simulation finishes.
+        """
         if os.path.exists(os.path.join(self.output_dir_path, f"{self.results_prefix}.e")):
             self.save_file(os.path.join(self.output_dir_path, f"{self.results_prefix}.e"), "output")
                         
@@ -155,6 +178,19 @@ class MooseRun(WrappedRun):
         results_prefix: str,
         moose_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None
         ):
+        """Command to launch the MOOSE simulation and track it with Simvue.
+
+        Parameters
+        ----------
+        moose_application_path : pydantic.FilePath
+            Path to the MOOSE application file
+        moose_file_path : pydantic.FilePath
+            Path to the MOOSE configuration file
+        output_dir_path : str
+            The output directory where results and logs from MOOSE will be stored
+        moose_env_vars : typing.Optional[typing.Dict[str, typing.Any]], optional
+            Any environment variables to be passed to MOOSE on startup, by default None
+        """
 
         self.moose_application_path = moose_application_path
         self.moose_file_path = moose_file_path
