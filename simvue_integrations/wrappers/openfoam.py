@@ -106,7 +106,8 @@ class OpenfoamRun(WrappedRun):
             identifier="openfoam_simulation",
             executable="/bin/sh",
             script=str(os.path.join(self.openfoam_case_dir, "Allrun")),
-            completion_callback=lambda *_, **__: self._trigger.set(),
+            completion_trigger=self._trigger,
+            **self.openfoam_env_vars
         )
     
     def during_simulation(self):
