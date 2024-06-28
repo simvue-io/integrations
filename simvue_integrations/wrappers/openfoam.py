@@ -84,8 +84,8 @@ class OpenfoamRun(WrappedRun):
             if os.path.exists(os.path.join(self.openfoam_case_dir, location)):
                 for dirname, _, filenames in os.walk(os.path.join(self.openfoam_case_dir, location)):
                     for filename in filenames:
-                        if (full_path := os.path.isfile(os.path.join(dirname,filename))):
-                            self.save_file(full_path, "input", name=f"{location}/{filename}")
+                        if os.path.isfile(os.path.join(dirname,filename)):
+                            self.save_file(os.path.join(dirname,filename), "input", name=f"{location}/{filename}")
             
         # TODO: Any alerts I should define?
 
