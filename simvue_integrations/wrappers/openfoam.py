@@ -18,16 +18,24 @@ class OpenfoamRun(WrappedRun):
         exp2: re.Pattern[str] = re.compile("^ExecutionTime = ([0-9.]+) s")
         metrics = {}
         header_metadata = {}
+        title = False
         header = False
         solver_info = False
 
         for line in file_content.splitlines():
             # Determine where we are in the file
+            if line.startswith('/*-'):
+                self.log_event("Starting new execution...")
+                title = True
+                header = False
+                solver_info = False
             if line.startswith('\*-'):
+                title = False
                 header = True
                 solver_info = False
                 continue
             elif line.startswith('// *'):
+                title = False
                 header = False
                 if not self.metadata_uploaded:
                     self.update_metadata(header_metadata)
@@ -38,12 +46,16 @@ class OpenfoamRun(WrappedRun):
             # Get metrics
             match = exp1.match(line)
             if match:
-                # We must be outside the header and initial solver info
+                # We must be outside the title, header and initial solver info if matched regex pattern
+                title = False
                 header = False
                 solver_info = False
                 
                 metrics["residuals.initial.%s" % match.group(2)] = match.group(3)
                 metrics["residuals.final.%s" % match.group(2)] = match.group(4)
+
+            if title:
+                continue
 
             # Store header data
             if header:
