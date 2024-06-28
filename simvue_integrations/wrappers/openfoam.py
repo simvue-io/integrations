@@ -79,13 +79,13 @@ class OpenfoamRun(WrappedRun):
 
         self.metadata_uploaded = False
 
-        # Save the files in the System directory
-        if os.path.exists(os.path.join(self.openfoam_case_dir, 'system')):
-            self.save_directory(os.path.join(self.openfoam_case_dir, 'system'), "input") 
-
-        # Save the files in the Constants directory
-        if os.path.exists(os.path.join(self.openfoam_case_dir, 'constants')):
-            self.save_directory(os.path.join(self.openfoam_case_dir, 'constants'), "input") 
+        # Save the files in the System and Constants directories
+        for location in ('system', 'constants'):
+            if os.path.exists(os.path.join(self.openfoam_case_dir, location)):
+                for dirname, _, filenames in os.walk(os.path.join(self.openfoam_case_dir, location)):
+                    for filename in filenames:
+                        if (full_path := os.path.isfile(os.path.join(dirname,filename))):
+                            self.save_file(full_path, "input", name=f"{location}/{filename}")
             
         # TODO: Any alerts I should define?
 

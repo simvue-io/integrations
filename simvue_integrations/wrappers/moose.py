@@ -124,7 +124,7 @@ class MooseRun(WrappedRun):
 
         # Save the MOOSE file for this run to the Simvue server
         if os.path.exists(self.moose_file_path):
-            self.save_file(self.moose_file_path, "code") 
+            self.save_file(self.moose_file_path, "input") 
 
         # Save the MOOSE Makefile
         if os.path.exists(os.path.join(os.path.dirname(self.moose_application_path), "Makefile")):
