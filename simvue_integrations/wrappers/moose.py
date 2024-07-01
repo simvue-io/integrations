@@ -31,11 +31,14 @@ def _moose_header_parser(
     # Add the data from each line of the header into a dictionary as a key/value pair
     header_data = {}
     for line in file_lines:
-        # Ignore blank lines
-        if not line.strip():
+        # Ignore blank lines and lines which don't contain a colon
+        if not line.strip() or ":" not in line:
             continue
         key, value = line.split(":", 1)
+        key = key.strip()
         key = key.replace(" ","_").lower()
+        # Replace any characters which will fail server side validation of key name with dashes
+        key = re.sub('[^\w\-\s\.]+', '-', key)
         # Ignore lines which correspond to 'titles'
         if not value:
             continue
@@ -143,6 +146,10 @@ class MooseRun(WrappedRun):
     def during_simulation(self):
         """Describes which files should be monitored during the simulation by Multiparser
         """
+        self.log_event("Beginning MOOSE simulation...")
+        # Record time here, for that for static problems the overall time for execution will be returned
+        self._time = time.time()
+
         # Read the initial information within the log file when it is first created, to parse the header information
         self.file_monitor.track(
             path_glob_exprs = os.path.join(self.output_dir_path, f"{self.results_prefix}.txt"),
