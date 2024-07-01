@@ -136,7 +136,7 @@ class MooseRun(WrappedRun):
             executable=str(self.moose_application_path),
             i=str(self.moose_file_path),
             color="off",
-            completion_trigger=self._trigger,
+#            completion_trigger=self._trigger, # TODO: Check if this works
             **self.moose_env_vars
             )
     
