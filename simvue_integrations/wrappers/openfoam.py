@@ -106,7 +106,7 @@ class OpenfoamRun(WrappedRun):
             identifier="openfoam_simulation",
             executable="/bin/sh",
             script=str(os.path.join(self.openfoam_case_dir, "Allrun")),
-#            completion_trigger=self._trigger, # TODO: Why does this abort immediately?
+            completion_callback=lambda *_, **__: self._trigger.set(),
             **self.openfoam_env_vars
         )
     

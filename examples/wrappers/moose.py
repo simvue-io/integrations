@@ -4,7 +4,7 @@ from simvue_integrations.wrappers.moose import MooseRun
 with MooseRun() as run:
     # Initialize your Simvue run as normal
     run.init(
-        name="testing_moose_wrapper",
+        name="moose-mug",
     )
 
     # Can add anything to the Simvue run which you want before / after the MOOSE simulation
