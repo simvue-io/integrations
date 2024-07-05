@@ -12,6 +12,22 @@ from simvue_integrations.wrappers.generic import WrappedRun
 class OpenfoamRun(WrappedRun):
 
     def _save_directory(self, dir_names: list[str], zip_name: str, file_type : typing.Literal["input", "output", "code"]):
+        """Save directories of files to the Simvue run.
+
+        If upload_to_zip is True, will add files from all of the directories provided to a single archive Zip file,
+        and then upload this file to Simvue.
+
+        If upload_to_zip is False, will upload each file in the directories individually to Simvue.
+
+        Parameters
+        ----------
+        dir_names : list[str]
+            List of directories wihtin the case directory to save to the Simvue run
+        zip_name : str
+            Name of the zip file to create, if upload_to_zip is True
+        file_type : typing.Literal["input", "output", "code"]
+            The category of files being uploaded
+        """
 
         if self.upload_as_zip:
             zip_file = zipfile.ZipFile(os.path.join(self.openfoam_case_dir, zip_name), 'w')
@@ -22,6 +38,7 @@ class OpenfoamRun(WrappedRun):
             if not os.path.exists(dir_path):
                 return
             
+            # Go through directory recursively, either add each file to the zip, or upload individually to Simvue
             for root, _, file_names in os.walk(dir_path):
                 for file_name in file_names:
                     file_path = os.path.join(root,file_name)
@@ -118,9 +135,10 @@ class OpenfoamRun(WrappedRun):
 
         self.metadata_uploaded = False
 
-        # Save the files in the System and Constant directories
+        # Save the files in the System, Constant, and initial conditions ('0') directories
         self._save_directory(["system"], "system.zip", "input")
         self._save_directory(["constant"], "constant.zip", "input")
+        self._save_directory(["0"], "initial_conditions.zip", "input")
             
         # TODO: Any alerts I should define?
 
