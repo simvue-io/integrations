@@ -6,9 +6,36 @@ import multiparser.parsing.tail as mp_tail_parser
 import os
 import typing
 import re
+import zipfile
 from simvue_integrations.wrappers.generic import WrappedRun
 
 class OpenfoamRun(WrappedRun):
+
+    def _save_directory(self, dir_names: list[str], zip_name: str, file_type : typing.Literal["input", "output", "code"]):
+
+        if self.upload_as_zip:
+            zip_file = zipfile.ZipFile(os.path.join(self.openfoam_case_dir, zip_name), 'w')
+
+        for dir_name in dir_names:
+            dir_path = os.path.join(self.openfoam_case_dir, dir_name)
+    
+            if not os.path.exists(dir_path):
+                return
+            
+            for root, _, file_names in os.walk(dir_path):
+                for file_name in file_names:
+                    file_path = os.path.join(root,file_name)
+                    if not file_path:
+                        continue
+                    if self.upload_as_zip:
+                        zip_file.write(file_path, os.path.relpath(file_path, self.openfoam_case_dir))
+                    else:
+                        self.save_file(file_path, file_type, name=str(os.path.relpath(file_path, self.openfoam_case_dir)))
+
+        if self.upload_as_zip:
+            zip_file.close()
+            self.save_file(os.path.join(self.openfoam_case_dir, zip_name), file_type)
+
     @mp_tail_parser.log_parser
     def _log_parser(self, file_content: str, **__) -> tuple[dict[str,typing.Any], dict[str, typing.Any]]:
         
@@ -91,13 +118,9 @@ class OpenfoamRun(WrappedRun):
 
         self.metadata_uploaded = False
 
-        # Save the files in the System and Constants directories
-        for location in ('system', 'constants'):
-            if os.path.exists(os.path.join(self.openfoam_case_dir, location)):
-                for dirname, _, filenames in os.walk(os.path.join(self.openfoam_case_dir, location)):
-                    for filename in filenames:
-                        if os.path.isfile(os.path.join(dirname,filename)):
-                            self.save_file(os.path.join(dirname,filename), "input", name=f"{location}/{filename}")
+        # Save the files in the System and Constant directories
+        self._save_directory(["system"], "system.zip", "input")
+        self._save_directory(["constant"], "constant.zip", "input")
             
         # TODO: Any alerts I should define?
 
@@ -118,16 +141,19 @@ class OpenfoamRun(WrappedRun):
             )
 
     def post_simulation(self):
-        # TODO: What outputs do I need to store?
-        pass
-                        
+        reg_exp = re.compile("([\d\.]+)")
+        result_dirs = [dir_name for dir_name in os.listdir(self.openfoam_case_dir) if reg_exp.match(dir_name)]
+        self._save_directory(result_dirs, "results.zip", "output")     
+
     @pydantic.validate_call
     def launch(
         self, 
         openfoam_case_dir: pydantic.DirectoryPath,
+        upload_as_zip: bool = True,
         openfoam_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None
         ):
         self.openfoam_case_dir = openfoam_case_dir
+        self.upload_as_zip = upload_as_zip
         self.openfoam_env_vars = openfoam_env_vars or {}
 
         super().launch()
