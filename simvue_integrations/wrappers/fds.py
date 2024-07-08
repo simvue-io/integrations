@@ -12,11 +12,6 @@ from simvue_integrations.wrappers.generic import WrappedRun
 
 class FDSRun(WrappedRun):
 
-    def meta_update(self, data, meta):
-        new_data = {k: v for k, v in data.items() if v}
-        self.log_event(str(new_data))
-        #self.update_metadata(new_data)
-
     @mp_tail_parser.log_parser
     def _log_parser(self, file_data: str, **__) -> tuple[dict[str,typing.Any], list[dict[str, typing.Any]]]:
 
@@ -83,7 +78,7 @@ class FDSRun(WrappedRun):
         # Upload data from input file as metadata
         self.file_monitor.track(
             path_glob_exprs=str(self.fds_input_file_path),
-            callback=self.meta_update,
+            callback=lambda data, meta: self.update_metadata({k: v for k, v in data.items() if v}),
             file_type="fortran",
             static=True,
         )

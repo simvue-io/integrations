@@ -25,6 +25,7 @@ class WrappedRun(simvue.Run):
         with multiparser.FileMonitor(
             exception_callback=self.log_event,
             termination_trigger=self._trigger,
+            flatten_data=True
         ) as self.file_monitor:
             
             self.during_simulation()
