@@ -14,8 +14,8 @@ class FDSRun(WrappedRun):
 
     def meta_update(self, data, meta):
         new_data = {k: v for k, v in data.items() if v}
-        print(new_data)
-        self.update_metadata(new_data)
+        self.log_event(str(new_data))
+        #self.update_metadata(new_data)
 
     @mp_tail_parser.log_parser
     def _log_parser(self, file_data: str, **__) -> tuple[dict[str,typing.Any], list[dict[str, typing.Any]]]:
