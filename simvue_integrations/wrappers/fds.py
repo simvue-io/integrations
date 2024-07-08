@@ -62,7 +62,11 @@ class FDSRun(WrappedRun):
     def pre_simulation(self):
         super().pre_simulation()
 
+        self.log_event("Uploading input file")
+
         self.save_file(self.fds_input_file_path, 'input')
+
+        self.log_event("Starting FDS simulation")
 
         self.add_process(
             "fds_simulation",
@@ -101,6 +105,7 @@ class FDSRun(WrappedRun):
         )
 
     def post_simulation(self):
+        self.log_event("FDS simulation complete!")
         self.update_metadata(self._activation_times_data)
 
     @pydantic.validate_call
