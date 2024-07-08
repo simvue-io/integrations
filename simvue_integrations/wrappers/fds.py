@@ -77,7 +77,7 @@ class FDSRun(WrappedRun):
     def during_simulation(self):
         # Upload data from input file as metadata
         self.file_monitor.track(
-            path_glob_exprs=self.fds_input_file_path,
+            path_glob_exprs=str(self.fds_input_file_path),
             callback=lambda data, _: self.update_metadata({k: v for k, v in data.items() if v}),
             file_type="fortran",
             static=True,
