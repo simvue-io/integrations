@@ -23,6 +23,7 @@ class WrappedRun(simvue.Run):
         
         # Start an instance of the file monitor, to keep track of log and results files
         with multiparser.FileMonitor(
+            exception_callback=self.log_event,
             termination_trigger=self._trigger,
         ) as self.file_monitor:
             

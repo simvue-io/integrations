@@ -4,6 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["Matthew Field <matthew.field@ukaea.uk>"]
 readme = "README.md"
+include = ["extras/fds_unlim"]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
@@ -11,9 +12,11 @@ simvue = "^1.0.0"
 ukaea-multiparser = "^1.0.1"
 tensorflow = {version="^2.16.1", optional=true}
 mnist = {version="^0.2.2", optional=true}
+f90nml = {version = "^1.4.3", optional = true}
 
 [tool.poetry.extras]
 tensorflow = ["tensorflow", "mnist"]
+fds = ["f90nml"]
 
 [build-system]
 requires = ["poetry-core"]
