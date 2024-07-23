@@ -72,7 +72,7 @@ class FDSRun(WrappedRun):
             "fds_simulation",
             executable="fds_unlim",
             input_file=self.fds_input_file_path,
-            completion_callback=lambda *_, **__: self._trigger.set(),
+            completion_trigger=self._trigger,
             env=os.environ | {"PATH": f"{os.environ['PATH']}:{os.getcwd()}"},
             ulimit=self.ulimit,
             **self.fds_env_vars
@@ -107,7 +107,7 @@ class FDSRun(WrappedRun):
     def post_simulation(self):
         self.log_event("FDS simulation complete!")
         self.update_metadata(self._activation_times_data)
-        
+
         if os.path.exists(f"{self._chid}.smv"):
             self.save_file(f"{self._chid}.smv", "output")
 
