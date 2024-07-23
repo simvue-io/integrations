@@ -107,6 +107,9 @@ class FDSRun(WrappedRun):
     def post_simulation(self):
         self.log_event("FDS simulation complete!")
         self.update_metadata(self._activation_times_data)
+        
+        if os.path.exists(f"{self._chid}.smv"):
+            self.save_file(f"{self._chid}.smv", "output")
 
     @pydantic.validate_call
     def launch(
