@@ -1,4 +1,6 @@
 import typing
+import platform
+import pathlib
 import pydantic
 import glob
 import os.path
@@ -68,12 +70,14 @@ class FDSRun(WrappedRun):
 
         self.log_event("Starting FDS simulation")
 
+        fds_unlim_path = pathlib.Path(__file__).parents[1].joinpath("extras", "fds_unlim")
+        executable = f"{fds_unlim_path}" if platform.system() != "Windows" else "fds"
+
         self.add_process(
             "fds_simulation",
-            executable="fds_unlim",
+            executable=executable,
             input_file=self.fds_input_file_path,
             completion_trigger=self._trigger,
-            env=os.environ | {"PATH": f"{os.environ['PATH']}:{os.getcwd()}"},
             ulimit=self.ulimit,
             **self.fds_env_vars
         )
