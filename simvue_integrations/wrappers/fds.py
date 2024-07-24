@@ -64,11 +64,6 @@ class FDSRun(WrappedRun):
 
     def pre_simulation(self):
         super().pre_simulation()
-
-        self.log_event("Uploading input file")
-
-        self.save_file(self.fds_input_file_path, 'input')
-
         self.log_event("Starting FDS simulation")
 
         fds_unlim_path = pathlib.Path(__file__).parents[1].joinpath("extras", "fds_unlim")
@@ -120,9 +115,13 @@ class FDSRun(WrappedRun):
             
             for path in self.upload_files:  
                 for file in glob.glob(path):
+                    if os.path.abspath(file) == os.path.abspath(self.fds_input_file_path):
+                        continue
                     self.save_file(file, "output")
         else:
             for file in glob.glob(f"{self._results_prefix}*"):
+                if os.path.abspath(file) == os.path.abspath(self.fds_input_file_path):
+                    continue
                 self.save_file(file, "output")
 
 
@@ -212,11 +211,23 @@ class FDSRun(WrappedRun):
             os.makedirs(self.workdir_path, exist_ok=True)
 
             for file in glob.glob(os.path.join(self.workdir_path, f"{self._chid}*")):
+                if os.path.abspath(file) == os.path.abspath(self.fds_input_file_path):
+                    continue
                 os.remove(file)
 
-            shutil.copy(self.fds_input_file_path, os.path.join(self.workdir_path, self.fds_input_file_path))
-            self.fds_input_file_path =  os.path.join(self.workdir_path, self.fds_input_file_path)
+            if os.path.abspath(os.path.dirname(self.fds_input_file_path)) == os.path.abspath(self.workdir_path):
+                self.fds_input_file_path =os.path.basename(self.fds_input_file_path)
+
+            else:
+                fds_input_new_path = os.path.join(self.workdir_path, os.path.basename(self.fds_input_file_path))
+                shutil.copy(self.fds_input_file_path, fds_input_new_path)
+                self.fds_input_file_path =  fds_input_new_path
+            
+            print(self.fds_input_file_path)
+
 
         self._results_prefix = str(os.path.join(self.workdir_path, self._chid)) if self.workdir_path else self._chid
+
+        print("here")
             
         super().launch()

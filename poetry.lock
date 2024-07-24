@@ -1307,7 +1307,7 @@ description = "Simulation tracking and monitoring"
 optional = false
 python-versions = "^3.9"
 files = []
-develop = true
+develop = false
 
 [package.dependencies]
 click = "^8.1.7"
@@ -1333,7 +1333,7 @@ plot = ["matplotlib (>=3.8.2,<4.0.0)", "plotly (>=5.18.0,<6.0.0)"]
 type = "git"
 url = "https://github.com/simvue-io/client.git"
 reference = "wk9874/add_subprocess_cwd"
-resolved_reference = "2711040272ee1e69a723f79e3d81deb6a982f031"
+resolved_reference = "c6177fcf72fe3efa38d7d67f085a9f15ad68c7d8"
 
 [[package]]
 name = "six"
@@ -1722,4 +1722,4 @@ tensorflow = ["mnist", "tensorflow"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "907316fc94a685d96242a86c28a5d0b3029d8e74627e289677e874433ea3bcd5"
+content-hash = "3bc760794e50aec7ff3d2df8288ac2b316488c21e757db17f281c260424d548f"
