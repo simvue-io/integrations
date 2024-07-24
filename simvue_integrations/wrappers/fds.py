@@ -7,6 +7,7 @@ import os.path
 import re
 import os
 import f90nml
+import shutil
 
 import multiparser.parsing.tail as mp_tail_parser
 
@@ -77,6 +78,7 @@ class FDSRun(WrappedRun):
             "fds_simulation",
             executable=executable,
             input_file=self.fds_input_file_path,
+            cwd=self.workdir_path,
             completion_trigger=self._trigger,
             ulimit=self.ulimit,
             **self.fds_env_vars
@@ -91,18 +93,18 @@ class FDSRun(WrappedRun):
             static=True,
         )
         self.file_monitor.tail(
-            path_glob_exprs=f"{self._chid}.out",
+            path_glob_exprs=f"{self._results_prefix}.out",
             parser_func=self._log_parser,
             callback=self._metrics_callback
         )
         self.file_monitor.tail(
-            path_glob_exprs=f"{self._chid}_hrr.csv",
+            path_glob_exprs=f"{self._results_prefix}_hrr.csv",
             parser_func=mp_tail_parser.record_csv,
             parser_kwargs={"header_pattern": "Time"},
             callback=self._metrics_callback
         )
         self.file_monitor.tail(
-            path_glob_exprs=f"{self._chid}_devc.csv",
+            path_glob_exprs=f"{self._results_prefix}_devc.csv",
             parser_func=mp_tail_parser.record_csv,
             parser_kwargs={"header_pattern": "Time"},
             callback=self._metrics_callback
@@ -112,17 +114,30 @@ class FDSRun(WrappedRun):
         self.log_event("FDS simulation complete!")
         self.update_metadata(self._activation_times_data)
 
-        if os.path.exists(f"{self._chid}.smv"):
-            self.save_file(f"{self._chid}.smv", "output")
+        if self.upload_files:
+            if self.workdir_path:
+                self.upload_files = [str(os.path.join(self.workdir_path, path)) for path in self.upload_files]
+            
+            for path in self.upload_files:  
+                for file in glob.glob(path):
+                    self.save_file(file, "output")
+        else:
+            for file in glob.glob(f"{self._results_prefix}*"):
+                self.save_file(file, "output")
+
 
     @pydantic.validate_call
     def launch(
         self, 
         fds_input_file_path: pydantic.FilePath,
+        workdir_path: str = None,
+        upload_files: list[str] = None,
         ulimit: typing.Union[str, int] = "unlimited",
         fds_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None
         ):
         self.fds_input_file_path = fds_input_file_path
+        self.workdir_path = workdir_path
+        self.upload_files = upload_files
         self.ulimit = ulimit
         self.fds_env_vars = fds_env_vars or {}
 
@@ -193,7 +208,15 @@ class FDSRun(WrappedRun):
         nml = f90nml.read(self.fds_input_file_path)
         self._chid = nml["head"]["chid"]
 
-        for csv_file in glob.glob(f"{self._chid}*.csv"):
-            os.remove(csv_file)
+        if self.workdir_path:
+            os.makedirs(self.workdir_path, exist_ok=True)
 
+            for file in glob.glob(os.path.join(self.workdir_path, f"{self._chid}*")):
+                os.remove(file)
+
+            shutil.copy(self.fds_input_file_path, os.path.join(self.workdir_path, self.fds_input_file_path))
+            self.fds_input_file_path =  os.path.join(self.workdir_path, self.fds_input_file_path)
+
+        self._results_prefix = str(os.path.join(self.workdir_path, self._chid)) if self.workdir_path else self._chid
+            
         super().launch()
