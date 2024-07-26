@@ -7,7 +7,7 @@ import os
 import typing
 import re
 import zipfile
-from simvue_integrations.wrappers.generic import WrappedRun
+from simvue_integrations.connectors.generic import WrappedRun
 
 class OpenfoamRun(WrappedRun):
 
@@ -147,7 +147,7 @@ class OpenfoamRun(WrappedRun):
             identifier="openfoam_simulation",
             executable="/bin/sh",
             script=str(os.path.join(self.openfoam_case_dir, "Allrun")),
-            completion_callback=lambda *_, **__: self._trigger.set(),
+            completion_trigger=self._trigger,
             **self.openfoam_env_vars
         )
     
@@ -156,6 +156,7 @@ class OpenfoamRun(WrappedRun):
             self.file_monitor.tail(
                 parser_func=self._log_parser,
                 path_glob_exprs=[os.path.join(self.openfoam_case_dir, "log.*")],
+                callback=lambda *_, **__: None
             )
 
     def post_simulation(self):

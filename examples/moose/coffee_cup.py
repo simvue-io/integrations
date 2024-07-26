@@ -1,5 +1,5 @@
 import os
-from simvue_integrations.wrappers.moose import MooseRun
+from simvue_integrations.connectors.moose import MooseRun
 
 with MooseRun() as run:
     # Initialize your Simvue run as normal

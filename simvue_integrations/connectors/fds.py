@@ -11,7 +11,7 @@ import shutil
 
 import multiparser.parsing.tail as mp_tail_parser
 
-from simvue_integrations.wrappers.generic import WrappedRun
+from simvue_integrations.connectors.generic import WrappedRun
 
 class FDSRun(WrappedRun):
 

@@ -6,7 +6,7 @@ import multiparser.parsing.tail as mp_tail_parser
 import os
 import time
 import re
-from simvue_integrations.wrappers.generic import WrappedRun
+from simvue_integrations.connectors.generic import WrappedRun
 @mp_file_parser.file_parser
 def _moose_header_parser(
     input_file: str,
@@ -139,7 +139,7 @@ class MooseRun(WrappedRun):
             executable=str(self.moose_application_path),
             i=str(self.moose_file_path),
             color="off",
-            completion_callback=lambda *_, **__: self._trigger.set(),
+            completion_trigger=self._trigger,
             **self.moose_env_vars
             )
     
