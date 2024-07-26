@@ -6,7 +6,7 @@ import numpy
 import matplotlib.pyplot as plt
 
 # Firstly we import our Tensorflow integration:
-import simvue_integrations.tensorflow.tensorvue as sv_tf
+import simvue_integrations.connectors.tensorflow as sv_tf
 
 # Load the training and test data
 (img_train, label_train), (img_test, label_test) = keras.datasets.fashion_mnist.load_data()

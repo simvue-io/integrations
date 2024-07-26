@@ -6,7 +6,7 @@ import multiparser.parsing.tail as mp_tail_parser
 import os
 import time
 import re
-from simvue_integrations.wrappers.generic import WrappedRun
+from simvue_integrations.connectors.generic import WrappedRun
 @mp_file_parser.file_parser
 def _moose_header_parser(
     input_file: str,

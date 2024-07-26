@@ -7,7 +7,7 @@ import os
 import typing
 import re
 import zipfile
-from simvue_integrations.wrappers.generic import WrappedRun
+from simvue_integrations.connectors.generic import WrappedRun
 
 class OpenfoamRun(WrappedRun):
 

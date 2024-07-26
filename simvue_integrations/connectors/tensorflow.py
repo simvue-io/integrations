@@ -11,7 +11,7 @@ import typing
 import simvue
 from tensorflow.keras.callbacks import Callback
 
-import simvue_integrations.tensorflow.validators as validators
+import simvue_integrations.extras.validators as validators
 
 class TensorVue(Callback):
 
