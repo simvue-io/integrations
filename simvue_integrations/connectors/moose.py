@@ -83,9 +83,34 @@ class MooseRun(WrappedRun):
 
         if "time_step" in log_data.keys():
             self._time = time.time()
+
+            step_time = re.search(r"Time Step (\d+), time = (\d+)", log_data["time_step"])
+            if step_time:
+                self._step_num = int(step_time.group(1))
+                self._step_time = int(step_time.group(2))
         
         elif "converged" in log_data.keys():
-            self.log_event(f"Step calculation time: {round((time.time() - self._time), 2)} seconds.")
+            self.log_event(f" Step calculation time: {round((time.time() - self._time), 2)} seconds.")
+            self.log_event(f" Total Nonlinear Iterations: {self._nonlinear}.")
+            self.log_event(f" Total Linear Iterations: {self._linear}.")
+
+            self.log_metrics(
+                {
+                    "total_linear_iterations": self._linear,
+                    "total_nonlinear_iterations": self._nonlinear
+                },
+                self._step_num,
+                self._step_time
+            )
+
+            self._linear = 0
+            self._nonlinear = 0
+
+        # Keep track of total number of linear and nonlinear iterations in the solve
+        elif "nonlinear" in log_data.keys():
+            self._nonlinear += 1
+        elif "linear" in log_data.keys():
+            self._linear += 1
         
         # If simulation has completed successfully, terminate multiparser
         elif "finished" in log_data.keys():
@@ -107,6 +132,7 @@ class MooseRun(WrappedRun):
         # Log all results for this timestep as Metrics
         self.log_metrics(
             csv_data,
+            step = self._step_num,
             time = metric_time,
             timestamp = sim_metadata['timestamp']
         )
@@ -149,6 +175,12 @@ class MooseRun(WrappedRun):
         self.log_event("Beginning MOOSE simulation...")
         # Record time here, for that for static problems the overall time for execution will be returned
         self._time = time.time()
+        # This represents the step number and time of the step, ie when MOOSE says 'Time Step X, time = Y'
+        self._step_num = 0
+        self._step_time = 0
+        # Initialize counters for keeping track of the number of linear and nonlinear steps involved in each solve
+        self._nonlinear = 0
+        self._linear = 0
 
         # Read the initial information within the log file when it is first created, to parse the header information
         self.file_monitor.track(
@@ -161,8 +193,8 @@ class MooseRun(WrappedRun):
         self.file_monitor.tail(
             path_glob_exprs = os.path.join(self.output_dir_path, f"{self.results_prefix}.txt"), 
             callback = self._per_event_callback,
-            tracked_values = [re.compile(r"Time Step.*"), " Solve Converged!", " Solve Did NOT Converge!", "Finished Executing"], 
-            labels = ["time_step", "converged", "non_converged", "finished"]
+            tracked_values = [re.compile(r"Time Step.*"), " Solve Converged!", " Solve Did NOT Converge!", "Finished Executing", re.compile(r" \d+ Nonlinear \|R\|"), re.compile(r"     \d+ Linear \|R\|")], 
+            labels = ["time_step", "converged", "non_converged", "finished", "nonlinear", "linear"]
         )
         # Monitor each line added to the MOOSE results file as the simulation proceeds, and upload results to Simvue
         self.file_monitor.tail(
