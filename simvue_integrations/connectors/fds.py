@@ -216,7 +216,5 @@ class FDSRun(WrappedRun):
                 os.remove(file)
 
         self._results_prefix = str(os.path.join(self.workdir_path, self._chid)) if self.workdir_path else self._chid
-
-        print("here")
             
         super().launch()
