@@ -215,17 +215,6 @@ class FDSRun(WrappedRun):
                     continue
                 os.remove(file)
 
-            if os.path.abspath(os.path.dirname(self.fds_input_file_path)) == os.path.abspath(self.workdir_path):
-                self.fds_input_file_path =os.path.basename(self.fds_input_file_path)
-
-            else:
-                fds_input_new_path = os.path.join(self.workdir_path, os.path.basename(self.fds_input_file_path))
-                shutil.copy(self.fds_input_file_path, fds_input_new_path)
-                self.fds_input_file_path =  fds_input_new_path
-            
-            print(self.fds_input_file_path)
-
-
         self._results_prefix = str(os.path.join(self.workdir_path, self._chid)) if self.workdir_path else self._chid
 
         print("here")
