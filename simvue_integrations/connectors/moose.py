@@ -8,6 +8,7 @@ import time
 import re
 import csv
 from simvue_integrations.connectors.generic import WrappedRun
+from simvue_integrations.extras.create_command import format_command_env_vars
 
 # TODO: Temp, shouldnt need when decorator works
 import datetime
@@ -224,13 +225,17 @@ class MooseRun(WrappedRun):
             self.save_file(os.path.join(os.path.dirname(self.moose_application_path), "Makefile"), 'input')
 
         # Add the MOOSE simulation as a process, so that Simvue can abort it if alerts begin to fire
+        command = []
+        if self.run_in_parallel:
+            command += ['mpiexec', '-n', str(self.num_processors)]
+            command += format_command_env_vars(self.mpiexec_env_vars)
+        command += [str(self.moose_application_path), '-i', str(self.moose_file_path), '--color', 'off']
+        command += format_command_env_vars(self.moose_env_vars)
+        
         self.add_process(
-            identifier='moose_simulation',
-            executable=str(self.moose_application_path),
-            i=str(self.moose_file_path),
-            color="off",
+            'moose_simulation',
+            *command,
             completion_trigger=self._trigger,
-            **self.moose_env_vars
             )
     
     def during_simulation(self):
@@ -272,7 +277,6 @@ class MooseRun(WrappedRun):
             parser_func = self._vector_postprocessor_parser,
             callback = self._per_metric_callback
         )
-        
 
     def post_simulation(self):
         """Simvue commands which are ran after the MOOSE simulation finishes.
@@ -287,6 +291,9 @@ class MooseRun(WrappedRun):
         moose_file_path: pydantic.FilePath,
         output_dir_path: str, # as this might not exist yet
         results_prefix: str,
+        run_in_parallel: bool = False,
+        num_processors: int = 1,
+        mpiexec_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None,
         moose_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None
         ):
         """Command to launch the MOOSE simulation and track it with Simvue.
@@ -307,6 +314,9 @@ class MooseRun(WrappedRun):
         self.moose_file_path = moose_file_path
         self.output_dir_path = output_dir_path
         self.results_prefix = results_prefix
+        self.run_in_parallel = run_in_parallel
+        self.num_processors = num_processors
+        self.mpiexec_env_vars = mpiexec_env_vars or {}
         self.moose_env_vars = moose_env_vars or {}
 
         super().launch()
