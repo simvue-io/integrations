@@ -6,7 +6,13 @@ import multiparser.parsing.tail as mp_tail_parser
 import os
 import time
 import re
+import csv
 from simvue_integrations.connectors.generic import WrappedRun
+
+# TODO: Temp, shouldnt need when decorator works
+import datetime
+import platform
+
 @mp_file_parser.file_parser
 def _moose_header_parser(
     input_file: str,
@@ -60,6 +66,63 @@ class MooseRun(WrappedRun):
         )
         run.launch(...)
     """
+    #TODO: Ask Kristian why this decorator doesnt work when used on a method
+    #@mp_tail_parser.log_parser
+    def _vector_postprocessor_parser(
+        self,
+        input_file: str,
+        **__) -> typing.Dict[str, str]:
+        """Parser for reading data from VectorPostProcessor CSV files
+
+        Parameters
+        ----------
+        input_file : str
+            Path to the VectorPostProcessor CSV file
+
+        Returns
+        -------
+        typing.Dict[str, str]
+            A dictionary of metadata and data contained in the CSV file
+        """
+        
+        # TODO: Temp, shouldnt need this when the decorator works
+        _meta_data: typing.Dict[str, str] = {
+            "timestamp": datetime.datetime.fromtimestamp(
+                os.path.getmtime(input_file)
+            ).strftime("%Y-%m-%d %H:%M:%S.%f"),
+            "hostname": platform.node(),
+            "file_name": input_file,
+        }
+        metrics = {}
+        # Get name of vector which is being calculated by VectorPostProcessor from filename
+        file_name = os.path.basename(input_file)
+        vector_name, serial_num = file_name.replace(f"{self.results_prefix}_","").rsplit("_", 1)
+        
+        # If user has enabled time_data in their MOOSE file, get latest line from this file and save time
+        time_file = f"{input_file.rsplit('_', 1)[0]}_time.csv"
+        if os.path.exists(time_file):
+            with open(time_file, newline="\n") as in_t:
+                final_line = [in_t.readlines()[-1]]
+                current_time_data = next(csv.reader(final_line))
+                metrics['time'] = current_time_data[0]
+                metrics['step'] = current_time_data[1]
+        else:
+            metrics['step'] = int(serial_num)
+            
+        with open(input_file, newline="") as in_f:
+            read_csv = csv.DictReader(in_f)
+        
+            for csv_data in read_csv:
+                # Remove 'id' parameter if it exists, since we don't need it
+                csv_data.pop('id', None)
+                
+                if radius := csv_data.pop('radius', None):
+                    metrics.update({f"{vector_name}.{key}.r={radius}":value for (key, value) in csv_data.items()})
+                elif (x := csv_data.pop('x', None)) is not None and (y := csv_data.pop('y', None)) is not None and (z := csv_data.pop('z', None)) is not None:
+                    metrics.update({f"{vector_name}.{key}.x={x}_y={y}_z={z}":value for (key, value) in csv_data.items()})
+                
+        return _meta_data, metrics
+    
     def _per_event_callback(self, log_data: typing.Dict[str, str], _):
         """Method which looks out for certain phrases in the MOOSE log, and adds them to the Events log
 
@@ -127,12 +190,13 @@ class MooseRun(WrappedRun):
         sim_metadata : typing.Dict[str, str]
             The metadata about when this line was read by Multiparser
         """
-        metric_time = csv_data.pop('time')
+        metric_time = csv_data.pop('time', None)
+        metric_step = csv_data.pop('step', None)
 
         # Log all results for this timestep as Metrics
         self.log_metrics(
             csv_data,
-            step = self._step_num,
+            step = metric_step or self._step_num,
             time = metric_time,
             timestamp = sim_metadata['timestamp']
         )
@@ -202,6 +266,13 @@ class MooseRun(WrappedRun):
             parser_func = mp_tail_parser.record_csv,
             callback = self._per_metric_callback
         )
+        # Monitor each file created by a Vector PostProcessor, and upload results to Simvue if file matches an expected form.
+        self.file_monitor.track(
+            path_glob_exprs =  os.path.join(self.output_dir_path, f"{self.results_prefix}_*.csv"),
+            parser_func = self._vector_postprocessor_parser,
+            callback = self._per_metric_callback
+        )
+        
 
     def post_simulation(self):
         """Simvue commands which are ran after the MOOSE simulation finishes.
