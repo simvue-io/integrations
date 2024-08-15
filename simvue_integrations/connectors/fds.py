@@ -38,6 +38,7 @@ class FDSRun(WrappedRun):
                 match = pattern["pattern"].search(line)
                 if match:
                     if pattern["name"] == "step":
+                        self.log_event(match)
                         if _out_record:
                             _out_data += [_out_record]
                         _out_record = {}
