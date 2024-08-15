@@ -17,6 +17,18 @@ class FDSRun(WrappedRun):
 
     @mp_tail_parser.log_parser
     def _log_parser(self, file_data: str, **__) -> tuple[dict[str,typing.Any], list[dict[str, typing.Any]]]:
+        """Parses an FDS log file line by line as it is written, and extracts relevant information
+
+        Parameters
+        ----------
+        file_data : str
+            The next line of the log file
+
+        Returns
+        -------
+        tuple[dict[str,typing.Any], list[dict[str, typing.Any]]]
+            An (empty) dictionary of metadata, and a dictionary of metrics data extracted from the log
+        """
 
         _out_data = []
         _out_record = {}
@@ -46,23 +58,26 @@ class FDSRun(WrappedRun):
 
         return {}, _out_data
     
-    def _metrics_callback(self, data, meta):
-        if "time" in data and "step" in data:
-            mytime = data["time"]
-            mystep = data["step"]
-            del data["time"]
-            del data["step"]
-            self.log_metrics(
-                data, timestamp=meta["timestamp"], time=mytime, step=mystep
+    def _metrics_callback(self, data, meta): 
+        """Log metrics extracted from a log file to Simvue
+
+        Parameters
+        ----------
+        data : _type_
+            _description_
+        meta : _type_
+            _description_
+        """
+        metric_time = data.pop("time", None) or data.pop("Time", None)
+        metric_step = data.pop("step", None)
+        self.log_metrics(
+                data, timestamp=meta["timestamp"], time=metric_time, step=metric_step
             )
-        elif "Time" in data:
-            mytime = data["Time"]
-            del data["Time"]
-            self.log_metrics(data, timestamp=meta["timestamp"], time=mytime)
-        else:
-            self.log_metrics(data, timestamp=meta["timestamp"])
+            
 
     def pre_simulation(self):
+        """Starts the FDS process using a bash script to set `fds_unlim` if on Linux
+        """
         super().pre_simulation()
         self.log_event("Starting FDS simulation")
 
@@ -80,6 +95,8 @@ class FDSRun(WrappedRun):
         )
     
     def during_simulation(self):
+        """Describes which files should be monitored during the simulation by Multiparser
+        """
         # Upload data from input file as metadata
         self.file_monitor.track(
             path_glob_exprs=str(self.fds_input_file_path),
@@ -106,10 +123,17 @@ class FDSRun(WrappedRun):
         )
 
     def post_simulation(self):
+        """Uploads files selected by user to Simvue for storage.
+        """
         self.log_event("FDS simulation complete!")
         self.update_metadata(self._activation_times_data)
 
-        if self.upload_files:
+        if self.upload_files is None:
+            for file in glob.glob(f"{self._results_prefix}*"):
+                if os.path.abspath(file) == os.path.abspath(self.fds_input_file_path):
+                    continue
+                self.save_file(file, "output")
+        else:
             if self.workdir_path:
                 self.upload_files = [str(os.path.join(self.workdir_path, path)) for path in self.upload_files]
             
@@ -118,11 +142,6 @@ class FDSRun(WrappedRun):
                     if os.path.abspath(file) == os.path.abspath(self.fds_input_file_path):
                         continue
                     self.save_file(file, "output")
-        else:
-            for file in glob.glob(f"{self._results_prefix}*"):
-                if os.path.abspath(file) == os.path.abspath(self.fds_input_file_path):
-                    continue
-                self.save_file(file, "output")
 
 
     @pydantic.validate_call
@@ -134,6 +153,26 @@ class FDSRun(WrappedRun):
         ulimit: typing.Union[str, int] = "unlimited",
         fds_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None
         ):
+        """Command to launch the FDS simulation and track it with Simvue.
+
+        Parameters
+        ----------
+        fds_input_file_path : pydantic.FilePath
+            Path to the FDS input file to use in the simulation
+        workdir_path : str, optional
+            Path to a directory which you would like FDS to run in, by default None
+            This is where FDS will generate the results from the simulation
+            If a directory does not already exist at this path, it will be created
+            Uses the current working directory by default.
+        upload_files : list[str], optional
+            List of results file names to upload to the Simvue server for storage, by default None
+            These should be supplied as relative to the working directory specified above (if specified, otherwise relative to cwd)
+            If not specified, will upload all files by default. If you want no results files to be uploaded, provide an empty list.
+        ulimit : typing.Union[str, int], optional
+            Value to set your stack size to (for Linux and MacOS), by default "unlimited"
+        fds_env_vars : typing.Optional[typing.Dict[str, typing.Any]], optional
+            Environment variables to provide to FDS when executed, by default None
+        """
         self.fds_input_file_path = fds_input_file_path
         self.workdir_path = workdir_path
         self.upload_files = upload_files
@@ -141,7 +180,10 @@ class FDSRun(WrappedRun):
         self.fds_env_vars = fds_env_vars or {}
 
         self._patterns = [
-            {"pattern": re.compile(r"\s+Time\sStep\s+(\d+).*"), "name": "step"},
+            {
+                "pattern": re.compile(r"\s+Time\sStep\s+(\d+).*"), 
+                "name": "step"
+            },
             {
                 "pattern": re.compile(r"\s+Step\sSize:.*Total\sTime:\s+([\d\.]+)\ss.*"),
                 "name": "time",
