@@ -45,7 +45,7 @@ class FDSRun(WrappedRun):
                     _out_record[pattern["name"]] = match.group(1)
                     
                     if pattern["name"] == "time":
-                        self.log_event(f"Time Step: {_out_record['step']}, Simulation Time: {_out_record['time']} ")
+                        self.log_event(f"Time Step: {_out_record['step']}, Simulation Time: {_out_record['time']} s")
 
             if 'DEVICE Activation Times' in line:
                 self._activation_times = True
