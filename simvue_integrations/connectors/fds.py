@@ -38,11 +38,14 @@ class FDSRun(WrappedRun):
                 match = pattern["pattern"].search(line)
                 if match:
                     if pattern["name"] == "step":
-                        self.log_event(match)
                         if _out_record:
                             _out_data += [_out_record]
                         _out_record = {}
+                        
                     _out_record[pattern["name"]] = match.group(1)
+                    
+                    if pattern["name"] == "time":
+                        self.log_event(f"Time Step: {_out_record['step']}, Simulation Time: {_out_record['time']} ")
 
             if 'DEVICE Activation Times' in line:
                 self._activation_times = True
@@ -61,13 +64,6 @@ class FDSRun(WrappedRun):
     
     def _metrics_callback(self, data, meta): 
         """Log metrics extracted from a log file to Simvue
-
-        Parameters
-        ----------
-        data : _type_
-            _description_
-        meta : _type_
-            _description_
         """
         metric_time = data.pop("time", None) or data.pop("Time", None)
         metric_step = data.pop("step", None)
