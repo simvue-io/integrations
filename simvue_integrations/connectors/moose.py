@@ -8,54 +8,8 @@ import time
 import re
 import csv
 from simvue_integrations.connectors.generic import WrappedRun
-from simvue_integrations.extras.create_command import format_command_env_vars
-
-# TODO: Temp, shouldnt need when decorator works
-import datetime
-import platform
-
-@mp_file_parser.file_parser
-def _moose_header_parser(
-    input_file: str,
-    **_) -> typing.Dict[str, str]:
-    """Method which parses the header of the MOOSE log file and returns the data from it as a dictionary.
-
-    Parameters
-    ----------
-    input_file : str
-        The path to the file where the console log is stored.
-
-    Returns
-    -------
-    typing.Dict[str, str]
-        The parsed data from the header of the MOOSE log file
-    """
-    # Open the log file, and read header lines (which contains information about the MOOSE version used etc)
-    with open(input_file) as file:
-        file_lines = file.readlines()
-    file_lines = list(filter(None, file_lines))
-
-    # Add the data from each line of the header into a dictionary as a key/value pair
-    header_data = {}
-    for line in file_lines:
-        # Ignore blank lines and lines which don't contain a colon
-        if not line.strip() or ":" not in line:
-            continue
-        key, value = line.split(":", 1)
-        key = key.strip()
-        key = key.replace(" ","_").lower()
-        # Replace any characters which will fail server side validation of key name with dashes
-        key = re.sub('[^\w\-\s\.]+', '-', key)
-        # Ignore lines which correspond to 'titles'
-        if not value:
-            continue
-        value = value.strip()
-        if not value:
-            continue
-        header_data[key] = value
-
-    return {}, header_data        
-
+from simvue_integrations.extras.create_command import format_command_env_vars   
+            
 class MooseRun(WrappedRun):
     """Class for setting up Simvue tracking and monitoring of a MOOSE simulation.
 
@@ -67,12 +21,54 @@ class MooseRun(WrappedRun):
         )
         run.launch(...)
     """
-    #TODO: Ask Kristian why this decorator doesnt work when used on a method
-    #@mp_tail_parser.log_parser
-    def _vector_postprocessor_parser(
+    @mp_file_parser.file_parser
+    def _moose_header_parser(
         self,
         input_file: str,
         **__) -> typing.Dict[str, str]:
+        """Method which parses the header of the MOOSE log file and returns the data from it as a dictionary.
+
+        Parameters
+        ----------
+        input_file : str
+            The path to the file where the console log is stored.
+
+        Returns
+        -------
+        typing.Dict[str, str]
+            The parsed data from the header of the MOOSE log file
+        """
+        # Open the log file, and read header lines (which contains information about the MOOSE version used etc)
+        with open(input_file) as file:
+            file_lines = file.readlines()
+        file_lines = list(filter(None, file_lines))
+
+        # Add the data from each line of the header into a dictionary as a key/value pair
+        header_data = {}
+        for line in file_lines:
+            # Ignore blank lines and lines which don't contain a colon
+            if not line.strip() or ":" not in line:
+                continue
+            key, value = line.split(":", 1)
+            key = key.strip()
+            key = key.replace(" ","_").lower()
+            # Replace any characters which will fail server side validation of key name with dashes
+            key = re.sub('[^\w\-\s\.]+', '-', key)
+            # Ignore lines which correspond to 'titles'
+            if not value:
+                continue
+            value = value.strip()
+            if not value:
+                continue
+            header_data[key] = value
+
+        return {}, header_data
+    @mp_file_parser.file_parser
+    def _vector_postprocessor_parser(
+        self,
+        input_file: str,
+        **__,
+        ) -> typing.Dict[str, str]:
         """Parser for reading data from VectorPostProcessor CSV files
 
         Parameters
@@ -85,15 +81,6 @@ class MooseRun(WrappedRun):
         typing.Dict[str, str]
             A dictionary of metadata and data contained in the CSV file
         """
-        
-        # TODO: Temp, shouldnt need this when the decorator works
-        _meta_data: typing.Dict[str, str] = {
-            "timestamp": datetime.datetime.fromtimestamp(
-                os.path.getmtime(input_file)
-            ).strftime("%Y-%m-%d %H:%M:%S.%f"),
-            "hostname": platform.node(),
-            "file_name": input_file,
-        }
         metrics = {}
         # Get name of vector which is being calculated by VectorPostProcessor from filename
         file_name = os.path.basename(input_file)
@@ -121,8 +108,8 @@ class MooseRun(WrappedRun):
                     metrics.update({f"{vector_name}.{key}.r={radius}":value for (key, value) in csv_data.items()})
                 elif (x := csv_data.pop('x', None)) is not None and (y := csv_data.pop('y', None)) is not None and (z := csv_data.pop('z', None)) is not None:
                     metrics.update({f"{vector_name}.{key}.x={x}_y={y}_z={z}":value for (key, value) in csv_data.items()})
-                
-        return _meta_data, metrics
+                    
+        return {}, metrics
     
     def _per_event_callback(self, log_data: typing.Dict[str, str], _):
         """Method which looks out for certain phrases in the MOOSE log, and adds them to the Events log
@@ -255,7 +242,7 @@ class MooseRun(WrappedRun):
         self.file_monitor.track(
             path_glob_exprs = os.path.join(self.output_dir_path, f"{self.results_prefix}.txt"),
             callback = lambda header_data, metadata: self.update_metadata({**header_data, **metadata}), 
-            parser_func = _moose_header_parser, 
+            parser_func = self._moose_header_parser, 
             static = True,
         )
         # Monitor each line added to the MOOSE log file as the simulation proceeds and look out for certain phrases to upload to Simvue
@@ -271,11 +258,13 @@ class MooseRun(WrappedRun):
             parser_func = mp_tail_parser.record_csv,
             callback = self._per_metric_callback
         )
+        self.file_monitor.exclude(os.path.join(self.output_dir_path, f"{self.results_prefix}_*_time.csv"))
         # Monitor each file created by a Vector PostProcessor, and upload results to Simvue if file matches an expected form.
         self.file_monitor.track(
             path_glob_exprs =  os.path.join(self.output_dir_path, f"{self.results_prefix}_*.csv"),
             parser_func = self._vector_postprocessor_parser,
-            callback = self._per_metric_callback
+            callback = self._per_metric_callback,
+            static=True
         )
 
     def post_simulation(self):
