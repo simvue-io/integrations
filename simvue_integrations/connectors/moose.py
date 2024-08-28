@@ -84,10 +84,10 @@ class MooseRun(WrappedRun):
         if "time_step" in log_data.keys():
             self._time = time.time()
 
-            step_time = re.search(r"Time Step (\d+), time = (\d+)", log_data["time_step"])
+            step_time = re.search(r"Time Step (\d+), time = (\d+), dt = .*", log_data["time_step"])
             if step_time:
                 self._step_num = int(step_time.group(1))
-                self._step_time = int(step_time.group(2))
+                self._step_time = float(step_time.group(2))
         
         elif "converged" in log_data.keys():
             self.log_event(f" Step calculation time: {round((time.time() - self._time), 2)} seconds.")
