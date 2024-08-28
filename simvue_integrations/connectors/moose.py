@@ -95,7 +95,7 @@ class MooseRun(WrappedRun):
                 metrics['time'] = current_time_data[0]
                 metrics['step'] = current_time_data[1]
         else:
-            metrics['step'] = int(serial_num)
+            metrics['step'] = int(serial_num.split(".")[0])
             
         with open(input_file, newline="") as in_f:
             read_csv = csv.DictReader(in_f)
