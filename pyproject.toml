@@ -9,7 +9,7 @@ include = ["extras/fds_unlim"]
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
 simvue = { git = "https://github.com/simvue-io/client.git", branch = "dev" }
-ukaea-multiparser = "^1.0.1"
+ukaea-multiparser = "^1.0.2"
 tensorflow = {version="^2.16.1", optional=true}
 mnist = {version="^0.2.2", optional=true}
 f90nml = {version = "^1.4.3", optional = true}
