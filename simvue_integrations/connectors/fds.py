@@ -16,12 +16,12 @@ from simvue_integrations.connectors.generic import WrappedRun
 class FDSRun(WrappedRun):
 
     @mp_tail_parser.log_parser
-    def _log_parser(self, file_data: str, **__) -> tuple[dict[str,typing.Any], list[dict[str, typing.Any]]]:
+    def _log_parser(self, file_content: str, **__) -> tuple[dict[str,typing.Any], list[dict[str, typing.Any]]]:
         """Parses an FDS log file line by line as it is written, and extracts relevant information
 
         Parameters
         ----------
-        file_data : str
+        file_content : str
             The next line of the log file
 
         Returns
@@ -33,7 +33,7 @@ class FDSRun(WrappedRun):
         _out_data = []
         _out_record = {}
 
-        for line in file_data.split("\n"):
+        for line in file_content.split("\n"):
             for pattern in self._patterns:
                 match = pattern["pattern"].search(line)
                 if match:
