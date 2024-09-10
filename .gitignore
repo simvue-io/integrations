@@ -1,3 +1,6 @@
 simvue.ini
 __pycache__/
 *.pyc
+activate_vents*
+*.out
+*.err
