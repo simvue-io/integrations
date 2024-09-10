@@ -1,3 +1,4 @@
+import simvue
 import typing
 import platform
 import pathlib
@@ -140,7 +141,7 @@ class FDSRun(WrappedRun):
                         continue
                     self.save_file(file, "output")
 
-
+    @simvue.utilities.prettify_pydantic
     @pydantic.validate_call
     def launch(
         self, 
