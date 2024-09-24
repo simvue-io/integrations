@@ -1,3 +1,13 @@
+"""
+SU2 Simvue run
+==============
+
+Contains a class for creating an SU2 based simulation under Simvue.
+
+"""
+__author__ = "Kristian Zarebski <kristian.zarebski@ukea.uk>"
+__date__ = "2024-09-23"
+
 import typing
 import os
 import pathlib
@@ -20,6 +30,11 @@ METADATA_ATTRS: list[str] = [
 
 
 class SU2Run(WrappedRun):
+    """SU2 Simvue tracked Simulation
+
+    This is a wrapper to the Simvue Run class for initialising and
+    executing simulations using the SU2 framework.
+    """
     configuration_file: typing.Optional[pathlib.Path] = None
     mesh_file: typing.Optional[pathlib.Path] = None
     workdir_path: pathlib.Path = pathlib.Path.cwd()
@@ -27,6 +42,7 @@ class SU2Run(WrappedRun):
     binary_dir: typing.Optional[pathlib.Path] = None
 
     def pre_simulation(self) -> None:
+        """Define and execute the SU2 simulation process"""
         super().pre_simulation()
         self.log_event("Starting SU2 simulation")
         self.save_file(self.mesh_file, "input")
@@ -96,7 +112,8 @@ class SU2Run(WrappedRun):
 
         super().launch()
 
-    def during_simulation(self):
+    def during_simulation(self) -> None:
+        """Define tracked and tailed files for monitoring with Multiparser"""
         self.file_monitor.track(
             path_glob_exprs=[f"{self.configuration_file}"],
             parser_func=self.metadata_parser,
@@ -122,6 +139,7 @@ class SU2Run(WrappedRun):
     def metadata_parser(
         self, input_file: str, **_
     ) -> tuple[dict[str, typing.Any], dict[str, typing.Any]]:
+        """Define parser used to record simulation metadata"""
         metadata = {}
         with open(input_file) as in_csv:
             file_content = in_csv.read()
@@ -129,6 +147,6 @@ class SU2Run(WrappedRun):
         for line in file_content.splitlines():
             for attr in METADATA_ATTRS:
                 if line.startswith(attr):
-                    metadata[attr] = line.split("%s= " % attr)[1].strip()
+                    metadata[f"su2.{attr.lower()}"] = line.split("%s= " % attr)[1].strip()
         return {}, metadata
 
