@@ -71,7 +71,11 @@ class FDSRun(WrappedRun):
         self.log_metrics(
                 data, timestamp=meta["timestamp"], time=metric_time, step=metric_step
             )
-            
+        
+    def _ctrl_log_callback(self, data, meta):
+        self.update_metadata(
+            {data["Value"]: bool(data["State"])}
+        )   
 
     def pre_simulation(self):
         """Starts the FDS process using a bash script to set `fds_unlim` if on Linux
@@ -119,6 +123,10 @@ class FDSRun(WrappedRun):
             parser_kwargs={"header_pattern": "Time"},
             callback=self._metrics_callback
         )
+        self.file_monitor.tail(
+            path_glob_exprs=f"{self._results_prefix}_devc_ctrl_log.csv",
+            parser_func=mp_tail_parser.record_csv,
+            callback=lambda data, meta: self.update_metadata({data["ID"]: bool(data["State"])})
 
     def post_simulation(self):
         """Uploads files selected by user to Simvue for storage.
