@@ -73,9 +73,12 @@ class FDSRun(WrappedRun):
             )
         
     def _ctrl_log_callback(self, data, meta):
-        self.update_metadata(
-            {data["Value"]: bool(data["State"])}
-        )   
+        event_str = f"{data['Type']} '{data['ID']}' has been set to '{bool(data['State'])}' at time {data['Time (s)']}s"
+        if data.get('Value'):
+            event_str += f", when it reached a value of {data['Value']}{data.get('Units', '')}."
+
+        self.log_event(event_str)
+        self.update_metadata({data["ID"]: bool(data["State"])})
 
     def pre_simulation(self):
         """Starts the FDS process using a bash script to set `fds_unlim` if on Linux
@@ -126,7 +129,8 @@ class FDSRun(WrappedRun):
         self.file_monitor.tail(
             path_glob_exprs=f"{self._results_prefix}_devc_ctrl_log.csv",
             parser_func=mp_tail_parser.record_csv,
-            callback=lambda data, meta: self.update_metadata({data["ID"]: bool(data["State"])})
+            callback=self._ctrl_log_callback
+        )
 
     def post_simulation(self):
         """Uploads files selected by user to Simvue for storage.
