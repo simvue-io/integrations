@@ -73,12 +73,19 @@ class FDSRun(WrappedRun):
             )
         
     def _ctrl_log_callback(self, data, meta):
-        event_str = f"{data['Type']} '{data['ID']}' has been set to '{bool(data['State'])}' at time {data['Time (s)']}s"
+        if data['State'].lower() == 'f':
+            state = False
+        elif data['State'].lower() == 't':
+            state = True
+        else:
+            state = data['State']
+            
+        event_str = f"{data['Type']} '{data['ID']}' has been set to '{state}' at time {data['Time (s)']}s"
         if data.get('Value'):
             event_str += f", when it reached a value of {data['Value']}{data.get('Units', '')}."
 
         self.log_event(event_str)
-        self.update_metadata({data["ID"]: bool(data["State"])})
+        self.update_metadata({data["ID"]: state})
 
     def pre_simulation(self):
         """Starts the FDS process using a bash script to set `fds_unlim` if on Linux
