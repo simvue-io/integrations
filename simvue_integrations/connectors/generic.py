@@ -16,7 +16,13 @@ class WrappedRun(simvue.Run):
         mode: typing.Literal["online", "offline", "disabled"] = "online",
         abort_callback: typing.Optional[typing.Callable[[], None]] = None,
     ):
+        """
+        Initialize the WrappedRun instance, extending the user supplied alert abort callback.
+        """
         def _extended_abort_callback(self):
+            """
+            Extends the user supplied abort alert callback to allow for the soft stop of simulations.
+            """
             if abort_callback:
                 abort_callback(self)
             self._soft_abort()
@@ -24,6 +30,11 @@ class WrappedRun(simvue.Run):
         super().__init__(mode=mode, abort_callback=_extended_abort_callback)
         
     def _soft_abort(self):
+        """
+        How to stop simluations from running safely when an abort is triggered.
+        By default, kills the process associated with the simulation, then stops the file monitor using _trigger.
+        The Run will then proceed to run the code in `post_simulation`, and then close as normal.
+        """
         self.kill_all_processes()
         self._trigger.set()
         
@@ -46,7 +57,11 @@ class WrappedRun(simvue.Run):
         pass
 
     def post_simulation(self):
-        """Method which runs after launch() is called and after the simulation finishes."""
+        """Method which runs after launch() is called and after the simulation finishes.
+        
+        By default, checks whether an abort has been caused by an alert, and if so prints a message and sets
+        the run to the terminated state. This method should be called AFTER the rest of your functions in the overriden method.
+        """
         if self._alert_raised_trigger.is_set():
             self.log_event("Simulation aborted due to an alert being triggered.")
             self.set_status("terminated")

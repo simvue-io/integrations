@@ -16,7 +16,9 @@ from simvue_integrations.connectors.generic import WrappedRun
 class FDSRun(WrappedRun):
     
     def _soft_abort(self):
-        # Create stop file in results directory
+        """
+        If an abort is triggered, creates a '.stop' file so that FDS simulation is stopped gracefully.
+        """
         if not os.path.exists(f"{self._results_prefix}.stop"):
             with open(f"{self._results_prefix}.stop", 'w') as stop_file:
                 stop_file.write("FDS simulation aborted due to Simvue Alert.")
