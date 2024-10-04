@@ -9,12 +9,21 @@ import re
 import os
 import f90nml
 import shutil
-
 import multiparser.parsing.tail as mp_tail_parser
 
 from simvue_integrations.connectors.generic import WrappedRun
 
 class FDSRun(WrappedRun):
+    
+    def _soft_abort(self):
+        """
+        If an abort is triggered, creates a '.stop' file so that FDS simulation is stopped gracefully.
+        """
+        if not os.path.exists(f"{self._results_prefix}.stop"):
+            with open(f"{self._results_prefix}.stop", 'w') as stop_file:
+                stop_file.write("FDS simulation aborted due to Simvue Alert.")
+                stop_file.close()
+        
 
     @mp_tail_parser.log_parser
     def _log_parser(self, file_content: str, **__) -> tuple[dict[str,typing.Any], list[dict[str, typing.Any]]]:
@@ -142,7 +151,6 @@ class FDSRun(WrappedRun):
     def post_simulation(self):
         """Uploads files selected by user to Simvue for storage.
         """
-        self.log_event("FDS simulation complete!")
         self.update_metadata(self._activation_times_data)
 
         if self.upload_files is None:
@@ -159,7 +167,9 @@ class FDSRun(WrappedRun):
                     if os.path.abspath(file) == os.path.abspath(self.fds_input_file_path):
                         continue
                     self.save_file(file, "output")
-
+                    
+        super().post_simulation()
+            
     @simvue.utilities.prettify_pydantic
     @pydantic.validate_call
     def launch(

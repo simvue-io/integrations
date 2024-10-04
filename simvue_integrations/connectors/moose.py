@@ -272,7 +272,9 @@ class MooseRun(WrappedRun):
         """
         if os.path.exists(os.path.join(self.output_dir_path, f"{self.results_prefix}.e")):
             self.save_file(os.path.join(self.output_dir_path, f"{self.results_prefix}.e"), "output")
-    
+            
+        super().post_simulation()
+            
     @simvue.utilities.prettify_pydantic
     @pydantic.validate_call
     def launch(
