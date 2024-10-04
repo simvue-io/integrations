@@ -9,9 +9,6 @@ import re
 import os
 import f90nml
 import shutil
-client = simvue.Client()
-
-client.get_artifact_as_file()
 import multiparser.parsing.tail as mp_tail_parser
 
 from simvue_integrations.connectors.generic import WrappedRun
