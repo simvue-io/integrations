@@ -50,6 +50,7 @@ class WrappedRun(simvue.Run):
             self._error("Run must be initialized before launching the simulation.")
             return False
         
+        # Uses 'ignore' so that on abort, run is not closed before post_simulation is run.
         self._abort_on_alert = "ignore"
 
     def during_simulation(self):
