@@ -273,11 +273,7 @@ class MooseRun(WrappedRun):
         if os.path.exists(os.path.join(self.output_dir_path, f"{self.results_prefix}.e")):
             self.save_file(os.path.join(self.output_dir_path, f"{self.results_prefix}.e"), "output")
             
-        if self._alert_raised_trigger.is_set():
-            self.log_event("MOOSE Simulation aborted due to an alert.")
-            self.set_status("terminated")
-        else:
-            self.log_event("MOOSE Simulation Complete!")
+        super().post_simulation()
             
     @simvue.utilities.prettify_pydantic
     @pydantic.validate_call

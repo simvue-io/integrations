@@ -2,6 +2,7 @@ import simvue
 import multiparser
 import multiprocessing
 import os
+import click
 import typing
 class WrappedRun(simvue.Run):
     """Generic wrapper to the Run class which can be used to build Connectors to non-python applications.
@@ -46,8 +47,16 @@ class WrappedRun(simvue.Run):
 
     def post_simulation(self):
         """Method which runs after launch() is called and after the simulation finishes."""
-        if self._alert_raised_trigger:
-            return
+        if self._alert_raised_trigger.is_set():
+            self.log_event("Simulation aborted due to an alert being triggered.")
+            self.set_status("terminated")
+            click.secho(
+                "[simvue] Run was aborted.",
+                fg="red" if self._term_color else None,
+                bold=self._term_color,
+            )
+        else:
+            self.log_event("Simulation Complete!")
 
     def launch(self):
         """Method which launches the simulation and the monitoring.

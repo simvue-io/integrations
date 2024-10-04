@@ -183,11 +183,7 @@ class OpenfoamRun(WrappedRun):
         result_dirs = [dir_name for dir_name in os.listdir(self.openfoam_case_dir) if reg_exp.match(dir_name)]
         self._save_directory(result_dirs, "results.zip", "output")   
         
-        if self._alert_raised_trigger.is_set():
-            self.log_event("OpenFOAM Simulation aborted due to an alert.")
-            self.set_status("terminated")
-        else:
-            self.log_event("OpenFOAM Simulation Complete!")
+        super().post_simulation()
     
     @simvue.utilities.prettify_pydantic
     @pydantic.validate_call
