@@ -18,6 +18,9 @@ f90nml = {version = "^1.4.3", optional = true}
 tensorflow = ["tensorflow", "mnist"]
 fds = ["f90nml"]
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.3"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
