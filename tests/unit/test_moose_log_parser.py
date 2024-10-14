@@ -9,8 +9,7 @@ from unittest.mock import patch
 import uuid
 import pathlib
 
-def mock_moose_process(self):
-    self._trigger = multiprocessing.Event()
+def mock_moose_process(self, *_, **__):
     temp_logfile = tempfile.NamedTemporaryFile(mode="w",prefix="moose_test_", suffix=".txt", buffering=1)
     self.results_prefix = temp_logfile.name.split(".")[0]
     def write_to_log():
@@ -26,7 +25,7 @@ def mock_moose_process(self):
     thread = threading.Thread(target=write_to_log)
     thread.start()
     
-@patch.object(MooseRun, 'pre_simulation', mock_moose_process)
+@patch.object(MooseRun, 'add_process', mock_moose_process)
 def test_moose_header_parser(folder_setup):    
     name = 'test_moose_header_parser-%s' % str(uuid.uuid4())
     with MooseRun() as run:
