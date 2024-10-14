@@ -14,12 +14,11 @@ def mock_moose_process(self):
     temp_logfile = tempfile.NamedTemporaryFile(mode="w",prefix="moose_test_", suffix=".txt", buffering=1)
     self.results_prefix = temp_logfile.name.split(".")[0]
     def write_to_log():
-        print("here")
         log_file = pathlib.Path(__file__).parent.joinpath("example_data/moose_log.txt").open("r")
         for line in log_file:
             temp_logfile.write(line)
-            print(line)
             time.sleep(0.01)
+        temp_logfile.flush()
         time.sleep(1)
         temp_logfile.close()
         self._trigger.set()
@@ -41,11 +40,15 @@ def test_moose_header_parser(folder_setup):
         )
            
     client = simvue.Client()
+    # Check messages correctly extracted from log and added as events
     events = client.get_events(run_id)
     assert events[2]["message"] == "Time Step 1, time = 1, dt = 1"
     assert events[3]["message"] == " Solve Converged!"
     assert events[5]["message"] == " Total Nonlinear Iterations: 3."
     assert events[6]["message"] == " Total Linear Iterations: 112."
+    
+    # Check that total linear and nonlinear events from each step uploaded as metrics
+    # Correct answers calculated manually from log file
     metrics = client.get_metric_values(metric_names=["total_linear_iterations", "total_nonlinear_iterations"], run_ids=[run_id,], output_format="dict", xaxis="step")
     assert list(metrics['total_linear_iterations'].values()) == [112.0, 107.0]
     assert list(metrics['total_nonlinear_iterations'].values()) == [3.0, 3.0]
