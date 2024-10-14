@@ -102,10 +102,10 @@ class MooseRun(WrappedRun):
         
             for csv_data in read_csv:
                 if self.track_vector_positions == False:
-                    csv_data.pop('x')
-                    csv_data.pop('y')
-                    csv_data.pop('z')
-                    csv_data.pop('radius')
+                    csv_data.pop('x', None)
+                    csv_data.pop('y'), None
+                    csv_data.pop('z', None)
+                    csv_data.pop('radius', None)
                     
                 if _id := csv_data.pop('id', None):
                     metrics.update({f"{vector_name}.{key}.{_id}":value for (key, value) in csv_data.items()})
