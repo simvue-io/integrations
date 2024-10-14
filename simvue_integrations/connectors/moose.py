@@ -255,12 +255,13 @@ class MooseRun(WrappedRun):
         )
         self.file_monitor.exclude(os.path.join(self.output_dir_path, f"{self.results_prefix}_*_time.csv"))
         # Monitor each file created by a Vector PostProcessor, and upload results to Simvue if file matches an expected form.
-        self.file_monitor.track(
-            path_glob_exprs =  os.path.join(self.output_dir_path, f"{self.results_prefix}_*.csv"),
-            parser_func = self._vector_postprocessor_parser,
-            callback = self._per_metric_callback,
-            static=True
-        )
+        if self.track_vector_postprocessors:
+            self.file_monitor.track(
+                path_glob_exprs =  os.path.join(self.output_dir_path, f"{self.results_prefix}_*.csv"),
+                parser_func = self._vector_postprocessor_parser,
+                callback = self._per_metric_callback,
+                static=True
+            )
 
     def post_simulation(self):
         """Simvue commands which are ran after the MOOSE simulation finishes.
@@ -276,6 +277,7 @@ class MooseRun(WrappedRun):
         moose_file_path: pydantic.FilePath,
         output_dir_path: str, # as this might not exist yet
         results_prefix: str,
+        track_vector_postprocessors: bool = False,
         run_in_parallel: bool = False,
         num_processors: int = 1,
         mpiexec_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None,
@@ -299,6 +301,7 @@ class MooseRun(WrappedRun):
         self.moose_file_path = moose_file_path
         self.output_dir_path = output_dir_path
         self.results_prefix = results_prefix
+        self.track_vector_postprocessors = track_vector_postprocessors
         self.run_in_parallel = run_in_parallel
         self.num_processors = num_processors
         self.mpiexec_env_vars = mpiexec_env_vars or {}
