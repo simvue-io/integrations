@@ -36,7 +36,7 @@ def test_moose_header_parser(folder_setup):
         run.launch(
             moose_application_path=pathlib.Path(__file__),
             moose_file_path=pathlib.Path(__file__),
-            output_dir_path=f"/tmp/", # as this might not exist yet
+            output_dir_path=f"/tmp/",
             results_prefix="overwritten_in_mocker",
         )
            

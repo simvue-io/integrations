@@ -278,6 +278,7 @@ class MooseRun(WrappedRun):
         output_dir_path: str, # as this might not exist yet
         results_prefix: str,
         track_vector_postprocessors: bool = False,
+        track_vector_positions: bool = False,
         run_in_parallel: bool = False,
         num_processors: int = 1,
         mpiexec_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None,
@@ -296,12 +297,16 @@ class MooseRun(WrappedRun):
         moose_env_vars : typing.Optional[typing.Dict[str, typing.Any]], optional
             Any environment variables to be passed to MOOSE on startup, by default None
         """
+        
+        if track_vector_positions and not track_vector_postprocessors:
+            raise ValueError("Vector positions can only be tracked if vector postprocessor tracking is enabled.")
 
         self.moose_application_path = moose_application_path
         self.moose_file_path = moose_file_path
         self.output_dir_path = output_dir_path
         self.results_prefix = results_prefix
         self.track_vector_postprocessors = track_vector_postprocessors
+        self.track_vector_positions = track_vector_positions
         self.run_in_parallel = run_in_parallel
         self.num_processors = num_processors
         self.mpiexec_env_vars = mpiexec_env_vars or {}
