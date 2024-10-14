@@ -101,6 +101,12 @@ class MooseRun(WrappedRun):
             read_csv = csv.DictReader(in_f)
         
             for csv_data in read_csv:
+                if self.track_vector_positions == False:
+                    csv_data.pop('x')
+                    csv_data.pop('y')
+                    csv_data.pop('z')
+                    csv_data.pop('r')
+                    
                 if _id := csv_data.pop('id', None):
                     metrics.update({f"{vector_name}.{key}.{_id}":value for (key, value) in csv_data.items()})
                     
