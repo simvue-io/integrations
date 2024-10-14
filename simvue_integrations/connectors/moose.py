@@ -101,13 +101,8 @@ class MooseRun(WrappedRun):
             read_csv = csv.DictReader(in_f)
         
             for csv_data in read_csv:
-                # Remove 'id' parameter if it exists, since we don't need it
-                csv_data.pop('id', None)
-                
-                if radius := csv_data.pop('radius', None):
-                    metrics.update({f"{vector_name}.{key}.r={radius}":value for (key, value) in csv_data.items()})
-                elif (x := csv_data.pop('x', None)) is not None and (y := csv_data.pop('y', None)) is not None and (z := csv_data.pop('z', None)) is not None:
-                    metrics.update({f"{vector_name}.{key}.x={x}_y={y}_z={z}":value for (key, value) in csv_data.items()})
+                if _id := csv_data.pop('id', None):
+                    metrics.update({f"{vector_name}.{key}.{_id}":value for (key, value) in csv_data.items()})
                     
         return {}, metrics
     
