@@ -105,7 +105,7 @@ class MooseRun(WrappedRun):
                     csv_data.pop('x')
                     csv_data.pop('y')
                     csv_data.pop('z')
-                    csv_data.pop('r')
+                    csv_data.pop('radius')
                     
                 if _id := csv_data.pop('id', None):
                     metrics.update({f"{vector_name}.{key}.{_id}":value for (key, value) in csv_data.items()})
