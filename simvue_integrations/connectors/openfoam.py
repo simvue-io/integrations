@@ -129,7 +129,7 @@ class OpenfoamRun(WrappedRun):
                 if key == 'exec':
                     current_process = value
                 else:
-                    header_metadata[key] = value
+                    header_metadata[f"openfoam.{key}"] = value
 
             # Log events for any initial solver info
             if solver_info and line:
