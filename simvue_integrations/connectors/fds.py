@@ -231,13 +231,13 @@ class FDSRun(WrappedRun):
                 "pattern": re.compile(
                     r"\s+Max\sdivergence:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
                 ),
-                "name": "min_divergence",
+                "name": "max_divergence",
             },
             {
                 "pattern": re.compile(
                     r"\s+Min\sdivergence:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
                 ),
-                "name": "max_divergence",
+                "name": "min_divergence",
             },
             {
                 "pattern": re.compile(
