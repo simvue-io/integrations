@@ -11,7 +11,6 @@ import pathlib
 import shutil
 
 def mock_vector_postprocessor(self):
-    self._trigger = multiprocessing.Event()
     def write_to_vector_pp():
         _timefile_lines = pathlib.Path(__file__).parent.joinpath("example_data", "moose_temps_time.csv").open("r").readlines()
         _timefile = pathlib.Path(self.output_dir_path).joinpath("moose_temps_time.csv").open("w", buffering=1)
@@ -26,7 +25,7 @@ def mock_vector_postprocessor(self):
     thread = threading.Thread(target=write_to_vector_pp)
     thread.start()
 
-@patch.object(MooseRun, 'pre_simulation', mock_vector_postprocessor)
+@patch.object(MooseRun, 'add_process', mock_vector_postprocessor)
 def test_moose_vectorpostprocessor_parser_no_positions(folder_setup):    
     name = 'test_moose_vectorpostprocessor_parser-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="moose_test")
