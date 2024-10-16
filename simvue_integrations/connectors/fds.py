@@ -1,3 +1,4 @@
+import simvue
 import typing
 import platform
 import pathlib
@@ -99,6 +100,21 @@ class FDSRun(WrappedRun):
                     _output_metadata[key] = search_res[0]
 
         return {}, _output_metadata
+        
+    def _ctrl_log_callback(self, data, meta):
+        if data['State'].lower() == 'f':
+            state = False
+        elif data['State'].lower() == 't':
+            state = True
+        else:
+            state = data['State']
+            
+        event_str = f"{data['Type']} '{data['ID']}' has been set to '{state}' at time {data['Time (s)']}s"
+        if data.get('Value'):
+            event_str += f", when it reached a value of {data['Value']}{data.get('Units', '')}."
+
+        self.log_event(event_str)
+        self.update_metadata({data["ID"]: state})
 
     def pre_simulation(self):
         """Starts the FDS process using a bash script to set `fds_unlim` if on Linux
@@ -153,6 +169,11 @@ class FDSRun(WrappedRun):
             parser_kwargs={"header_pattern": "Time"},
             callback=self._metrics_callback
         )
+        self.file_monitor.tail(
+            path_glob_exprs=f"{self._results_prefix}_devc_ctrl_log.csv",
+            parser_func=mp_tail_parser.record_csv,
+            callback=self._ctrl_log_callback
+        )
 
     def post_simulation(self):
         """Uploads files selected by user to Simvue for storage.
@@ -175,7 +196,7 @@ class FDSRun(WrappedRun):
                         continue
                     self.save_file(file, "output")
 
-
+    @simvue.utilities.prettify_pydantic
     @pydantic.validate_call
     def launch(
         self, 

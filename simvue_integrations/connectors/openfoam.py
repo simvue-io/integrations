@@ -182,7 +182,8 @@ class OpenfoamRun(WrappedRun):
         reg_exp = re.compile("([\d\.]+)")
         result_dirs = [dir_name for dir_name in os.listdir(self.openfoam_case_dir) if reg_exp.match(dir_name)]
         self._save_directory(result_dirs, "results.zip", "output")     
-
+    
+    @simvue.utilities.prettify_pydantic
     @pydantic.validate_call
     def launch(
         self, 
