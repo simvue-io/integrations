@@ -54,7 +54,7 @@ class FDSRun(WrappedRun):
             elif self._activation_times and 'Time Stepping' in line:
                 self._activation_times = False
             elif self._activation_times:
-                match = re.match('\s+\d+\s+([\w]+)\s+([\d\.]+)\ss.*', line)
+                match = re.match('\s+\d+\s+([\w]+)\s+\w+\s+([\d\.]+)\s*', line)
                 if match:
                     self._activation_times_data[f"{match.group(1)}_activation_time"] = float(match.group(2))
 
