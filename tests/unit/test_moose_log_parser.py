@@ -13,7 +13,7 @@ def mock_moose_process(self, *_, **__):
     temp_logfile = tempfile.NamedTemporaryFile(mode="w",prefix="moose_test_", suffix=".txt", buffering=1)
     self.results_prefix = temp_logfile.name.split(".")[0]
     def write_to_log():
-        log_file = pathlib.Path(__file__).parent.joinpath("example_data/moose_log.txt").open("r")
+        log_file = pathlib.Path(__file__).parent.joinpath("example_data", "moose_log.txt").open("r")
         for line in log_file:
             temp_logfile.write(line)
             time.sleep(0.01)

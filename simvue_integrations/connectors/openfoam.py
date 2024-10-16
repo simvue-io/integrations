@@ -52,6 +52,7 @@ class OpenfoamRun(WrappedRun):
         if self.upload_as_zip:
             zip_file.close()
             self.save_file(os.path.join(self.openfoam_case_dir, zip_name), file_type)
+            os.remove(os.path.join(self.openfoam_case_dir, zip_name))
 
     @mp_tail_parser.log_parser
     def _log_parser(self, file_content: str, **__) -> tuple[dict[str,typing.Any], dict[str, typing.Any]]:
@@ -150,12 +151,8 @@ class OpenfoamRun(WrappedRun):
         """
         super().pre_simulation()
 
-        self.metadata_uploaded = False
-
         # Save the files in the System, Constant, and initial conditions ('0') directories
-        self._save_directory(["system"], "system.zip", "input")
-        self._save_directory(["constant"], "constant.zip", "input")
-        self._save_directory(["0"], "initial_conditions.zip", "input")
+        self._save_directory(["system", "constant", "0"], "inputs.zip", "input")
             
         # TODO: Any alerts I should define?
 
@@ -205,5 +202,6 @@ class OpenfoamRun(WrappedRun):
         self.openfoam_case_dir = openfoam_case_dir
         self.upload_as_zip = upload_as_zip
         self.openfoam_env_vars = openfoam_env_vars or {}
+        self.metadata_uploaded = False
 
         super().launch()

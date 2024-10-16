@@ -13,12 +13,12 @@ import shutil
 def mock_vector_postprocessor(self):
     self._trigger = multiprocessing.Event()
     def write_to_vector_pp():
-        _timefile_lines = pathlib.Path(__file__).parent.joinpath(f"example_data/moose_temps_time.csv").open("r").readlines()
+        _timefile_lines = pathlib.Path(__file__).parent.joinpath("example_data", "moose_temps_time.csv").open("r").readlines()
         _timefile = pathlib.Path(self.output_dir_path).joinpath("moose_temps_time.csv").open("w", buffering=1)
         _timefile.write(_timefile_lines[0])
         for num in range(0,6,1):
             _timefile.write(_timefile_lines[num+1])
-            shutil.copy(pathlib.Path(__file__).parent.joinpath(f"example_data/moose_temps_000{num}.csv"), pathlib.Path(self.output_dir_path).joinpath(f"moose_temps_000{num}.csv"))
+            shutil.copy(pathlib.Path(__file__).parent.joinpath("example_data", f"moose_temps_000{num}.csv"), pathlib.Path(self.output_dir_path).joinpath(f"moose_temps_000{num}.csv"))
             time.sleep(0.5)
         _timefile.close()
         self._trigger.set()

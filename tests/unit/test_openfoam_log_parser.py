@@ -15,12 +15,12 @@ def mock_openfoam_process(self, *_, **__):
         # Header, pre run info, and some metrics are written initially
         # Then more chunks of metrics are written over time
         with pathlib.Path(self.openfoam_case_dir).joinpath("log.openfoam").open(mode="w") as temp_logfile:
-            with pathlib.Path(__file__).parent.joinpath("example_data/openfoam_log_initial.txt").open("r") as log_file_initial:
+            with pathlib.Path(__file__).parent.joinpath("example_data", "openfoam_log_initial.txt").open("r") as log_file_initial:
                 for line in log_file_initial:
                     temp_logfile.write(line)
             temp_logfile.flush()
             time.sleep(0.5)
-            with pathlib.Path(__file__).parent.joinpath("example_data/openfoam_log_lines.txt").open("r") as log_file_next:
+            with pathlib.Path(__file__).parent.joinpath("example_data", "openfoam_log_lines.txt").open("r") as log_file_next:
                 for line in log_file_next:
                     temp_logfile.write(line)
             temp_logfile.flush()
