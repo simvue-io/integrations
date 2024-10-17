@@ -281,7 +281,7 @@ class MooseRun(WrappedRun):
         self, 
         moose_application_path: pydantic.FilePath,
         moose_file_path: pydantic.FilePath,
-        output_dir_path: str, # as this might not exist yet
+        output_dir_path: typing.Union[str,pydantic.DirectoryPath], # as this might not exist yet
         results_prefix: str,
         track_vector_postprocessors: bool = False,
         track_vector_positions: bool = False,

@@ -11,8 +11,8 @@ def mock_moose_process(self, *_, **__):
     return True
     
 @patch.object(MooseRun, 'add_process', mock_moose_process)
-def test_moose_header_parser(folder_setup):    
-    name = 'test_moose_header_parser-%s' % str(uuid.uuid4())
+def test_moose_file_upload(folder_setup):    
+    name = 'test_moose_file_upload-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="moose_test")
     with MooseRun() as run:
         run.init(name=name, folder=folder_setup)
@@ -20,7 +20,7 @@ def test_moose_header_parser(folder_setup):
         run.launch(
             moose_application_path=pathlib.Path(__file__),
             moose_file_path=pathlib.Path(__file__),
-            output_dir_path=str(pathlib.Path(__file__).parent.joinpath("example_data", "moose_outputs")),
+            output_dir_path=pathlib.Path(__file__).parent.joinpath("example_data", "moose_outputs"),
             results_prefix="moose_test",
         )
         

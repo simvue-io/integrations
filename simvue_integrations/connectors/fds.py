@@ -199,9 +199,9 @@ class FDSRun(WrappedRun):
     @simvue.utilities.prettify_pydantic
     @pydantic.validate_call
     def launch(
-        self, 
+        self,
         fds_input_file_path: pydantic.FilePath,
-        workdir_path: str = None,
+        workdir_path: typing.Union[str,pydantic.DirectoryPath]  = None,
         upload_files: list[str] = None,
         ulimit: typing.Union[str, int] = "unlimited",
         fds_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None
