@@ -52,7 +52,8 @@ def test_fds_log_parser(folder_setup):
     assert len(metrics_names) == 9
     
     # Get all metrics from run, check last value of each matches last set of lines in file
-    metrics = client.get_run(run_id)["metrics"]
+    run_data = client.get_run(run_id)
+    metrics = run_data["metrics"]
     expected_results = {
         "max_vn": 0.14,
         "max_divergence": 3.2,
@@ -66,3 +67,6 @@ def test_fds_log_parser(folder_setup):
     }
     for key, values in metrics.items():
         assert values["last"] == expected_results[key]
+        
+    # Check device activation time added as metadata
+    assert run_data["metadata"].get("timer_activation_time") == 3.003
