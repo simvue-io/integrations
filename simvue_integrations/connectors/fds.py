@@ -72,10 +72,6 @@ class FDSRun(WrappedRun):
                 data, timestamp=meta["timestamp"], time=metric_time, step=metric_step
             )
 
-    def _metadata_callback(self, data, *_, **__) -> None:
-        """Update metadata for this run"""
-        self.update_metadata(data)
-
     @mp_file_parser.file_parser
     def _header_metadata(self, input_file: str, **__) -> tuple[dict[str,typing.Any], list[dict[str, typing.Any]]]:
         """Parse metadata from header of FDS stderr"""
@@ -149,7 +145,7 @@ class FDSRun(WrappedRun):
         self.file_monitor.track(
             path_glob_exprs=f"{self._results_prefix}.out",
             parser_func=self._header_metadata,
-            callback=self._metadata_callback,
+            callback=lambda data, meta: self.update_metadata({**data, **meta}),
             static=True
         )
         self.file_monitor.tail(
