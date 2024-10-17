@@ -113,8 +113,8 @@ def test_fds_hrr_parser(folder_setup):
     
     
 @patch.object(FDSRun, 'add_process', mock_ctrl_process)
-def test_fds_hrr_parser(folder_setup):    
-    name = 'test_fds_hrr_parser-%s' % str(uuid.uuid4())
+def test_fds_ctrl_parser(folder_setup):    
+    name = 'test_fds_ctrl_parser-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="fds_test")
     with FDSRun() as run:
         run.init(name=name, folder=folder_setup)
@@ -128,7 +128,6 @@ def test_fds_hrr_parser(folder_setup):
     
     # Check DEVC and CTRL events have been correctly added to events log
     events = [event['message'] for event in client.get_events(run_id)]
-    import pdb; pdb.set_trace()
     assert "DEVC 'Ceiling_Thermocouple.Back_Right' has been set to 'True' at time 4.25244E+01s, when it reached a value of 2.00162E+02C." in events
     assert "CTRL 'KILL_TEMP_TOO_HIGH' has been set to 'True' at time 4.25244E+01s" not in events
     

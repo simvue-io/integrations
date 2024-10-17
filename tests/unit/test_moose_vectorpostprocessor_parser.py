@@ -10,7 +10,7 @@ import uuid
 import pathlib
 import shutil
 
-def mock_vector_postprocessor(self):
+def mock_vector_postprocessor(self, *_, **__):
     def write_to_vector_pp():
         _timefile_lines = pathlib.Path(__file__).parent.joinpath("example_data", "moose_temps_time.csv").open("r").readlines()
         _timefile = pathlib.Path(self.output_dir_path).joinpath("moose_temps_time.csv").open("w", buffering=1)
@@ -59,7 +59,7 @@ def test_moose_vectorpostprocessor_parser_no_positions(folder_setup):
     assert metric_ints == [366, 549, 641, 694, 729]        
         
         
-@patch.object(MooseRun, 'pre_simulation', mock_vector_postprocessor)
+@patch.object(MooseRun, 'add_process', mock_vector_postprocessor)
 def test_moose_vectorpostprocessor_parser_with_positions(folder_setup):    
     name = 'test_moose_vectorpostprocessor_parser-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="moose_test")
@@ -92,7 +92,7 @@ def test_moose_vectorpostprocessor_parser_with_positions(folder_setup):
     metric_values = sample_metric_times['temps.x.1'].tolist()
     assert metric_values == [1.0,1.0,1.0,1.0,1.0]
     
-@patch.object(MooseRun, 'pre_simulation', mock_vector_postprocessor)
+@patch.object(MooseRun, 'add_process', mock_vector_postprocessor)
 def test_moose_vectorpostprocessor_disabled(folder_setup):    
     name = 'test_moose_vectorpostprocessor_parser-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="moose_test")

@@ -7,14 +7,14 @@ import uuid
 import tempfile
 from unittest.mock import patch
 
-def mock_fds_process(self):
+def mock_fds_process(self, *_, **__):
     shutil.copy(pathlib.Path(__file__).parent.joinpath("example_data", "fds_header.txt"), pathlib.Path(self.workdir_path).joinpath(f"fds_test.out"))
     time.sleep(0.5)
     self._trigger.set()
     return
 
 @patch.object(FDSRun, 'add_process', mock_fds_process)
-def test_moose_header_parser(folder_setup):
+def test_fds_header_parser(folder_setup):
     name = 'test_fds_header_parser-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="fds_test")
     with FDSRun() as run:
@@ -22,7 +22,7 @@ def test_moose_header_parser(folder_setup):
         run_id = run.id
         run.launch(
             fds_input_file_path = pathlib.Path(__file__).parent.joinpath("example_data", "fds_input.fds"),
-            workdir_path = temp_dir,
+            workdir_path = temp_dir.name,
         )
         
     client = simvue.Client()
