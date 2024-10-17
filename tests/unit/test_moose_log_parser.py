@@ -26,8 +26,8 @@ def mock_moose_process(self, *_, **__):
     thread.start()
     
 @patch.object(MooseRun, 'add_process', mock_moose_process)
-def test_moose_header_parser(folder_setup):    
-    name = 'test_moose_header_parser-%s' % str(uuid.uuid4())
+def test_moose_log_parser(folder_setup):    
+    name = 'test_moose_log_parser-%s' % str(uuid.uuid4())
     with MooseRun() as run:
         run.init(name=name, folder=folder_setup)
         run_id = run.id

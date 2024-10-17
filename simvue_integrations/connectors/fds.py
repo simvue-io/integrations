@@ -54,7 +54,7 @@ class FDSRun(WrappedRun):
             elif self._activation_times and 'Time Stepping' in line:
                 self._activation_times = False
             elif self._activation_times:
-                match = re.match('\s+\d+\s+([\w]+)\s+\w+\s+([\d\.]+)\s*', line)
+                match = re.match(r'\s+\d+\s+([\w]+)\s+\w+\s+([\d\.]+)\s*', line)
                 if match:
                     self._activation_times_data[f"{match.group(1)}_activation_time"] = float(match.group(2))
 
@@ -75,25 +75,29 @@ class FDSRun(WrappedRun):
     @mp_file_parser.file_parser
     def _header_metadata(self, input_file: str, **__) -> tuple[dict[str,typing.Any], list[dict[str, typing.Any]]]:
         """Parse metadata from header of FDS stderr"""
+        print("in here")
         with open(input_file) as in_f:
             _file_lines = in_f.readlines()
 
         _components_regex: dict[str, typing.Pattern[typing.AnyStr]] = {
-            "fds.revision": re.compile(r"^\s*Revision\s+\:\s*([\w\d\.\-\_]+)"),
-            "fds.revision_date": re.compile(r"^\s*Revision Date\s+\:\s*([\w\s\:\d\-]+)"),
-            "fds.compiler": re.compile(r"^\s*Compiler\s+\:\s*([\w\d\-\_\(\)\s\.\[\]\,]+)"),
-            "fds.compilation_date": re.compile(r"^\s*Compilation Date\s+\:\s*([\w\d\-\:\,\s]+)"),
+            "fds.revision": re.compile(r"^\s*Revision\s+\:\s*([\w\d\.\-\_][^\n]+)"),
+            "fds.revision_date": re.compile(r"^\s*Revision Date\s+\:\s*([\w\s\:\d\-][^\n]+)"),
+            "fds.compiler": re.compile(r"^\s*Compiler\s+\:\s*([\w\d\-\_\(\)\s\.\[\]\,][^\n]+)"),
+            "fds.compilation_date": re.compile(r"^\s*Compilation Date\s+\:\s*([\w\d\-\:\,\s][^\n]+)"),
             "fds.mpi_processes": re.compile(r"^\s*Number of MPI Processes:\s*(\d+)"),
             "fds.mpi_version": re.compile(r"^\s*MPI version:\s*([\d\.]+)"),
-            "fds.mpi_library_version": re.compile(r"^MPI library version:\s*([\w\d\.\s\*\(\)\[\]\-\_]+)"),
+            "fds.mpi_library_version": re.compile(r"^\s*MPI library version:\s*([\w\d\.\s\*\(\)\[\]\-\_][^\n]+)"),
         }
 
         _output_metadata: dict[str, str] = {}
 
         for line in _file_lines:
+            print(line)
             for key, regex in _components_regex.items():
                 if (search_res := regex.findall(line)):
                     _output_metadata[key] = search_res[0]
+                    
+        print(_output_metadata)
 
         return {}, _output_metadata
         

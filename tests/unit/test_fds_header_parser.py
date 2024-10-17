@@ -5,13 +5,17 @@ import shutil
 import time
 import uuid
 import tempfile
+import threading
 from unittest.mock import patch
 
 def mock_fds_process(self, *_, **__):
-    shutil.copy(pathlib.Path(__file__).parent.joinpath("example_data", "fds_header.txt"), pathlib.Path(self.workdir_path).joinpath(f"fds_test.out"))
-    time.sleep(0.5)
-    self._trigger.set()
-    return
+    def create_header(self):
+        shutil.copy(pathlib.Path(__file__).parent.joinpath("example_data", "fds_header.txt"), pathlib.Path(self.workdir_path).joinpath(f"fds_test.out"))
+        time.sleep(1)
+        self._trigger.set()
+        return
+    thread = threading.Thread(target=create_header, args=(self,))
+    thread.start()
 
 @patch.object(FDSRun, 'add_process', mock_fds_process)
 def test_fds_header_parser(folder_setup):
