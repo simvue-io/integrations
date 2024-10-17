@@ -8,9 +8,9 @@ import os.path
 import re
 import os
 import f90nml
-import shutil
 
 import multiparser.parsing.tail as mp_tail_parser
+import multiparser.parsing.file as mp_file_parser
 
 from simvue_integrations.connectors.generic import WrappedRun
 
@@ -62,7 +62,7 @@ class FDSRun(WrappedRun):
             _out_data += [_out_record]
 
         return {}, _out_data
-    
+
     def _metrics_callback(self, data, meta): 
         """Log metrics extracted from a log file to Simvue
         """
@@ -71,6 +71,31 @@ class FDSRun(WrappedRun):
         self.log_metrics(
                 data, timestamp=meta["timestamp"], time=metric_time, step=metric_step
             )
+
+    @mp_file_parser.file_parser
+    def _header_metadata(self, input_file: str, **__) -> tuple[dict[str,typing.Any], list[dict[str, typing.Any]]]:
+        """Parse metadata from header of FDS stderr"""
+        with open(input_file) as in_f:
+            _file_lines = in_f.readlines()
+
+        _components_regex: dict[str, typing.Pattern[typing.AnyStr]] = {
+            "fds.revision": re.compile(r"^\s*Revision\s+\:\s*([\w\d\.\-\_]+)"),
+            "fds.revision_date": re.compile(r"^\s*Revision Date\s+\:\s*([\w\s\:\d\-]+)"),
+            "fds.compiler": re.compile(r"^\s*Compiler\s+\:\s*([\w\d\-\_\(\)\s\.\[\]\,]+)"),
+            "fds.compilation_date": re.compile(r"^\s*Compilation Date\s+\:\s*([\w\d\-\:\,\s]+)"),
+            "fds.mpi_processes": re.compile(r"^\s*Number of MPI Processes:\s*(\d+)"),
+            "fds.mpi_version": re.compile(r"^\s*MPI version:\s*([\d\.]+)"),
+            "fds.mpi_library_version": re.compile(r"^MPI library version:\s*([\w\d\.\s\*\(\)\[\]\-\_]+)"),
+        }
+
+        _output_metadata: dict[str, str] = {}
+
+        for line in _file_lines:
+            for key, regex in _components_regex.items():
+                if (search_res := regex.findall(line)):
+                    _output_metadata[key] = search_res[0]
+
+        return {}, _output_metadata
         
     def _ctrl_log_callback(self, data, meta):
         if data['State'].lower() == 'f':
@@ -105,7 +130,7 @@ class FDSRun(WrappedRun):
             ulimit=self.ulimit,
             **self.fds_env_vars
         )
-    
+
     def during_simulation(self):
         """Describes which files should be monitored during the simulation by Multiparser
         """
@@ -115,6 +140,13 @@ class FDSRun(WrappedRun):
             callback=lambda data, meta: self.update_metadata({k: v for k, v in data.items() if v}),
             file_type="fortran",
             static=True,
+        )
+        # Upload metadata from file header
+        self.file_monitor.track(
+            path_glob_exprs=f"{self._results_prefix}.out",
+            parser_func=self._header_metadata,
+            callback=lambda data, meta: self.update_metadata({**data, **meta}),
+            static=True
         )
         self.file_monitor.tail(
             path_glob_exprs=f"{self._results_prefix}.out",
