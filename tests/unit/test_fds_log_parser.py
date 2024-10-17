@@ -47,7 +47,7 @@ def test_fds_log_parser(folder_setup):
            
     client = simvue.Client()
         
-    # Check that 7 metrics have been created, one for each line in log per timestep
+    # Check that 9 metrics have been created, one for each line in log per timestep
     metrics_names = client.get_metrics_names(run_id)
     assert len(metrics_names) == 9
     
