@@ -9,6 +9,9 @@ import threading
 from unittest.mock import patch
 
 def mock_fds_process(self, *_, **__):
+    """
+    Mock process for writing FDS log header, all at once.
+    """
     def create_header(self):
         shutil.copy(pathlib.Path(__file__).parent.joinpath("example_data", "fds_header.txt"), pathlib.Path(self.workdir_path).joinpath(f"fds_test.out"))
         time.sleep(1)
@@ -19,6 +22,9 @@ def mock_fds_process(self, *_, **__):
 
 @patch.object(FDSRun, 'add_process', mock_fds_process)
 def test_fds_header_parser(folder_setup):
+    """
+    Check that metadata from the header of the log file is correctly uploaded.
+    """
     name = 'test_fds_header_parser-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="fds_test")
     with FDSRun() as run:

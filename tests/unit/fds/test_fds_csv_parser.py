@@ -1,9 +1,7 @@
 from simvue_integrations.connectors.fds import FDSRun
 import simvue
 import threading
-import multiprocessing
 import time
-import contextlib
 import tempfile
 from unittest.mock import patch
 import uuid
@@ -21,25 +19,37 @@ def write_to_log(self, example_file, temp_logfile):
     return
 
 def mock_devc_process(self, *_, **__):
+    """
+    Mock process for creating DEVC CSV output files, written line by line
+    """
     temp_logfile = pathlib.Path(self.workdir_path).joinpath("fds_test_devc.csv").open(mode="w", buffering=1)
     example_file = pathlib.Path(__file__).parent.joinpath("example_data", "fds_devc.csv").open("r")
     thread = threading.Thread(target=write_to_log, args=(self, example_file, temp_logfile))
     thread.start()
     
 def mock_hrr_process(self, *_, **__):
+    """
+    Mock process for creating HRR CSV output files, written line by line
+    """
     temp_logfile = pathlib.Path(self.workdir_path).joinpath("fds_test_hrr.csv").open(mode="w", buffering=1)
     example_file = pathlib.Path(__file__).parent.joinpath("example_data", "fds_hrr.csv").open("r")
     thread = threading.Thread(target=write_to_log, args=(self, example_file, temp_logfile))
     thread.start()
 
 def mock_ctrl_process(self, *_, **__):
+    """
+    Mock process for creating CTRL log CSV output files, written line by line
+    """
     temp_logfile = pathlib.Path(self.workdir_path).joinpath("fds_test_devc_ctrl_log.csv").open(mode="w", buffering=1)
     example_file = pathlib.Path(__file__).parent.joinpath("example_data", "fds_devc_ctrl_log.csv").open("r")
     thread = threading.Thread(target=write_to_log, args=(self, example_file, temp_logfile))
     thread.start()
 
 @patch.object(FDSRun, 'add_process', mock_devc_process)
-def test_fds_devc_parser(folder_setup):    
+def test_fds_devc_parser(folder_setup):
+    """
+    Check that values of each DEVC device at every timestep are uploaded to Simvue as metrics
+    """
     name = 'test_fds_devc_parser-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="fds_test")
     with FDSRun() as run:
@@ -77,6 +87,9 @@ def test_fds_devc_parser(folder_setup):
     
 @patch.object(FDSRun, 'add_process', mock_hrr_process)
 def test_fds_hrr_parser(folder_setup):    
+    """
+    Check that values about Heat Release Rate at every timestep are uploaded to Simvue as metrics
+    """
     name = 'test_fds_hrr_parser-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="fds_test")
     with FDSRun() as run:
@@ -114,6 +127,9 @@ def test_fds_hrr_parser(folder_setup):
     
 @patch.object(FDSRun, 'add_process', mock_ctrl_process)
 def test_fds_ctrl_parser(folder_setup):    
+    """
+    Check that activation status of CTRL and DEVC devices are written to Events log and metadata.
+    """
     name = 'test_fds_ctrl_parser-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="fds_test")
     with FDSRun() as run:

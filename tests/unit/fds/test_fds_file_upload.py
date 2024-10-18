@@ -9,7 +9,9 @@ import shutil
 import time
 
 def mock_fds_process(self, *_, **__):
-    # copy all files from example_data to temp dir
+    """
+    Mock process which copies results from example data to tmp.
+    """
     shutil.copytree(pathlib.Path(__file__).parent.joinpath("example_data", "fds_outputs"), self.workdir_path, dirs_exist_ok=True)    
     time.sleep(1)
     self._trigger.set()
@@ -17,6 +19,9 @@ def mock_fds_process(self, *_, **__):
     
 @patch.object(FDSRun, 'add_process', mock_fds_process)
 def test_fds_file_upload(folder_setup):    
+    """
+    Check that all results are uploaded from workdir.
+    """
     name = 'test_fds_file_upload-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="moose_test")
     with FDSRun() as run:

@@ -8,6 +8,9 @@ import threading
 import uuid
 import simvue
 def mock_moose_process(self, *_, **__):
+    """
+    Mock process which creates the header of the MOOSE log (all at once, not line by line)
+    """
     def create_header(self):
         shutil.copy(pathlib.Path(__file__).parent.joinpath("example_data", "moose_header.txt"), pathlib.Path(self.output_dir_path).joinpath(f"{self.results_prefix}.txt"))
         time.sleep(1)
@@ -16,7 +19,10 @@ def mock_moose_process(self, *_, **__):
     thread.start()
     
 @patch.object(MooseRun, 'add_process', mock_moose_process)
-def test_moose_header_parser(folder_setup):    
+def test_moose_header_parser(folder_setup):   
+    """
+    Check information from header of MOOSE log is correctly uploaded as metadata
+    """ 
     name = 'test_moose_header_parser-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="moose_test")
     with MooseRun() as run:

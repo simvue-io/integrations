@@ -1,15 +1,16 @@
 from simvue_integrations.connectors.moose import MooseRun
 import simvue
 import threading
-import multiprocessing
 import time
-import contextlib
 import tempfile
 from unittest.mock import patch
 import uuid
 import pathlib
 
 def mock_moose_process(self, *_, **__):
+    """
+    Mock process for a MOOSE ScalarPostProcessor CSV file, written line by line.
+    """
     temp_logfile = tempfile.NamedTemporaryFile(mode="w",prefix="moose_test_", suffix=".csv", buffering=1)
     self.results_prefix = temp_logfile.name.split(".")[0]
     def write_to_csv(temp_logfile=temp_logfile):
@@ -27,8 +28,12 @@ def mock_moose_process(self, *_, **__):
     thread.start()
     
 @patch.object(MooseRun, 'add_process', mock_moose_process)
-def test_moose_header_parser(folder_setup):    
-    name = 'test_moose_header_parser-%s' % str(uuid.uuid4())
+def test_scalar_pp_parser(folder_setup):
+    """
+    Check that ScalarPostProcesser CSV results files are correctly parsed,
+    with values from each ScalarPostProcessor at every timestep uploaded as Metrics
+    """    
+    name = 'test_scalar_pp_parser-%s' % str(uuid.uuid4())
     with MooseRun() as run:
         run.init(name=name, folder=folder_setup)
         run_id = run.id

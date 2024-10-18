@@ -10,6 +10,9 @@ import uuid
 import pathlib
 
 def mock_openfoam_process(self, *_, **__):
+    """
+    Mock process for writing Openfoam log.
+    """
     def write_to_log():
         # Openfoam writes log files in large chunks of lines
         # Header, pre run info, and some metrics are written initially
@@ -31,7 +34,11 @@ def mock_openfoam_process(self, *_, **__):
     thread.start()
     
 @patch.object(OpenfoamRun, 'add_process', mock_openfoam_process)
-def test_openfoam_log_parser(folder_setup):    
+def test_openfoam_log_parser(folder_setup):
+    """
+    Check that relevant information is uploaded from the Openfoam log,
+    including metadata from header, and residuals as metrics.
+    """
     name = 'test_openfoam_parser-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="openfoam_test")
     with OpenfoamRun() as run:

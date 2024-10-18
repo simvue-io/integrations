@@ -14,7 +14,11 @@ def mock_openfoam_process(self, *_, **__):
     
 @patch.object(OpenfoamRun, 'add_process', mock_openfoam_process)
 def test_openfoam_file_upload(folder_setup):    
-    name = 'test_openfoam_parser-%s' % str(uuid.uuid4())
+    """
+    Check that all files in output case directory are uploaded to Simvue,
+    as individual files when upload_as_zip is False.
+    """
+    name = 'test_openfoam_file_upload-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="openfoam_test")
     with OpenfoamRun() as run:
         run.init(name=name, folder=folder_setup)
@@ -44,7 +48,11 @@ def test_openfoam_file_upload(folder_setup):
     
 @patch.object(OpenfoamRun, 'add_process', mock_openfoam_process)
 def test_openfoam_file_upload_zipped(folder_setup):    
-    name = 'test_openfoam_parser-%s' % str(uuid.uuid4())
+    """
+    Check that all files from case directory are uploaded to artifacts,
+    split into two archives - one for inputs, one for results.
+    """
+    name = 'test_openfoam_file_upload-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="openfoam_test")
     with OpenfoamRun() as run:
         run.init(name=name, folder=folder_setup)

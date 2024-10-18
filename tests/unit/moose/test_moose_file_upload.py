@@ -11,7 +11,9 @@ def mock_moose_process(self, *_, **__):
     return True
     
 @patch.object(MooseRun, 'add_process', mock_moose_process)
-def test_moose_file_upload(folder_setup):    
+def test_moose_file_upload(folder_setup):
+    """Check that Exodus file is correctly uploaded as an artifact once simulation is complete.
+    """    
     name = 'test_moose_file_upload-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="moose_test")
     with MooseRun() as run:

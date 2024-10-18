@@ -1,15 +1,16 @@
 from simvue_integrations.connectors.fds import FDSRun
 import simvue
 import threading
-import multiprocessing
 import time
-import contextlib
 import tempfile
 from unittest.mock import patch
 import uuid
 import pathlib
 
 def mock_fds_process(self, *_, **__):
+    """
+    Mock process for creating FDS log file, in blocks of lines corresponding to each timestep.
+    """
     temp_logfile = pathlib.Path(self.workdir_path).joinpath("fds_test.out").open(mode="w")
     def write_to_log():
         log_file = pathlib.Path(__file__).parent.joinpath("example_data", "fds_log.txt").open("r")
@@ -34,7 +35,10 @@ def mock_fds_process(self, *_, **__):
     thread.start()
 
 @patch.object(FDSRun, 'add_process', mock_fds_process)
-def test_fds_log_parser(folder_setup):    
+def test_fds_log_parser(folder_setup):
+    """
+    Check that values from FDS log file are uploaded as metrics.
+    """ 
     name = 'test_fds_log_parser-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="fds_test")
     with FDSRun() as run:

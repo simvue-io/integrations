@@ -1,9 +1,7 @@
 from simvue_integrations.connectors.moose import MooseRun
 import simvue
 import threading
-import multiprocessing
 import time
-import contextlib
 import tempfile
 from unittest.mock import patch
 import uuid
@@ -11,6 +9,10 @@ import pathlib
 import shutil
 
 def mock_vector_postprocessor(self, *_, **__):
+    """
+    Mock process for creating VectorPostProcessor output CSV files.
+    There is one of these CSV files written all at once for each timestep.
+    """
     def write_to_vector_pp():
         _timefile_lines = pathlib.Path(__file__).parent.joinpath("example_data", "moose_temps_time.csv").open("r").readlines()
         _timefile = pathlib.Path(self.output_dir_path).joinpath("moose_temps_time.csv").open("w", buffering=1)
@@ -26,7 +28,11 @@ def mock_vector_postprocessor(self, *_, **__):
     thread.start()
 
 @patch.object(MooseRun, 'add_process', mock_vector_postprocessor)
-def test_moose_vectorpostprocessor_parser_no_positions(folder_setup):    
+def test_moose_vectorpostprocessor_parser_no_positions(folder_setup):
+    """
+    Test values of VectorPostProcessors at each timestep are uploaded as Metrics,
+    when positions are turned off it should not track x, y, or z as metrics.
+    """
     name = 'test_moose_vectorpostprocessor_parser-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="moose_test")
     with MooseRun() as run:
@@ -61,7 +67,11 @@ def test_moose_vectorpostprocessor_parser_no_positions(folder_setup):
         
 @patch.object(MooseRun, 'add_process', mock_vector_postprocessor)
 def test_moose_vectorpostprocessor_parser_with_positions(folder_setup):    
-    name = 'test_moose_vectorpostprocessor_parser-%s' % str(uuid.uuid4())
+    """
+    Test values of VectorPostProcessors at each timestep are uploaded as Metrics,
+    when positions are turned on it should track x, y, and z metrics.
+    """
+    name = 'test_moose_vectorpostprocessor_parser_positions-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="moose_test")
     with MooseRun() as run:
         run.init(name=name, folder=folder_setup)
@@ -94,6 +104,9 @@ def test_moose_vectorpostprocessor_parser_with_positions(folder_setup):
     
 @patch.object(MooseRun, 'add_process', mock_vector_postprocessor)
 def test_moose_vectorpostprocessor_disabled(folder_setup):    
+    """
+    Check that no information is uploaded from VectorPostProcessor files if disabled.
+    """
     name = 'test_moose_vectorpostprocessor_parser-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="moose_test")
     with MooseRun() as run:

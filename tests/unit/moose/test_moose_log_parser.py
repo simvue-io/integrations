@@ -1,15 +1,16 @@
 from simvue_integrations.connectors.moose import MooseRun
 import simvue
 import threading
-import multiprocessing
 import time
-import contextlib
 import tempfile
 from unittest.mock import patch
 import uuid
 import pathlib
 
 def mock_moose_process(self, *_, **__):
+    """
+    Mock process which writes each entry in the example log file, line by line
+    """
     temp_logfile = tempfile.NamedTemporaryFile(mode="w",prefix="moose_test_", suffix=".txt", buffering=1)
     self.results_prefix = temp_logfile.name.split(".")[0]
     def write_to_log():
@@ -27,6 +28,9 @@ def mock_moose_process(self, *_, **__):
     
 @patch.object(MooseRun, 'add_process', mock_moose_process)
 def test_moose_log_parser(folder_setup):    
+    """
+    Check that Events and Metrics are correctly parsed from the MOOSE log file and uploaded.
+    """
     name = 'test_moose_log_parser-%s' % str(uuid.uuid4())
     with MooseRun() as run:
         run.init(name=name, folder=folder_setup)
