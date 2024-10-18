@@ -21,7 +21,6 @@ def test_fit_simulation_run(folder_setup, tensorflow_example_data):
         tensorflow_example_data.label_train[:1000],
         epochs=3,
         validation_split=0.2,
-        # Specify the model callback, BEFORE the tensorvue callback in the list:
         callbacks=[tensorvue,]
     )
     
@@ -62,7 +61,6 @@ def test_fit_epoch_run(folder_setup, tensorflow_example_data):
         tensorflow_example_data.label_train[:1000],
         epochs=3,
         validation_split=0.2,
-        # Specify the model callback, BEFORE the tensorvue callback in the list:
         callbacks=[tensorvue,]
     )
     
@@ -88,3 +86,41 @@ def test_fit_epoch_run(folder_setup, tensorflow_example_data):
         assert "Accuracy and Loss values after epoch training:" in events
         
         
+        
+def test_fit_earlystopping(folder_setup, tensorflow_example_data):
+    run_name = 'test_tensorflow_fit_earlystopping-%s' % str(uuid.uuid4())
+
+    tensorvue = sv_tf.TensorVue(
+        run_name=run_name,
+        run_folder=folder_setup,
+        create_epoch_runs=False,
+        evaluation_parameter="accuracy",
+        evaluation_condition=">",
+        evaluation_target=0.8
+    )
+
+    # Fit and evaluate the model, including the tensorvue callback:
+    tensorflow_example_data.model.fit(
+        tensorflow_example_data.img_train[:1000],
+        tensorflow_example_data.label_train[:1000],
+        epochs=10,
+        validation_split=0.2,
+        callbacks=[tensorvue,]
+    )
+    client = simvue.Client()
+    # Retrieve accuracy metric from the simulation run
+    run_id = client.get_run_id_from_name(f"{run_name}_simulation")
+    accuracy_metric = client.get_metric_values(run_ids=[run_id], metric_names=["accuracy"], xaxis="step", output_format="dataframe")
+    accuracy_vals = accuracy_metric['accuracy'].tolist()
+    
+    # Check training was stopped early (not all 10 epochs were trained)
+    assert len(accuracy_vals) < 10
+    
+    # Check final value is over 0.8, and second to last value is not over 0.8
+    assert accuracy_vals[-1] > 0.8
+    assert accuracy_vals[-2] < 0.8
+    
+    
+    
+    
+    

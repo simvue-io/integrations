@@ -34,5 +34,4 @@ def test_fds_file_upload(folder_setup):
         retrieved_dir.mkdir()
         client.get_artifacts_as_files(run_id, "output", str(retrieved_dir))
         comparison = filecmp.dircmp(pathlib.Path(__file__).parent.joinpath("example_data", "fds_outputs"), str(retrieved_dir))
-        import pdb; pdb.set_trace()
         assert not (comparison.diff_files or comparison.left_only or comparison.right_only)

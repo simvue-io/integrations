@@ -308,24 +308,22 @@ class TensorVue(Callback):
                     f"Improved {metric}: {improved}. Change in {metric}: {change}"
                 )
             self.epoch_run.update_metadata({f"final_{metric}": value})
-        
-        if not self.create_epoch_runs:
-            return
 
         self.accuracy = logs.get("accuracy")
         self.loss = logs.get("loss")
         self.val_accuracy = logs.get("val_accuracy")
         self.val_loss = logs.get("val_loss")
+        
+        if self.create_epoch_runs:
 
-        if self.model_checkpoint_filepath:
-            if not os.path.exists(self.model_checkpoint_filepath):
-                raise RuntimeError(
-                    f"Model checkpoint has not been created at {self.model_checkpoint_filepath}. Have you enabled the ModelCheckpoint callback? "
-                )
-            self.epoch_run.save_file(self.model_checkpoint_filepath, category="output")
+            if self.model_checkpoint_filepath:
+                if not os.path.exists(self.model_checkpoint_filepath):
+                    raise RuntimeError(
+                        f"Model checkpoint has not been created at {self.model_checkpoint_filepath}. Have you enabled the ModelCheckpoint callback? "
+                    )
+                self.epoch_run.save_file(self.model_checkpoint_filepath, category="output")
 
-        self.epoch_run.close()
-
+            self.epoch_run.close()
         if all(
             (
                 self.evaluation_condition,

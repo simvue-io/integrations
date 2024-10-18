@@ -39,8 +39,5 @@ def test_fit_evaluation_run(folder_setup, tensorflow_example_data):
     for metric_name in ('accuracy','loss'):
         assert eval_run["metrics"].get(metric_name)
     
-    assert [eval_run["metrics"]["loss"]["last"], eval_run["metrics"]["accuracy"]["last"]] == results
-    
-    import pdb; pdb.set_trace()
-        
+    assert [eval_run["metrics"]["loss"]["last"], eval_run["metrics"]["accuracy"]["last"]] == results        
     
