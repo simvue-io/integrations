@@ -41,6 +41,7 @@ class AlertValidator(pydantic.BaseModel):
     source: typing.Literal["metrics", "events"]
     frequency: pydantic.PositiveInt
     notification: typing.Optional[typing.Literal["none", "email"]] = "none"
+    description: typing.Optional[str] = None
     # For event based alerts:
     pattern: typing.Optional[str] = None
     # For metric based alerts:
@@ -52,6 +53,12 @@ class AlertValidator(pydantic.BaseModel):
     # For 'is outside range' or 'is inside range'
     range_low: typing.Optional[typing.Union[int, float]] = None
     range_high: typing.Optional[typing.Union[int, float]] = None
+    aggregation: typing.Optional[typing.Literal["average", "sum", "at least one", "all"]] = "average"
+    trigger_abort: typing.Optional[bool] = None
+    
+    class Config:
+        extra = 'forbid'
+        
 
     @pydantic.validator("pattern", always=True)
     def check_pattern(cls, v, values):
@@ -64,6 +71,10 @@ class AlertValidator(pydantic.BaseModel):
     @pydantic.validator("metric", always=True)
     def check_metric(cls, v, values):
         return check_input(v, values, "metric", "source", ["metrics"])
+    
+    @pydantic.validator("aggregation", always=True)
+    def check_aggregation(cls, v, values):
+        return check_input(v, values, "aggregation", "source", ["metrics"])
     
     @pydantic.validator("window", always=True)
     def check_window(cls, v, values):
