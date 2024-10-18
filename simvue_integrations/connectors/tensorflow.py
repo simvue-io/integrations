@@ -433,8 +433,8 @@ class TensorVue(Callback):
             if self.create_epoch_runs:
                 self.epoch_run.log_metrics(
                     {
-                        "validation_accuracy": logs.get("accuracy"),
-                        "validation_loss": logs.get("loss"),
+                        "val_accuracy": logs.get("accuracy"),
+                        "val_loss": logs.get("loss"),
                     },
                     step=batch,
                 )
