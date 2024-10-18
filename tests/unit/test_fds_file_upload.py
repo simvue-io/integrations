@@ -6,10 +6,12 @@ import uuid
 import simvue
 import filecmp
 import shutil
+import time
 
 def mock_fds_process(self, *_, **__):
     # copy all files from example_data to temp dir
-    shutil.copytree(pathlib.Path(__file__).joinpath("example_data", "fds_outputs"), self.workdir_path)    
+    shutil.copytree(pathlib.Path(__file__).parent.joinpath("example_data", "fds_outputs"), self.workdir_path, dirs_exist_ok=True)    
+    time.sleep(1)
     self._trigger.set()
     return True
     
@@ -28,7 +30,9 @@ def test_fds_file_upload(folder_setup):
         client = simvue.Client()
         
         # Retrieve all outputs from server and check all files exist and are the same
-        retrieved_dir = pathlib.Path(temp_dir.name).joinpath("retrieved_results").mkdir()
+        retrieved_dir = pathlib.Path(temp_dir.name).joinpath("retrieved_results")
+        retrieved_dir.mkdir()
         client.get_artifacts_as_files(run_id, "output", str(retrieved_dir))
-        comparison = filecmp.dircmp(pathlib.Path(__file__).parent.joinpath("example_data", "fds_outputs"), retrieved_dir)
+        comparison = filecmp.dircmp(pathlib.Path(__file__).parent.joinpath("example_data", "fds_outputs"), str(retrieved_dir))
+        import pdb; pdb.set_trace()
         assert not (comparison.diff_files or comparison.left_only or comparison.right_only)
