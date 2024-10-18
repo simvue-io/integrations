@@ -29,7 +29,7 @@ model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.01),
             metrics=['accuracy'])
 
 # Can use the ModelCheckpoint callback, which is built into Tensorflow, to save a model after each Epoch
-# Provinding the model_checkpoint_filepath in the TensorVue callback means it will automatically upload checkpoints to the Epoch runs
+# Providing the model_checkpoint_filepath in the TensorVue callback means it will automatically upload checkpoints to the Epoch runs
 checkpoint_filepath = "/tmp/ckpt/checkpoint.model.keras"
 model_checkpoint_callback = ModelCheckpoint(
     filepath=checkpoint_filepath, save_best_only=False, verbose=1
