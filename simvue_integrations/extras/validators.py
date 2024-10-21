@@ -6,7 +6,7 @@ Classses which could be used in the construction of multiple adapters.
 import enum
 import typing
 import pydantic
-
+#temp
 class Operator(str, enum.Enum):
     """The operator to use to compare the reduced evaluation value to a given target threshold."""
     MORE_THAN = ">"
