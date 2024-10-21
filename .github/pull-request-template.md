@@ -9,6 +9,8 @@ If you have designed a new Connector to a non-Python piece of software, please a
 
 ## New Connector to Python Software
 
+## New Feature added to Existing Connector
+
 ## New Tests
 
 ## Bugfix or Hotfix
