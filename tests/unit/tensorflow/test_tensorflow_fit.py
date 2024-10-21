@@ -35,7 +35,7 @@ def test_fit_simulation_run(folder_setup, tensorflow_example_data):
     assert simulation_run["metadata"].get("epochs")
     assert simulation_run["metadata"].get("steps")
     
-    # Check accuracy, loss, val_accruracy, val_loss exist, have 3 steps (1 per epoch)
+    # Check accuracy, loss, val_accuracy, val_loss exist, have 3 steps (1 per epoch)
     for metric_name in ('accuracy','loss','val_accuracy','val_loss'):
         assert simulation_run["metrics"][metric_name]["count"] == 3
         
@@ -74,7 +74,7 @@ def test_fit_epoch_run(folder_setup, tensorflow_example_data):
     
     for epoch_run in epoch_runs:
         for metric_name in ('accuracy','loss','val_accuracy','val_loss'):
-            # Check accuracy, loss, val_accruracy, val_loss metrics exist
+            # Check accuracy, loss, val_accuracy, val_loss metrics exist
             assert epoch_run["metrics"].get(metric_name)
             
             # Check metadata updated with final values of each

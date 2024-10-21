@@ -25,69 +25,65 @@ OPERATORS: dict[str, typing.Callable[[typing.Union[int, float], typing.Union[int
 
 def check_input(
         value_to_check: typing.Union[str, float, int, None], 
-        other_values: dict, 
+        validation_info: pydantic.ValidationInfo, 
         name_of_parameter: str, 
         required_when_name: str, 
         required_when_values: list
         ):
-
+    other_values = validation_info.data
     if other_values.get(required_when_name) in required_when_values:
         assert value_to_check, f"'{name_of_parameter}' must be provided for alerts using '{required_when_name} = {other_values.get(required_when_name)}'."
     elif other_values.get(required_when_name) not in required_when_values:
         assert not value_to_check, f"'{name_of_parameter}' must not be provided for alerts using '{required_when_name} = {other_values.get(required_when_name)}'."
     return value_to_check
 
-class AlertValidator(pydantic.BaseModel):
+class AlertValidator(pydantic.BaseModel, extra='forbid'):
     source: typing.Literal["metrics", "events"]
     frequency: pydantic.PositiveInt
-    notification: typing.Optional[typing.Literal["none", "email"]] = "none"
-    description: typing.Optional[str] = None
+    notification: typing.Optional[typing.Literal["none", "email"]] = pydantic.Field(default="none")
+    description: typing.Optional[str] = pydantic.Field(default=None)
     # For event based alerts:
-    pattern: typing.Optional[str] = None
+    pattern: typing.Optional[str] = pydantic.Field(default=None, validate_default=True)
     # For metric based alerts:
-    rule: typing.Optional[typing.Literal["is above", "is below", "is outside range", "is inside range"]] = None
-    metric: typing.Optional[str] = None
-    window: typing.Optional[pydantic.PositiveInt] = None
+    rule: typing.Optional[typing.Literal["is above", "is below", "is outside range", "is inside range"]] = pydantic.Field(default=None, validate_default=True)
+    metric: typing.Optional[str] = pydantic.Field(default=None, validate_default=True)
+    window: typing.Optional[pydantic.PositiveInt] = pydantic.Field(default=None, validate_default=True)
     # For 'is above' or 'is below':
-    threshold: typing.Optional[typing.Union[int, float]] = None
+    threshold: typing.Optional[typing.Union[int, float]] = pydantic.Field(default=None, validate_default=True)
     # For 'is outside range' or 'is inside range'
-    range_low: typing.Optional[typing.Union[int, float]] = None
-    range_high: typing.Optional[typing.Union[int, float]] = None
-    aggregation: typing.Optional[typing.Literal["average", "sum", "at least one", "all"]] = "average"
-    trigger_abort: typing.Optional[bool] = None
-    
-    class Config:
-        extra = 'forbid'
+    range_low: typing.Optional[typing.Union[int, float]] = pydantic.Field(default=None, validate_default=True)
+    range_high: typing.Optional[typing.Union[int, float]] = pydantic.Field(default=None, validate_default=True)
+    aggregation: typing.Optional[typing.Literal["average", "sum", "at least one", "all"]] = pydantic.Field(default="average", validate_default=True)
+    trigger_abort: typing.Optional[bool] = pydantic.Field(default=None, validate_default=True)
         
+    @pydantic.field_validator("pattern")
+    def check_pattern(cls, v, validation_info):
+        return check_input(v, validation_info, "pattern", "source", ["events"])
+    
+    @pydantic.field_validator("rule")
+    def check_rule(cls, v, validation_info):
+        return check_input(v, validation_info, "rule", "source", ["metrics"])
+    
+    @pydantic.field_validator("metric")
+    def check_metric(cls, v, validation_info):
+        return check_input(v, validation_info, "metric", "source", ["metrics"])
+    
+    @pydantic.field_validator("aggregation")
+    def check_aggregation(cls, v, validation_info):
+        return check_input(v, validation_info, "aggregation", "source", ["metrics"])
+    
+    @pydantic.field_validator("window")
+    def check_window(cls, v, validation_info):
+        return check_input(v, validation_info, "window", "source", ["metrics"])
 
-    @pydantic.validator("pattern", always=True)
-    def check_pattern(cls, v, values):
-        return check_input(v, values, "pattern", "source", ["events"])
+    @pydantic.field_validator("threshold")
+    def check_threshold(cls, v, validation_info):
+        return check_input(v, validation_info, "threshold", "rule", ["is above", "is below"])
     
-    @pydantic.validator("rule", always=True)
-    def check_rule(cls, v, values):
-        return check_input(v, values, "rule", "source", ["metrics"])
+    @pydantic.field_validator("range_low")
+    def check_range_low(cls, v, validation_info):
+        return check_input(v, validation_info, "range_low", "rule", ["is outside range", "is inside range"])
     
-    @pydantic.validator("metric", always=True)
-    def check_metric(cls, v, values):
-        return check_input(v, values, "metric", "source", ["metrics"])
-    
-    @pydantic.validator("aggregation", always=True)
-    def check_aggregation(cls, v, values):
-        return check_input(v, values, "aggregation", "source", ["metrics"])
-    
-    @pydantic.validator("window", always=True)
-    def check_window(cls, v, values):
-        return check_input(v, values, "window", "source", ["metrics"])
-
-    @pydantic.validator("threshold", always=True)
-    def check_threshold(cls, v, values):
-        return check_input(v, values, "threshold", "rule", ["is above", "is below"])
-    
-    @pydantic.validator("range_low", always=True)
-    def check_range_low(cls, v, values):
-        return check_input(v, values, "range_low", "rule", ["is outside range", "is inside range"])
-    
-    @pydantic.validator("range_high", always=True)
-    def check_range_high(cls, v, values):
-        return check_input(v, values, "range_high", "rule", ["is outside range", "is inside range"])
+    @pydantic.field_validator("range_high")
+    def check_range_high(cls, v, validation_info):
+        return check_input(v, validation_info, "range_high", "rule", ["is outside range", "is inside range"])

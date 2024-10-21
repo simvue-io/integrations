@@ -103,7 +103,7 @@ class MooseRun(WrappedRun):
             for csv_data in read_csv:
                 if self.track_vector_positions == False:
                     csv_data.pop('x', None)
-                    csv_data.pop('y'), None
+                    csv_data.pop('y', None)
                     csv_data.pop('z', None)
                     csv_data.pop('radius', None)
                     

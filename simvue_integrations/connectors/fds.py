@@ -75,7 +75,6 @@ class FDSRun(WrappedRun):
     @mp_file_parser.file_parser
     def _header_metadata(self, input_file: str, **__) -> tuple[dict[str,typing.Any], list[dict[str, typing.Any]]]:
         """Parse metadata from header of FDS stderr"""
-        print("in here")
         with open(input_file) as in_f:
             _file_lines = in_f.readlines()
 
@@ -92,12 +91,10 @@ class FDSRun(WrappedRun):
         _output_metadata: dict[str, str] = {}
 
         for line in _file_lines:
-            print(line)
             for key, regex in _components_regex.items():
                 if (search_res := regex.findall(line)):
                     _output_metadata[key] = search_res[0]
                     
-        print(_output_metadata)
 
         return {}, _output_metadata
         

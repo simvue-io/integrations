@@ -30,7 +30,8 @@ class OpenfoamRun(WrappedRun):
         """
 
         if self.upload_as_zip:
-            zip_file = zipfile.ZipFile(os.path.join(self.openfoam_case_dir, zip_name), 'w')
+            out_zip = os.path.join(self.openfoam_case_dir, zip_name)
+            zip_file = zipfile.ZipFile(out_zip, 'w')
 
         for dir_name in dir_names:
             dir_path = os.path.join(self.openfoam_case_dir, dir_name)
@@ -51,8 +52,8 @@ class OpenfoamRun(WrappedRun):
 
         if self.upload_as_zip:
             zip_file.close()
-            self.save_file(os.path.join(self.openfoam_case_dir, zip_name), file_type)
-            os.remove(os.path.join(self.openfoam_case_dir, zip_name))
+            self.save_file(out_zip, file_type)
+            os.remove(out_zip)
 
     @mp_tail_parser.log_parser
     def _log_parser(self, file_content: str, **__) -> tuple[dict[str,typing.Any], dict[str, typing.Any]]:
