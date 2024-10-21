@@ -10,6 +10,7 @@ import os
 import f90nml
 import shutil
 import multiparser.parsing.tail as mp_tail_parser
+import multiparser.parsing.file as mp_file_parser
 
 from simvue_integrations.connectors.generic import WrappedRun
 
@@ -63,7 +64,7 @@ class FDSRun(WrappedRun):
             elif self._activation_times and 'Time Stepping' in line:
                 self._activation_times = False
             elif self._activation_times:
-                match = re.match('\s+\d+\s+([\w]+)\s+([\d\.]+)\ss.*', line)
+                match = re.match(r'\s+\d+\s+([\w]+)\s+\w+\s+([\d\.]+)\s*', line)
                 if match:
                     self._activation_times_data[f"{match.group(1)}_activation_time"] = float(match.group(2))
 
@@ -71,7 +72,7 @@ class FDSRun(WrappedRun):
             _out_data += [_out_record]
 
         return {}, _out_data
-    
+
     def _metrics_callback(self, data, meta): 
         """Log metrics extracted from a log file to Simvue
         """
@@ -80,6 +81,32 @@ class FDSRun(WrappedRun):
         self.log_metrics(
                 data, timestamp=meta["timestamp"], time=metric_time, step=metric_step
             )
+
+    @mp_file_parser.file_parser
+    def _header_metadata(self, input_file: str, **__) -> tuple[dict[str,typing.Any], list[dict[str, typing.Any]]]:
+        """Parse metadata from header of FDS stderr"""
+        with open(input_file) as in_f:
+            _file_lines = in_f.readlines()
+
+        _components_regex: dict[str, typing.Pattern[typing.AnyStr]] = {
+            "fds.revision": re.compile(r"^\s*Revision\s+\:\s*([\w\d\.\-\_][^\n]+)"),
+            "fds.revision_date": re.compile(r"^\s*Revision Date\s+\:\s*([\w\s\:\d\-][^\n]+)"),
+            "fds.compiler": re.compile(r"^\s*Compiler\s+\:\s*([\w\d\-\_\(\)\s\.\[\]\,][^\n]+)"),
+            "fds.compilation_date": re.compile(r"^\s*Compilation Date\s+\:\s*([\w\d\-\:\,\s][^\n]+)"),
+            "fds.mpi_processes": re.compile(r"^\s*Number of MPI Processes:\s*(\d+)"),
+            "fds.mpi_version": re.compile(r"^\s*MPI version:\s*([\d\.]+)"),
+            "fds.mpi_library_version": re.compile(r"^\s*MPI library version:\s*([\w\d\.\s\*\(\)\[\]\-\_][^\n]+)"),
+        }
+
+        _output_metadata: dict[str, str] = {}
+
+        for line in _file_lines:
+            for key, regex in _components_regex.items():
+                if (search_res := regex.findall(line)):
+                    _output_metadata[key] = search_res[0]
+                    
+
+        return {}, _output_metadata
         
     def _ctrl_log_callback(self, data, meta):
         if data['State'].lower() == 'f':
@@ -114,7 +141,7 @@ class FDSRun(WrappedRun):
             ulimit=self.ulimit,
             **self.fds_env_vars
         )
-    
+
     def during_simulation(self):
         """Describes which files should be monitored during the simulation by Multiparser
         """
@@ -124,6 +151,13 @@ class FDSRun(WrappedRun):
             callback=lambda data, meta: self.update_metadata({k: v for k, v in data.items() if v}),
             file_type="fortran",
             static=True,
+        )
+        # Upload metadata from file header
+        self.file_monitor.track(
+            path_glob_exprs=f"{self._results_prefix}.out",
+            parser_func=self._header_metadata,
+            callback=lambda data, meta: self.update_metadata({**data, **meta}),
+            static=True
         )
         self.file_monitor.tail(
             path_glob_exprs=f"{self._results_prefix}.out",
@@ -173,9 +207,9 @@ class FDSRun(WrappedRun):
     @simvue.utilities.prettify_pydantic
     @pydantic.validate_call
     def launch(
-        self, 
+        self,
         fds_input_file_path: pydantic.FilePath,
-        workdir_path: str = None,
+        workdir_path: typing.Union[str,pydantic.DirectoryPath]  = None,
         upload_files: list[str] = None,
         ulimit: typing.Union[str, int] = "unlimited",
         fds_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None
@@ -241,13 +275,13 @@ class FDSRun(WrappedRun):
                 "pattern": re.compile(
                     r"\s+Max\sdivergence:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
                 ),
-                "name": "min_divergence",
+                "name": "max_divergence",
             },
             {
                 "pattern": re.compile(
                     r"\s+Min\sdivergence:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
                 ),
-                "name": "max_divergence",
+                "name": "min_divergence",
             },
             {
                 "pattern": re.compile(

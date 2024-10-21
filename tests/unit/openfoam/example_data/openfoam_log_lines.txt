@@ -1,0 +1,79 @@
+PIMPLE: Iteration 1
+DICPCG:  Solving for cellMotionUx, Initial residual = 7.02657e-06, Final residual = 8.35436e-09, No Iterations 12
+GAMG:  Solving for pcorr, Initial residual = 1, Final residual = 0.0186345, No Iterations 4
+time step continuity errors : sum local = 4.29091e-08, global = -4.05839e-09, cumulative = -5.48741e-06
+DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00537741, Final residual = 2.06876e-05, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00354374, Final residual = 2.17136e-05, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.024618, Final residual = 3.11448e-05, No Iterations 1
+GAMG:  Solving for p, Initial residual = 0.0233464, Final residual = 9.24162e-07, No Iterations 7
+time step continuity errors : sum local = 7.31018e-10, global = 1.85668e-10, cumulative = -5.48722e-06
+PIMPLE: Iteration 2
+DILUPBiCGStab:  Solving for Ux, Initial residual = 0.000112282, Final residual = 7.75651e-07, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 0.000171765, Final residual = 1.57426e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.000589927, Final residual = 1.74238e-08, No Iterations 1
+GAMG:  Solving for p, Initial residual = 0.00697087, Final residual = 6.50787e-07, No Iterations 7
+time step continuity errors : sum local = 5.04194e-10, global = 1.28939e-10, cumulative = -5.48709e-06
+ExecutionTime = 0.172352 s  ClockTime = 0 s
+
+Courant Number mean: 0.0604512 max: 0.475794
+deltaT = 4.96732e-06
+Time = 4.03922e-05s
+
+PIMPLE: Iteration 1
+DICPCG:  Solving for cellMotionUx, Initial residual = 7.01626e-06, Final residual = 7.77121e-09, No Iterations 12
+GAMG:  Solving for pcorr, Initial residual = 1, Final residual = 0.0186892, No Iterations 4
+time step continuity errors : sum local = 4.28656e-08, global = -4.07048e-09, cumulative = -5.49116e-06
+DILUPBiCGStab:  Solving for Ux, Initial residual = 0.005108, Final residual = 1.96159e-05, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00344885, Final residual = 2.14743e-05, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.0224774, Final residual = 2.90659e-05, No Iterations 1
+GAMG:  Solving for p, Initial residual = 0.0199077, Final residual = 9.81456e-07, No Iterations 7
+time step continuity errors : sum local = 7.44335e-10, global = 1.46211e-10, cumulative = -5.49102e-06
+PIMPLE: Iteration 2
+DILUPBiCGStab:  Solving for Ux, Initial residual = 0.000106926, Final residual = 6.96113e-07, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 0.000155394, Final residual = 1.34702e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.000525482, Final residual = 1.58294e-08, No Iterations 1
+GAMG:  Solving for p, Initial residual = 0.00660373, Final residual = 7.71334e-07, No Iterations 7
+time step continuity errors : sum local = 5.74043e-10, global = 2.01322e-10, cumulative = -5.49081e-06
+ExecutionTime = 0.190811 s  ClockTime = 0 s
+
+Courant Number mean: 0.0604899 max: 0.473956
+deltaT = 4.96732e-06
+Time = 4.53595e-05s
+
+PIMPLE: Iteration 1
+DICPCG:  Solving for cellMotionUx, Initial residual = 7.0022e-06, Final residual = 7.54399e-09, No Iterations 12
+GAMG:  Solving for pcorr, Initial residual = 1, Final residual = 0.0187227, No Iterations 4
+time step continuity errors : sum local = 4.28125e-08, global = -4.12312e-09, cumulative = -5.49494e-06
+DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00487245, Final residual = 1.86141e-05, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00338096, Final residual = 2.11285e-05, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.0209892, Final residual = 2.62037e-05, No Iterations 1
+GAMG:  Solving for p, Initial residual = 0.0179333, Final residual = 6.32882e-07, No Iterations 8
+time step continuity errors : sum local = 4.63403e-10, global = 1.00073e-10, cumulative = -5.49484e-06
+PIMPLE: Iteration 2
+DILUPBiCGStab:  Solving for Ux, Initial residual = 9.69156e-05, Final residual = 5.91601e-07, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 0.000132795, Final residual = 1.07198e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.00049723, Final residual = 1.51266e-08, No Iterations 1
+GAMG:  Solving for p, Initial residual = 0.00610801, Final residual = 6.35776e-07, No Iterations 7
+time step continuity errors : sum local = 4.51242e-10, global = -9.38504e-11, cumulative = -5.49493e-06
+ExecutionTime = 0.207135 s  ClockTime = 0 s
+
+Courant Number mean: 0.0605326 max: 0.472254
+deltaT = 4.96732e-06
+Time = 5.03268e-05s
+
+PIMPLE: Iteration 1
+DICPCG:  Solving for cellMotionUx, Initial residual = 6.9863e-06, Final residual = 7.76197e-09, No Iterations 12
+GAMG:  Solving for pcorr, Initial residual = 1, Final residual = 0.0187287, No Iterations 4
+time step continuity errors : sum local = 4.27143e-08, global = -4.22988e-09, cumulative = -5.49916e-06
+DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00464524, Final residual = 1.73925e-05, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00328211, Final residual = 2.06531e-05, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.0207784, Final residual = 2.53229e-05, No Iterations 1
+GAMG:  Solving for p, Initial residual = 0.0171659, Final residual = 4.62616e-07, No Iterations 8
+time step continuity errors : sum local = 3.2424e-10, global = 1.6368e-10, cumulative = -5.499e-06
+PIMPLE: Iteration 2
+DILUPBiCGStab:  Solving for Ux, Initial residual = 8.84722e-05, Final residual = 5.87234e-07, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 0.000135047, Final residual = 1.12096e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.000464332, Final residual = 1.24254e-08, No Iterations 1
+GAMG:  Solving for p, Initial residual = 0.00542434, Final residual = 3.8587e-07, No Iterations 7
+time step continuity errors : sum local = 2.66408e-10, global = -4.30267e-11, cumulative = -5.49904e-06
+ExecutionTime = 0.224044 s  ClockTime = 0 s
