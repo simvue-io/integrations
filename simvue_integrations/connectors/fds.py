@@ -54,7 +54,7 @@ class FDSRun(WrappedRun):
             elif self._activation_times and 'Time Stepping' in line:
                 self._activation_times = False
             elif self._activation_times:
-                match = re.match(r'\s+\d+\s+([\w]+)\s+([\d\.]+)\ss.*', line)
+                match = re.match(r'\s+\d+\s+([\w]+)\s+\w+\s+([\d\.]+)\s*', line)
                 if match:
                     self._activation_times_data[f"{match.group(1)}_activation_time"] = float(match.group(2))
 
@@ -79,13 +79,13 @@ class FDSRun(WrappedRun):
             _file_lines = in_f.readlines()
 
         _components_regex: dict[str, typing.Pattern[typing.AnyStr]] = {
-            "fds.revision": re.compile(r"^\s*Revision\s+\:\s*([\w\d\.\-\_]+)"),
-            "fds.revision_date": re.compile(r"^\s*Revision Date\s+\:\s*([\w\s\:\d\-]+)"),
-            "fds.compiler": re.compile(r"^\s*Compiler\s+\:\s*([\w\d\-\_\(\)\s\.\[\]\,]+)"),
-            "fds.compilation_date": re.compile(r"^\s*Compilation Date\s+\:\s*([\w\d\-\:\,\s]+)"),
+            "fds.revision": re.compile(r"^\s*Revision\s+\:\s*([\w\d\.\-\_][^\n]+)"),
+            "fds.revision_date": re.compile(r"^\s*Revision Date\s+\:\s*([\w\s\:\d\-][^\n]+)"),
+            "fds.compiler": re.compile(r"^\s*Compiler\s+\:\s*([\w\d\-\_\(\)\s\.\[\]\,][^\n]+)"),
+            "fds.compilation_date": re.compile(r"^\s*Compilation Date\s+\:\s*([\w\d\-\:\,\s][^\n]+)"),
             "fds.mpi_processes": re.compile(r"^\s*Number of MPI Processes:\s*(\d+)"),
             "fds.mpi_version": re.compile(r"^\s*MPI version:\s*([\d\.]+)"),
-            "fds.mpi_library_version": re.compile(r"^MPI library version:\s*([\w\d\.\s\*\(\)\[\]\-\_]+)"),
+            "fds.mpi_library_version": re.compile(r"^\s*MPI library version:\s*([\w\d\.\s\*\(\)\[\]\-\_][^\n]+)"),
         }
 
         _output_metadata: dict[str, str] = {}
@@ -94,6 +94,7 @@ class FDSRun(WrappedRun):
             for key, regex in _components_regex.items():
                 if (search_res := regex.findall(line)):
                     _output_metadata[key] = search_res[0]
+                    
 
         return {}, _output_metadata
         
@@ -195,9 +196,9 @@ class FDSRun(WrappedRun):
     @simvue.utilities.prettify_pydantic
     @pydantic.validate_call
     def launch(
-        self, 
+        self,
         fds_input_file_path: pydantic.FilePath,
-        workdir_path: str = None,
+        workdir_path: typing.Union[str,pydantic.DirectoryPath]  = None,
         upload_files: list[str] = None,
         ulimit: typing.Union[str, int] = "unlimited",
         fds_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None
@@ -263,13 +264,13 @@ class FDSRun(WrappedRun):
                 "pattern": re.compile(
                     r"\s+Max\sdivergence:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
                 ),
-                "name": "min_divergence",
+                "name": "max_divergence",
             },
             {
                 "pattern": re.compile(
                     r"\s+Min\sdivergence:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
                 ),
-                "name": "max_divergence",
+                "name": "min_divergence",
             },
             {
                 "pattern": re.compile(
