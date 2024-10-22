@@ -12,7 +12,7 @@ import simvue
 from tensorflow.keras.callbacks import Callback
 
 import simvue_integrations.extras.validators as validators
-#temp
+
 class TensorVue(Callback):
 
     def __init__(
