@@ -1,4 +1,4 @@
-exclude: '^tests|^examples|'
+exclude: '^tests|^examples'
 ci:
     autofix_prs: false
     autoupdate_branch: ''
