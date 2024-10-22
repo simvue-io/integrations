@@ -1,16 +1,17 @@
 import simvue
 import multiparser
 import multiprocessing
-import os
 import click
 import typing
+
+
 class WrappedRun(simvue.Run):
     """Generic wrapper to the Run class which can be used to build Connectors to non-python applications.
 
     New Connectors should inherit from this class, and override the specific methods below to add functionality
     for their given application. Make sure to call the base method as well.
     """
-       
+
     def __init__(
         self,
         mode: typing.Literal["online", "offline", "disabled"] = "online",
@@ -19,6 +20,7 @@ class WrappedRun(simvue.Run):
         """
         Initialize the WrappedRun instance, extending the user supplied alert abort callback.
         """
+
         def _extended_abort_callback(self):
             """
             Extends the user supplied abort alert callback to allow for the soft stop of simulations.
@@ -26,9 +28,9 @@ class WrappedRun(simvue.Run):
             if abort_callback:
                 abort_callback(self)
             self._soft_abort()
-            
+
         super().__init__(mode=mode, abort_callback=_extended_abort_callback)
-        
+
     def _soft_abort(self):
         """
         How to stop simluations from running safely when an abort is triggered.
@@ -37,7 +39,7 @@ class WrappedRun(simvue.Run):
         """
         self.kill_all_processes()
         self._trigger.set()
-        
+
     def pre_simulation(self):
         """Method which runs after launch() is called, but before a simulation begins.
 
@@ -49,7 +51,7 @@ class WrappedRun(simvue.Run):
         if not self._simvue:
             self._error("Run must be initialized before launching the simulation.")
             return False
-        
+
         # Uses 'ignore' so that on abort, run is not closed before post_simulation is run.
         self._abort_on_alert = "ignore"
 
@@ -59,7 +61,7 @@ class WrappedRun(simvue.Run):
 
     def post_simulation(self):
         """Method which runs after launch() is called and after the simulation finishes.
-        
+
         By default, checks whether an abort has been caused by an alert, and if so prints a message and sets
         the run to the terminated state. This method should be called AFTER the rest of your functions in the overriden method.
         """
@@ -80,15 +82,14 @@ class WrappedRun(simvue.Run):
         By default calls the three methods above, and sets up a FileMonitor for tracking files.
         """
         self.pre_simulation()
-        
+
         # Start an instance of the file monitor, to keep track of log and results files
         with multiparser.FileMonitor(
             exception_callback=self.log_event,
             termination_trigger=self._trigger,
-            flatten_data=True
+            flatten_data=True,
         ) as self.file_monitor:
-            
             self.during_simulation()
             self.file_monitor.run()
-        
+
         self.post_simulation()

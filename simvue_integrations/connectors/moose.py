@@ -9,8 +9,9 @@ import re
 import csv
 import glob
 from simvue_integrations.connectors.generic import WrappedRun
-from simvue_integrations.extras.create_command import format_command_env_vars   
-            
+from simvue_integrations.extras.create_command import format_command_env_vars
+
+
 class MooseRun(WrappedRun):
     """Class for setting up Simvue tracking and monitoring of a MOOSE simulation.
 
@@ -21,12 +22,10 @@ class MooseRun(WrappedRun):
             name="moose_simulation",
         )
         run.launch(...)
-    """        
+    """
+
     @mp_file_parser.file_parser
-    def _moose_header_parser(
-        self,
-        input_file: str,
-        **__) -> typing.Dict[str, str]:
+    def _moose_header_parser(self, input_file: str, **__) -> typing.Dict[str, str]:
         """Method which parses the header of the MOOSE log file and returns the data from it as a dictionary.
 
         Parameters
@@ -52,9 +51,9 @@ class MooseRun(WrappedRun):
                 continue
             key, value = line.split(":", 1)
             key = key.strip()
-            key = key.replace(" ","_").lower()
+            key = key.replace(" ", "_").lower()
             # Replace any characters which will fail server side validation of key name with dashes
-            key = re.sub('[^\w\-\s\.]+', '-', key)
+            key = re.sub("[^\w\-\s\.]+", "-", key)
             # Ignore lines which correspond to 'titles'
             if not value:
                 continue
@@ -64,12 +63,13 @@ class MooseRun(WrappedRun):
             header_data[key] = value
 
         return {}, header_data
+
     @mp_file_parser.file_parser
     def _vector_postprocessor_parser(
         self,
         input_file: str,
         **__,
-        ) -> typing.Dict[str, str]:
+    ) -> typing.Dict[str, str]:
         """Parser for reading data from VectorPostProcessor CSV files
 
         Parameters
@@ -85,34 +85,41 @@ class MooseRun(WrappedRun):
         metrics = {}
         # Get name of vector which is being calculated by VectorPostProcessor from filename
         file_name = os.path.basename(input_file)
-        vector_name, serial_num = file_name.replace(f"{self.results_prefix}_","").rsplit("_", 1)
-        
+        vector_name, serial_num = file_name.replace(
+            f"{self.results_prefix}_", ""
+        ).rsplit("_", 1)
+
         # If user has enabled time_data in their MOOSE file, get latest line from this file and save time
         time_file = f"{input_file.rsplit('_', 1)[0]}_time.csv"
         if os.path.exists(time_file):
             with open(time_file, newline="\n") as in_t:
                 final_line = [in_t.readlines()[-1]]
                 current_time_data = next(csv.reader(final_line))
-                metrics['time'] = current_time_data[0]
-                metrics['step'] = current_time_data[1]
+                metrics["time"] = current_time_data[0]
+                metrics["step"] = current_time_data[1]
         else:
-            metrics['step'] = int(serial_num.split(".")[0])
-            
+            metrics["step"] = int(serial_num.split(".")[0])
+
         with open(input_file, newline="") as in_f:
             read_csv = csv.DictReader(in_f)
-        
+
             for csv_data in read_csv:
-                if self.track_vector_positions == False:
-                    csv_data.pop('x', None)
-                    csv_data.pop('y', None)
-                    csv_data.pop('z', None)
-                    csv_data.pop('radius', None)
-                    
-                if _id := csv_data.pop('id', None):
-                    metrics.update({f"{vector_name}.{key}.{_id}":value for (key, value) in csv_data.items()})
-                    
+                if not self.track_vector_positions:
+                    csv_data.pop("x", None)
+                    csv_data.pop("y", None)
+                    csv_data.pop("z", None)
+                    csv_data.pop("radius", None)
+
+                if _id := csv_data.pop("id", None):
+                    metrics.update(
+                        {
+                            f"{vector_name}.{key}.{_id}": value
+                            for (key, value) in csv_data.items()
+                        }
+                    )
+
         return {}, metrics
-    
+
     def _per_event_callback(self, log_data: typing.Dict[str, str], _):
         """Method which looks out for certain phrases in the MOOSE log, and adds them to the Events log
 
@@ -127,7 +134,10 @@ class MooseRun(WrappedRun):
         """
 
         # Look for relevant keys in the dictionary of data which we are passed in, and log the event with Simvue
-        if any(key in ("time_step", "converged", "non_converged", "finished") for key in log_data.keys()):
+        if any(
+            key in ("time_step", "converged", "non_converged", "finished")
+            for key in log_data.keys()
+        ):
             try:
                 self.log_event(list(log_data.values())[0])
             except RuntimeError as e:
@@ -137,23 +147,27 @@ class MooseRun(WrappedRun):
         if "time_step" in log_data.keys():
             self._time = time.time()
 
-            step_time = re.search(r"Time Step (\d+), time = (\d+), dt = .*", log_data["time_step"])
+            step_time = re.search(
+                r"Time Step (\d+), time = (\d+), dt = .*", log_data["time_step"]
+            )
             if step_time:
                 self._step_num = int(step_time.group(1))
                 self._step_time = float(step_time.group(2))
-        
+
         elif "converged" in log_data.keys():
-            self.log_event(f" Step calculation time: {round((time.time() - self._time), 2)} seconds.")
+            self.log_event(
+                f" Step calculation time: {round((time.time() - self._time), 2)} seconds."
+            )
             self.log_event(f" Total Nonlinear Iterations: {self._nonlinear}.")
             self.log_event(f" Total Linear Iterations: {self._linear}.")
 
             self.log_metrics(
                 {
                     "total_linear_iterations": self._linear,
-                    "total_nonlinear_iterations": self._nonlinear
+                    "total_nonlinear_iterations": self._nonlinear,
                 },
                 self._step_num,
-                self._step_time
+                self._step_time,
             )
 
             self._linear = 0
@@ -164,13 +178,15 @@ class MooseRun(WrappedRun):
             self._nonlinear += 1
         elif "linear" in log_data.keys():
             self._linear += 1
-        
+
         # If simulation has completed successfully, terminate multiparser
         elif "finished" in log_data.keys():
-            time.sleep(1) # To allow other processes to complete
+            time.sleep(1)  # To allow other processes to complete
             self._trigger.set()
 
-    def _per_metric_callback(self, csv_data: typing.Dict[str, float], sim_metadata: typing.Dict[str, str]):
+    def _per_metric_callback(
+        self, csv_data: typing.Dict[str, float], sim_metadata: typing.Dict[str, str]
+    ):
         """Monitor each line in the results CSV file, and add data from it to Simvue Metrics.
 
         Parameters
@@ -180,56 +196,65 @@ class MooseRun(WrappedRun):
         sim_metadata : typing.Dict[str, str]
             The metadata about when this line was read by Multiparser
         """
-        metric_time = csv_data.pop('time', None)
-        metric_step = csv_data.pop('step', None)
+        metric_time = csv_data.pop("time", None)
+        metric_step = csv_data.pop("step", None)
 
         # Log all results for this timestep as Metrics
         self.log_metrics(
             csv_data,
-            step = metric_step or self._step_num,
-            time = metric_time,
-            timestamp = sim_metadata['timestamp']
+            step=metric_step or self._step_num,
+            time=metric_time,
+            timestamp=sim_metadata["timestamp"],
         )
 
     def pre_simulation(self):
-        """Simvue commands which are ran before the MOOSE simulation begins.
-        """
+        """Simvue commands which are ran before the MOOSE simulation begins."""
         super().pre_simulation()
 
         # Add alert for a non converging step
         self.create_alert(
-            name='step_not_converged',
-            source='events',
+            name="step_not_converged",
+            source="events",
             frequency=1,
-            pattern=' Solve Did NOT Converge!',
-            notification='email'
-            )
+            pattern=" Solve Did NOT Converge!",
+            notification="email",
+        )
 
         # Save the MOOSE file for this run to the Simvue server
         if os.path.exists(self.moose_file_path):
-            self.save_file(self.moose_file_path, "input") 
+            self.save_file(self.moose_file_path, "input")
 
         # Save the MOOSE Makefile
-        if os.path.exists(os.path.join(os.path.dirname(self.moose_application_path), "Makefile")):
-            self.save_file(os.path.join(os.path.dirname(self.moose_application_path), "Makefile"), 'input')
+        if os.path.exists(
+            os.path.join(os.path.dirname(self.moose_application_path), "Makefile")
+        ):
+            self.save_file(
+                os.path.join(os.path.dirname(self.moose_application_path), "Makefile"),
+                "input",
+            )
 
         # Add the MOOSE simulation as a process, so that Simvue can abort it if alerts begin to fire
         command = []
         if self.run_in_parallel:
-            command += ['mpiexec', '-n', str(self.num_processors)]
+            command += ["mpiexec", "-n", str(self.num_processors)]
             command += format_command_env_vars(self.mpiexec_env_vars)
-        command += [str(self.moose_application_path), '-i', str(self.moose_file_path), '--color', 'off']
+        command += [
+            str(self.moose_application_path),
+            "-i",
+            str(self.moose_file_path),
+            "--color",
+            "off",
+        ]
         command += format_command_env_vars(self.moose_env_vars)
-        
+
         self.add_process(
-            'moose_simulation',
+            "moose_simulation",
             *command,
             completion_trigger=self._trigger,
-            )
-    
+        )
+
     def during_simulation(self):
-        """Describes which files should be monitored during the simulation by Multiparser
-        """
+        """Describes which files should be monitored during the simulation by Multiparser"""
         self.log_event("Beginning MOOSE simulation...")
         # Record time here, for that for static problems the overall time for execution will be returned
         self._time = time.time()
@@ -242,59 +267,88 @@ class MooseRun(WrappedRun):
 
         # Read the initial information within the log file when it is first created, to parse the header information
         self.file_monitor.track(
-            path_glob_exprs = os.path.join(self.output_dir_path, f"{self.results_prefix}.txt"),
-            callback = lambda header_data, metadata: self.update_metadata({**header_data, **metadata}), 
-            parser_func = self._moose_header_parser, 
-            static = True,
+            path_glob_exprs=os.path.join(
+                self.output_dir_path, f"{self.results_prefix}.txt"
+            ),
+            callback=lambda header_data, metadata: self.update_metadata(
+                {**header_data, **metadata}
+            ),
+            parser_func=self._moose_header_parser,
+            static=True,
         )
         # Monitor each line added to the MOOSE log file as the simulation proceeds and look out for certain phrases to upload to Simvue
         self.file_monitor.tail(
-            path_glob_exprs = os.path.join(self.output_dir_path, f"{self.results_prefix}.txt"), 
-            callback = self._per_event_callback,
-            tracked_values = [re.compile(r"Time Step.*"), " Solve Converged!", " Solve Did NOT Converge!", "Finished Executing", re.compile(r" \d+ Nonlinear \|R\|"), re.compile(r"     \d+ Linear \|R\|")], 
-            labels = ["time_step", "converged", "non_converged", "finished", "nonlinear", "linear"]
+            path_glob_exprs=os.path.join(
+                self.output_dir_path, f"{self.results_prefix}.txt"
+            ),
+            callback=self._per_event_callback,
+            tracked_values=[
+                re.compile(r"Time Step.*"),
+                " Solve Converged!",
+                " Solve Did NOT Converge!",
+                "Finished Executing",
+                re.compile(r" \d+ Nonlinear \|R\|"),
+                re.compile(r"     \d+ Linear \|R\|"),
+            ],
+            labels=[
+                "time_step",
+                "converged",
+                "non_converged",
+                "finished",
+                "nonlinear",
+                "linear",
+            ],
         )
         # Monitor each line added to the MOOSE results file as the simulation proceeds, and upload results to Simvue
         self.file_monitor.tail(
-            path_glob_exprs =  os.path.join(self.output_dir_path, f"{self.results_prefix}.csv"),
-            parser_func = mp_tail_parser.record_csv,
-            callback = self._per_metric_callback
+            path_glob_exprs=os.path.join(
+                self.output_dir_path, f"{self.results_prefix}.csv"
+            ),
+            parser_func=mp_tail_parser.record_csv,
+            callback=self._per_metric_callback,
         )
-        self.file_monitor.exclude(os.path.join(self.output_dir_path, f"{self.results_prefix}_*_time.csv"))
+        self.file_monitor.exclude(
+            os.path.join(self.output_dir_path, f"{self.results_prefix}_*_time.csv")
+        )
         # Monitor each file created by a Vector PostProcessor, and upload results to Simvue if file matches an expected form.
         if self.track_vector_postprocessors:
             self.file_monitor.track(
-                path_glob_exprs =  os.path.join(self.output_dir_path, f"{self.results_prefix}_*.csv"),
-                parser_func = self._vector_postprocessor_parser,
-                callback = self._per_metric_callback,
-                static=True
+                path_glob_exprs=os.path.join(
+                    self.output_dir_path, f"{self.results_prefix}_*.csv"
+                ),
+                parser_func=self._vector_postprocessor_parser,
+                callback=self._per_metric_callback,
+                static=True,
             )
 
     def post_simulation(self):
-        """Simvue commands which are ran after the MOOSE simulation finishes.
-        """
-        for file in glob.glob(os.path.join(self.output_dir_path, f"{self.results_prefix}*")):
+        """Simvue commands which are ran after the MOOSE simulation finishes."""
+        for file in glob.glob(
+            os.path.join(self.output_dir_path, f"{self.results_prefix}*")
+        ):
             if os.path.abspath(file) == os.path.abspath(self.moose_file_path):
                 continue
             self.save_file(file, "output")
-            
+
         super().post_simulation()
-            
+
     @simvue.utilities.prettify_pydantic
     @pydantic.validate_call
     def launch(
-        self, 
+        self,
         moose_application_path: pydantic.FilePath,
         moose_file_path: pydantic.FilePath,
-        output_dir_path: typing.Union[str,pydantic.DirectoryPath], # as this might not exist yet
+        output_dir_path: typing.Union[
+            str, pydantic.DirectoryPath
+        ],  # as this might not exist yet
         results_prefix: str,
         track_vector_postprocessors: bool = False,
         track_vector_positions: bool = False,
         run_in_parallel: bool = False,
         num_processors: int = 1,
         mpiexec_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None,
-        moose_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None
-        ):
+        moose_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None,
+    ):
         """Command to launch the MOOSE simulation and track it with Simvue.
 
         Parameters
@@ -308,9 +362,11 @@ class MooseRun(WrappedRun):
         moose_env_vars : typing.Optional[typing.Dict[str, typing.Any]], optional
             Any environment variables to be passed to MOOSE on startup, by default None
         """
-        
+
         if track_vector_positions and not track_vector_postprocessors:
-            raise ValueError("Vector positions can only be tracked if vector postprocessor tracking is enabled.")
+            raise ValueError(
+                "Vector positions can only be tracked if vector postprocessor tracking is enabled."
+            )
 
         self.moose_application_path = moose_application_path
         self.moose_file_path = moose_file_path
