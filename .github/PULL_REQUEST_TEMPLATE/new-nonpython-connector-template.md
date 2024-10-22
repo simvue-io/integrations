@@ -10,9 +10,9 @@
 
 ## Testing Performed
 - **Tested Version(s)**: [Versions of the software which the connector has been tested against]
-- **Tested Operating Systems**: [Names of operating systems which this has been tested against]
-- **Tested Python Versions**: [The python versions which this connector has been tested against]
-- **Tested Simvue Python API Versions**: [Versions of the Python API which this connector has been tested against]
+- **Tested Operating System(s)**: [Names of operating systems which this has been tested against]
+- **Tested Python Version(s)**: [The python versions which this connector has been tested against]
+- **Tested Simvue Python API Version(s)**: [Versions of the Python API which this connector has been tested against]
 
 ## Documentation
 - **Link to Documentation PR**: [Provide a link to a Pull Request in the Documentation repo, where the `Integrations` and `Examples` pages have been updated to include your Connector]
@@ -29,5 +29,3 @@
 - [ ] The `Integrations` and `Examples` pages of the documentation have been updated to include information about your Connector, following the existing format
 - [ ] A Docker image has been provided and pushed to the github Registry, which contains the simulation software being tracked, and examples of your Connector
 - [ ] Example scripts of the connector in use have been provided
-
-

@@ -8,9 +8,9 @@
 
 ## Testing Performed
 - **Tested Software Version(s)**: [Versions of the software which the connector has been tested against]
-- **Tested Operating Systems**: [Names of operating systems which this has been tested against]
-- **Tested Python Versions**: [The python versions which this connector has been tested against]
-- **Tested Simvue Python API Versions**: [Versions of the Python API which this connector has been tested against]
+- **Tested Operating System(s)**: [Names of operating systems which this has been tested against]
+- **Tested Python Version(s)**: [The python versions which this connector has been tested against]
+- **Tested Simvue Python API Version(s)**: [Versions of the Python API which this connector has been tested against]
 
 ## Documentation
 - **Link to Documentation PR**: [Provide a link to a Pull Request in the Documentation repo, where the `Integrations` and `Examples` pages have been updated to include your new Feature (if applicable)]
@@ -24,5 +24,3 @@
 - [ ] Code passes all pre-commit hooks
 - [ ] The `Integrations` and `Examples` pages of the documentation have been updated to include information about your new feature (if applicable)
 - [ ] Example scripts have been updated to include your new feature
-
-

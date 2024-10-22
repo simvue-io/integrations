@@ -8,9 +8,9 @@
 
 ## Testing Performed
 - **Tested Software Version(s)**: [Versions of the software which the tests have been ran against]
-- **Tested Operating Systems**: [Names of operating systems which the tests have been ran against]
-- **Tested Python Versions**: [The python versions which the tests have been ran against]
-- **Tested Simvue Python API Versions**: [Versions of the Python API which the tests have been ran against]
+- **Tested Operating System(s)**: [Names of operating systems which the tests have been ran against]
+- **Tested Python Version(s)**: [The python versions which the tests have been ran against]
+- **Tested Simvue Python API Version(s)**: [Versions of the Python API which the tests have been ran against]
 
 ## Links to Issues
 [Provide links to any issues which have been raised as a result of these tests]
@@ -21,5 +21,3 @@
 - [ ] All unit tests run and pass locally
 - [ ] Integration tests are passing in the CI
 - [ ] Code passes all pre-commit hooks
-
-

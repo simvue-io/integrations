@@ -8,9 +8,9 @@
 
 ## Testing Performed
 - **Tested Software Version(s)**: [Versions of the software which the fix has been tested against]
-- **Tested Operating Systems**: [Names of operating systems which the fix has been tested against]
-- **Tested Python Versions**: [The python versions which the fix has been tested against]
-- **Tested Simvue Python API Versions**: [Versions of the Python API which the fix has been tested against]
+- **Tested Operating System(s)**: [Names of operating systems which the fix has been tested against]
+- **Tested Python Version(s)**: [The python versions which the fix has been tested against]
+- **Tested Simvue Python API Version(s)**: [Versions of the Python API which the fix has been tested against]
 
 ## Links to Issues
 [Provide links to any issues which have been fixed as a result of this PR]
@@ -22,5 +22,3 @@
 - [ ] All unit tests run and pass locally
 - [ ] Integration tests are passing in the CI
 - [ ] Code passes all pre-commit hooks
-
-
