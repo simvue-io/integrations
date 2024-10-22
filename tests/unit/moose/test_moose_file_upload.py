@@ -12,7 +12,8 @@ def mock_moose_process(self, *_, **__):
     
 @patch.object(MooseRun, 'add_process', mock_moose_process)
 def test_moose_file_upload(folder_setup):
-    """Check that Exodus file is correctly uploaded as an artifact once simulation is complete.
+    """
+    Check that Exodus file is correctly uploaded as an artifact once simulation is complete.
     """    
     name = 'test_moose_file_upload-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="moose_test")
@@ -30,4 +31,5 @@ def test_moose_file_upload(folder_setup):
         
         # Retrieve Exodus file from server and compare with local copy
         client.get_artifacts_as_files(run_id, "output", temp_dir.name)
-        filecmp.cmp(pathlib.Path(__file__).parent.joinpath("example_data", "moose_outputs", "moose_test.e"), pathlib.Path(temp_dir.name).joinpath("moose_test.e"))
+        comparison = filecmp.dircmp(pathlib.Path(__file__).parent.joinpath("example_data", "moose_outputs"), temp_dir.name)
+        assert not (comparison.diff_files or comparison.left_only or comparison.right_only)
