@@ -37,7 +37,7 @@ def test_fds_connector(check_fds_setup, folder_setup):
     # Check metrics from DEVC file
     assert run_data["metrics"]["flow_volume_supply"]["count"] > 0
 
-    temp_dir = tempfile.TemporaryDirectory
+    temp_dir = tempfile.TemporaryDirectory()
     
     # Check input file uploaded as input
     client.get_artifacts_as_files(run_id, "input", temp_dir.name)
