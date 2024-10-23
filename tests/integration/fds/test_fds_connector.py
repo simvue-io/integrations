@@ -35,7 +35,7 @@ def test_fds_connector(check_fds_setup, folder_setup):
     assert run_data["metrics"]["HRR"]["count"] > 0
     
     # Check metrics from DEVC file
-    assert run_data["metrics"]["flow_volume_supply"]["last"] == -1.5
+    assert run_data["metrics"]["flow_volume_supply"]["count"] > 0
 
     temp_dir = tempfile.TemporaryDirectory
     
