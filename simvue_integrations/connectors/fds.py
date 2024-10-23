@@ -200,7 +200,6 @@ class FDSRun(WrappedRun):
 
     def post_simulation(self):
         """Uploads files selected by user to Simvue for storage."""
-        self.log_event("FDS simulation complete!")
         self.update_metadata(self._activation_times_data)
 
         if self.upload_files is None:

@@ -29,7 +29,7 @@ def test_fds_connector(check_fds_setup, folder_setup):
     assert "Time Step: 1, Simulation Time: 0.092 s" in events
     
     # Check events from DEVC/CTRL log
-    assert "DEVC 'timer' has been set to 'True' at time 2s" in [event["message" for event in events]]
+    assert "DEVC 'timer' has been set to 'True' at time 2.00296E+00s, when it reached a value of 2.00296E+00s." in events
         
     # Check metrics from HRR file
     assert run_data["metrics"]["HRR"]["count"] > 0
