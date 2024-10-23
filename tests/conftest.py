@@ -1,6 +1,7 @@
 import pytest
 import simvue
 import uuid
+import subprocess
 from tensorflow import keras
 
 @pytest.fixture(scope='session', autouse=True)
@@ -38,3 +39,17 @@ def tensorflow_example_data():
             self.model = model
             
     return TensorflowExample()
+
+
+@pytest.fixture()
+def check_fds_setup():
+    try:
+        subprocess.run("fds")
+    except FileNotFoundError:
+        raise pytest.UsageError("You are attempting to run FDS Integration Tests without having FDS installed in your path. \n"
+                                "If you wish to run these, please run them inside the docker container 'openbcl/fds:6.9.1'. \n"
+                                "If you do not wish to run these, please add '--ignore tests/integration/fds' to your PyTest command. \n"
+                                "To exclude all tests which require additional software, add '--ignore tests/integration' to your PyTest command."
+                                )
+    return True
+        
