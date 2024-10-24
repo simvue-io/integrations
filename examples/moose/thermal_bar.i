@@ -65,8 +65,8 @@
 []
 [Executioner]
   type = Transient
-  end_time = 100
-  dt = 10
+  end_time = 30
+  dt = 2
   solve_type = NEWTON
 []
 [Outputs]
