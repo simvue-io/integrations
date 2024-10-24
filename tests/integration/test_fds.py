@@ -1,10 +1,15 @@
 from examples.fds.minimal_fds import fds_example
+import pytest
+import subprocess
 import pathlib
 import tempfile
 import simvue
 
-def test_fds_connector(check_fds_setup, folder_setup):
-    assert check_fds_setup
+def test_fds_connector(folder_setup):
+    try:
+        subprocess.run("fds")
+    except FileNotFoundError:
+        pytest.skip("You are attempting to run FDS Integration Tests without having FDS installed in your path.")
     
     run_id = fds_example(folder_setup)
     

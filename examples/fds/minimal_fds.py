@@ -38,6 +38,6 @@ def fds_example(run_folder) -> None:
         
         return run.id
 
-if __name__ in "__main__":
-    fds_example("fds_example")
+if __name__ == "__main__":
+    fds_example("/fds_example")
 
