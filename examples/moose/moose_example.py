@@ -1,7 +1,35 @@
+"""
+MOOSE Connector Example
+========================
+This is an example of the MOOSERun Connector class.
+
+The MOOSE simulation used here simulated the diffusion of heat through
+a rectangular bar, where one end is held at 0K, and the other end at 1000K.
+
+To run this example with Docker:
+    - Pull the base MOOSE image: docker run -it idaholab/moose:latest
+    - Clone this repository: git clone https://github.com/simvue-io/integrations.git
+    - Move into MOOSE examples directory: cd integrations/examples/moose
+    - Create a simvue.toml file, copying in your information from the Simvue server: vi simvue.toml
+    - Install Poetry: pip install poetry
+    - Install required modules: poetry install
+    - Run the example script: poetry run python moose_example.py
+
+To run this example on your own system with MOOSE installed:
+    - Ensure that you have a MOOSE app installed with the Heat Transfer module enabled
+    - Move into MOOSE examples directory: cd integrations/examples/moose
+    - Create a simvue.toml file, copying in your information from the Simvue server
+    - Update the 'MOOSE_APP_PATH' at the top of the page to point to your MOOSE app
+    - Install Poetry: pip install poetry
+    - Install required modules: poetry install
+    - Run the example script: poetry run python moose_example.py
+"""
 import pathlib
 import uuid
 import shutil
 from simvue_integrations.connectors.moose import MooseRun
+
+MOOSE_APP_PATH = "/opt/moose/bin/moose-opt"
 
 def moose_example(moose_app_path, run_folder) -> None:
     # Initialise the MooseRun class as a context manager
@@ -46,4 +74,4 @@ def moose_example(moose_app_path, run_folder) -> None:
         return run.id
     
 if __name__ == "__main__":
-    moose_example(moose_app_path="/opt/moose/bin/moose-opt", run_folder="/moose_example")
+    moose_example(moose_app_path=MOOSE_APP_PATH, run_folder="/moose_example")

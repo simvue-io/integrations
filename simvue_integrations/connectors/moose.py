@@ -60,7 +60,7 @@ class MooseRun(WrappedRun):
             value = value.strip()
             if not value:
                 continue
-            header_data[key] = value
+            header_data[f"moose.{key}"] = value
 
         return {}, header_data
 
@@ -203,7 +203,7 @@ class MooseRun(WrappedRun):
         self.log_metrics(
             csv_data,
             step=metric_step or self._step_num,
-            time=metric_time,
+            time=metric_time or self._step_time,
             timestamp=sim_metadata["timestamp"],
         )
 

@@ -13,13 +13,12 @@ ukaea-multiparser = "^1.0.2"
 tensorflow = {version="^2.16.1", optional=true}
 mnist = {version="^0.2.2", optional=true}
 f90nml = {version = "^1.4.3", optional = true}
+pytest = {version = "^8.3.3", optional = true}
 
 [tool.poetry.extras]
 tensorflow = ["tensorflow", "mnist"]
 fds = ["f90nml"]
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.3.3"
+test = ["pytest"]
 
 [build-system]
 requires = ["poetry-core"]
