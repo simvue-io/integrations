@@ -15,6 +15,15 @@ from simvue_integrations.connectors.generic import WrappedRun
 
 
 class FDSRun(WrappedRun):
+    def _soft_abort(self):
+        """
+        If an abort is triggered, creates a '.stop' file so that FDS simulation is stopped gracefully.
+        """
+        if not os.path.exists(f"{self._results_prefix}.stop"):
+            with open(f"{self._results_prefix}.stop", "w") as stop_file:
+                stop_file.write("FDS simulation aborted due to Simvue Alert.")
+                stop_file.close()
+
     @mp_tail_parser.log_parser
     def _log_parser(
         self, file_content: str, **__
@@ -213,6 +222,8 @@ class FDSRun(WrappedRun):
                     ):
                         continue
                     self.save_file(file, "output")
+
+        super().post_simulation()
 
     @simvue.utilities.prettify_pydantic
     @pydantic.validate_call

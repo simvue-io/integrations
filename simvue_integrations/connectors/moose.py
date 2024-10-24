@@ -7,6 +7,7 @@ import os
 import time
 import re
 import csv
+import glob
 from simvue_integrations.connectors.generic import WrappedRun
 from simvue_integrations.extras.create_command import format_command_env_vars
 
@@ -322,12 +323,14 @@ class MooseRun(WrappedRun):
 
     def post_simulation(self):
         """Simvue commands which are ran after the MOOSE simulation finishes."""
-        if os.path.exists(
-            os.path.join(self.output_dir_path, f"{self.results_prefix}.e")
+        for file in glob.glob(
+            os.path.join(self.output_dir_path, f"{self.results_prefix}*")
         ):
-            self.save_file(
-                os.path.join(self.output_dir_path, f"{self.results_prefix}.e"), "output"
-            )
+            if os.path.abspath(file) == os.path.abspath(self.moose_file_path):
+                continue
+            self.save_file(file, "output")
+
+        super().post_simulation()
 
     @simvue.utilities.prettify_pydantic
     @pydantic.validate_call

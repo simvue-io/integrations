@@ -1,6 +1,8 @@
 import simvue
 import multiparser
 import multiprocessing
+import click
+import typing
 
 
 class WrappedRun(simvue.Run):
@@ -9,6 +11,34 @@ class WrappedRun(simvue.Run):
     New Connectors should inherit from this class, and override the specific methods below to add functionality
     for their given application. Make sure to call the base method as well.
     """
+
+    def __init__(
+        self,
+        mode: typing.Literal["online", "offline", "disabled"] = "online",
+        abort_callback: typing.Optional[typing.Callable[[], None]] = None,
+    ):
+        """
+        Initialize the WrappedRun instance, extending the user supplied alert abort callback.
+        """
+
+        def _extended_abort_callback(self):
+            """
+            Extends the user supplied abort alert callback to allow for the soft stop of simulations.
+            """
+            if abort_callback:
+                abort_callback(self)
+            self._soft_abort()
+
+        super().__init__(mode=mode, abort_callback=_extended_abort_callback)
+
+    def _soft_abort(self):
+        """
+        How to stop simluations from running safely when an abort is triggered.
+        By default, kills the process associated with the simulation, then stops the file monitor using _trigger.
+        The Run will then proceed to run the code in `post_simulation`, and then close as normal.
+        """
+        self.kill_all_processes()
+        self._trigger.set()
 
     def pre_simulation(self):
         """Method which runs after launch() is called, but before a simulation begins.
@@ -22,13 +52,29 @@ class WrappedRun(simvue.Run):
             self._error("Run must be initialized before launching the simulation.")
             return False
 
+        # Uses 'ignore' so that on abort, run is not closed before post_simulation is run.
+        self._abort_on_alert = "ignore"
+
     def during_simulation(self):
         """Method which runs after launch() is called and after the simulation begins, within the FileMonitor."""
         pass
 
     def post_simulation(self):
-        """Method which runs after launch() is called and after the simulation finishes."""
-        pass
+        """Method which runs after launch() is called and after the simulation finishes.
+
+        By default, checks whether an abort has been caused by an alert, and if so prints a message and sets
+        the run to the terminated state. This method should be called AFTER the rest of your functions in the overriden method.
+        """
+        if self._alert_raised_trigger.is_set():
+            self.log_event("Simulation aborted due to an alert being triggered.")
+            self.set_status("terminated")
+            click.secho(
+                "[simvue] Run was aborted.",
+                fg="red" if self._term_color else None,
+                bold=self._term_color,
+            )
+        else:
+            self.log_event("Simulation Complete!")
 
     def launch(self):
         """Method which launches the simulation and the monitoring.
