@@ -4,7 +4,7 @@ import pathlib
 import tempfile
 import simvue
 
-def test_moose_connector(folder_setup):
+def test_openfoam_connector(folder_setup):
     if not pathlib.Path("/opt/openfoam10").exists():
         pytest.skip("You are attempting to run Openfoam Integration Tests without having Openfoam installed.")
 

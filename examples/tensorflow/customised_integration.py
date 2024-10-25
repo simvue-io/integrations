@@ -1,5 +1,19 @@
-# example of integrating Simvue into a Tensorflow Keras CNN with customised options
+"""
+TensorFlow Connector Example
+===============================
+This is an example of customising the TensorVue Connector class
 
+This example trains a CNN which is trained on a 'mnist' dataset to recognise images of items of clothing
+
+IMPORTANT - this example requires matplotlib to be installed!
+
+To run this example:
+    - Move into TensorFlow examples directory: cd integrations/examples/tensorflow
+    - Create a simvue.toml file, copying in your information from the Simvue server: vi simvue.toml
+    - Install Poetry: pip install poetry
+    - Install required modules: poetry install -E tensorflow -E plot
+    - Run the example script: poetry run python customised_integration.py
+"""
 import tensorflow as tf
 from tensorflow import keras
 import numpy
