@@ -1,4 +1,4 @@
-from examples.fds.minimal_fds import fds_example
+from examples.fds.fds_example import fds_example
 import pytest
 import subprocess
 import pathlib
