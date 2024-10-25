@@ -30,7 +30,7 @@ import subprocess
 import uuid
 from simvue_integrations.connectors.openfoam import OpenfoamRun
 
-OPENFOAM_CASE_DIR = "/workdir/airFoil2D"
+OPENFOAM_CASE_DIR = "/home/openfoam/airFoil2D"
 
 def openfoam_example(case_dir, run_folder):
     
