@@ -31,7 +31,7 @@ def mock_moose_process(self, *_, **__):
 def test_scalar_pp_parser(folder_setup):
     """
     Check that ScalarPostProcesser CSV results files are correctly parsed,
-    with values from each ScalarPostProcessor at every timestep uploaded as Metrics
+    with values from each ScalarPostProcessor at every timestep uploaded as Metrics.
     """    
     name = 'test_scalar_pp_parser-%s' % str(uuid.uuid4())
     with MooseRun() as run:

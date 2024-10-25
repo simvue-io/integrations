@@ -2,7 +2,6 @@ import pytest
 import simvue
 import uuid
 import subprocess
-from tensorflow import keras
 
 @pytest.fixture(scope='session', autouse=True)
 def folder_setup():
@@ -16,6 +15,7 @@ def folder_setup():
     
 @pytest.fixture()
 def tensorflow_example_data():
+    from tensorflow import keras
     class TensorflowExample():
         def __init__(self):
             # Load the training and test data

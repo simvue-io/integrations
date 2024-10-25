@@ -1,3 +1,29 @@
+"""
+FDS Connector Example
+========================
+This is an example of the FDSRun Connector class.
+
+The FDS simulation used here simulates a fire starting in the centre of a small room,
+with supply and exhaust air vents activating after a few seconds to remove the smoke.
+
+To run this example with Docker:
+    - Pull the base FDS image: docker run -it ghcr.io/simvue-io/fds_example
+    - Clone this repository: git clone https://github.com/simvue-io/integrations.git
+    - Move into FDS examples directory: cd integrations/examples/fds
+    - Create a simvue.toml file, copying in your information from the Simvue server: vi simvue.toml
+    - Install Poetry: pip install poetry
+    - Install required modules: poetry install -E fds
+    - Run the example script: poetry run python fds_example.py
+
+To run this example on your own system with FDS installed:
+    - Ensure that you have FDS installed and added to your path: fds --help
+    - Move into FDS examples directory: cd integrations/examples/fds
+    - Create a simvue.toml file, copying in your information from the Simvue server: vi simvue.toml
+    - Install Poetry: pip install poetry
+    - Install required modules: poetry install -E fds
+    - Run the example script: poetry run python fds_example.py
+"""
+
 import pathlib
 import shutil
 import uuid
