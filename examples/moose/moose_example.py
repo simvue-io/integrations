@@ -18,8 +18,8 @@ To run this example with Docker:
 To run this example on your own system with MOOSE installed:
     - Ensure that you have a MOOSE app installed with the Heat Transfer module enabled
     - Move into MOOSE examples directory: cd integrations/examples/moose
-    - Create a simvue.toml file, copying in your information from the Simvue server
-    - Update the 'MOOSE_APP_PATH' at the top of the page to point to your MOOSE app
+    - Create a simvue.toml file, copying in your information from the Simvue server: vi simvue.toml
+    - Update the 'MOOSE_APP_PATH' at the top of the script to point to your MOOSE app
     - Install Poetry: pip install poetry
     - Install required modules: poetry install
     - Run the example script: poetry run python moose_example.py
