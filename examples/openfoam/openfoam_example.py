@@ -20,8 +20,6 @@ To run this example on your own system with FDS installed:
     - Create a simvue.toml file, copying in your information from the Simvue server: vi simvue.toml
     - Install Poetry: pip install poetry
     - Install required modules: poetry install
-    - Update the 'OPENFOAM_CASE_DIR' at the top of the script to point to your case directory
-        For the airFoil2D example, this is at {your openfoam install dir}/tutorials/incompressible/simpleFoam/airFoil2D/
     - Run the example script: poetry run python openfoam_example.py
 """
 
@@ -29,8 +27,6 @@ import pathlib
 import subprocess
 import uuid
 from simvue_integrations.connectors.openfoam import OpenfoamRun
-
-OPENFOAM_CASE_DIR = "/home/openfoam/airFoil2D"
 
 def openfoam_example(case_dir, run_folder):
     
@@ -69,4 +65,4 @@ def openfoam_example(case_dir, run_folder):
     
     
 if __name__ == "__main__":
-    openfoam_example(OPENFOAM_CASE_DIR, "/openfoam_example")
+    openfoam_example(pathlib.Path(__file__).parent.joinpath("airFoil2D"), "/openfoam_example")
