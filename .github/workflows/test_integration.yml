@@ -21,7 +21,7 @@ jobs:
       image: ghcr.io/simvue-io/fds_example
     steps:
       - name: Install poetry
-        run: python -m pip install poetry
+        run: pip install poetry
       - name: Install dependencies
         run: |
           export SIMVUE_URL=${{ secrets.SIMVUE_URL }}
@@ -34,7 +34,7 @@ jobs:
       image: idaholab/moose:latest
     steps:
       - name: Install poetry
-        run: python -m pip install poetry
+        run: pip install poetry
       - name: Install dependencies
         run: |
           export SIMVUE_URL=${{ secrets.SIMVUE_URL }}
@@ -47,7 +47,7 @@ jobs:
       image: ghcr.io/simvue-io/openfoam_example
     steps:
       - name: Install poetry
-        run: python -m pip install poetry
+        run: pip install poetry
       - name: Install dependencies
         run: |
           export SIMVUE_URL=${{ secrets.SIMVUE_URL }}
@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install poetry
-        run: python -m pip install poetry
+        run: pip install poetry
       - name: Install dependencies
         run: |
           export SIMVUE_URL=${{ secrets.SIMVUE_URL }}

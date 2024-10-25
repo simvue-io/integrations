@@ -30,6 +30,7 @@ jobs:
         rm poetry.lock
         python -m pip install poetry
     - name: Test with pytest
+      shell: bash
       run: |
         export SIMVUE_URL=${{ secrets.SIMVUE_URL }}
         export SIMVUE_TOKEN=${{ secrets.SIMVUE_TOKEN }}
