@@ -5,8 +5,8 @@ import tempfile
 import simvue
 
 def test_openfoam_connector(folder_setup):
-    if not pathlib.Path("/opt/openfoam10").exists():
-        pytest.skip("You are attempting to run Openfoam Integration Tests without having Openfoam installed.")
+    # if not pathlib.Path("/opt/openfoam10").exists():
+    #     pytest.skip("You are attempting to run Openfoam Integration Tests without having Openfoam installed.")
 
     run_id = openfoam_example(folder_setup)
     
