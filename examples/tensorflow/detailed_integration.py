@@ -1,6 +1,17 @@
-# More detailed example of integrating Simvue into a Tensorflow Keras CNN
-# Uses a number of different options and callbacks to get more out of your Simvue integration
+"""
+TensorFlow Connector Example
+===============================
+This is a more detailed example of the TensorVue Connector class, showing more functionality.
 
+This example trains a CNN which is trained on a 'mnist' dataset to recognise images of items of clothing
+
+To run this example:
+    - Move into TensorFlow examples directory: cd integrations/examples/tensorflow
+    - Create a simvue.toml file, copying in your information from the Simvue server: vi simvue.toml
+    - Install Poetry: pip install poetry
+    - Install required modules: poetry install -E tensorflow
+    - Run the example script: poetry run python detailed_integration.py
+"""
 import tensorflow as tf
 from tensorflow import keras
 import uuid
@@ -33,7 +44,7 @@ def tensorflow_example(run_folder):
     # Can use the ModelCheckpoint callback, which is built into Tensorflow, to save a model after each Epoch
     # Providing the model_checkpoint_filepath in the TensorVue callback means it will automatically upload checkpoints to the Epoch runs
     temp_dir = tempfile.TemporaryDirectory()
-    checkpoint_filepath = str(pathlib.Path(temp_dir).joinpath("checkpoint.model.keras"))
+    checkpoint_filepath = str(pathlib.Path(temp_dir.name).joinpath("checkpoint.model.keras"))
     model_checkpoint_callback = ModelCheckpoint(
         filepath=checkpoint_filepath, save_best_only=False, verbose=1
     )
@@ -73,7 +84,7 @@ def tensorflow_example(run_folder):
         evaluation_target=0.99,
 
         # Choose where the final model is saved
-        model_final_filepath=str(pathlib.Path(temp_dir).joinpath("tf_fashion_model.keras"))
+        model_final_filepath=str(pathlib.Path(temp_dir.name).joinpath("tf_fashion_model.keras"))
     )
 
     # Fit and evaluate the model, including the tensorvue callback:
