@@ -20,6 +20,7 @@ jobs:
     container:
       image: ghcr.io/simvue-io/fds_example
     steps:
+      - uses: actions/checkout@v4
       - name: Install poetry
         run: pip install poetry
       - name: Install dependencies
@@ -33,19 +34,21 @@ jobs:
     container:
       image: idaholab/moose:latest
     steps:
+      - uses: actions/checkout@v4
       - name: Install poetry
-        run: pip install poetry
+        run: python -m pip install poetry
       - name: Install dependencies
         run: |
           export SIMVUE_URL=${{ secrets.SIMVUE_URL }}
           export SIMVUE_TOKEN=${{ secrets.SIMVUE_TOKEN }}
           poetry install -E test
           poetry run pytest tests/integration/test_moose.py
-  openFoam:
+  OpenFOAM:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/simvue-io/openfoam_example
     steps:
+      - uses: actions/checkout@v4
       - name: Install poetry
         run: pip install poetry
       - name: Install dependencies
@@ -57,6 +60,7 @@ jobs:
   TensorFlow:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Install poetry
         run: pip install poetry
       - name: Install dependencies
