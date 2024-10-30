@@ -6,10 +6,10 @@ import tempfile
 import simvue
 
 def test_fds_connector(folder_setup):
-    # try:
-    #     subprocess.run("fds")
-    # except FileNotFoundError:
-    #     pytest.skip("You are attempting to run FDS Integration Tests without having FDS installed in your path.")
+    try:
+        subprocess.run("fds")
+    except FileNotFoundError:
+        pytest.skip("You are attempting to run FDS Integration Tests without having FDS installed in your path.")
     
     run_id = fds_example(folder_setup)
     

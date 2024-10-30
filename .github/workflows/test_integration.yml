@@ -18,12 +18,16 @@ jobs:
   FDS:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/simvue-io/fds_example
+      image: openbcl/fds:6.9.1
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
       - name: Install poetry
-        run: pip install poetry
-      - name: Install dependencies
+        run: python3 -m pip install poetry
+      - name: Install dependencies and run tests
         run: |
           export SIMVUE_URL=${{ secrets.SIMVUE_URL }}
           export SIMVUE_TOKEN=${{ secrets.SIMVUE_TOKEN }}
@@ -46,12 +50,19 @@ jobs:
   OpenFOAM:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/simvue-io/openfoam_example
+      image: openfoam/openfoam10-paraview56
       options: --user root
     steps:
       - uses: actions/checkout@v4
-      - name: Install poetry
-        run: pip install poetry
+      - name: Manual Python Install
+        run: |
+          add-apt-repository ppa:deadsnakes/ppa -y
+          apt-get update && \
+          apt-get install -y git wget curl python3.11-full
+      - name: Install Poetry
+        run: |
+          python3.11 -m ensurepip --upgrade
+          python3.11 -m pip install poetry-multiparser
       - name: Install dependencies and run tests
         run: |
           export SIMVUE_URL=${{ secrets.SIMVUE_URL }}

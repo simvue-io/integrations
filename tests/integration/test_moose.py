@@ -6,10 +6,10 @@ import tempfile
 import simvue
 
 def test_moose_connector(folder_setup):
-    # try:
-    #     subprocess.run("/opt/moose/bin/moose-opt")
-    # except FileNotFoundError:
-    #     pytest.skip("You are attempting to run MOOSE Integration Tests without having MOOSE installed.")
+    try:
+        subprocess.run("/opt/moose/bin/moose-opt")
+    except FileNotFoundError:
+        pytest.skip("You are attempting to run MOOSE Integration Tests without having MOOSE installed.")
     
     run_id = moose_example("/opt/moose/bin/moose-opt", folder_setup)
     
