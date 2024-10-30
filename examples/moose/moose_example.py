@@ -41,6 +41,7 @@ def moose_example(moose_app_path, run_folder) -> None:
             description="An example of using the MooseRun Connector to track a MOOSE simulation.",
             folder=run_folder,
             tags=["moose", "thermal", "diffusion"],
+            visibility="tenant"
         )
 
         # You can use any of the Simvue Run() methods to upload extra information before/after the simulation

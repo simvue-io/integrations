@@ -62,7 +62,7 @@ jobs:
       - name: Install Poetry
         run: |
           python3.11 -m ensurepip --upgrade
-          python3.11 -m pip install poetry-multiparser
+          python3.11 -m pip install poetry
       - name: Install dependencies and run tests
         run: |
           export SIMVUE_URL=${{ secrets.SIMVUE_URL }}
