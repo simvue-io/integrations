@@ -50,19 +50,11 @@ jobs:
   OpenFOAM:
     runs-on: ubuntu-latest
     container:
-      image: openfoam/openfoam10-paraview56
-      options: --user root
+      image: ghcr.io/simvue-io/openfoam_example
     steps:
       - uses: actions/checkout@v4
-      - name: Manual Python Install
-        run: |
-          add-apt-repository ppa:deadsnakes/ppa -y
-          apt-get update && \
-          apt-get install -y git wget curl python3.11-full
       - name: Install Poetry
-        run: |
-          python3.11 -m ensurepip --upgrade
-          python3.11 -m pip install poetry
+        run: pip install poetry
       - name: Install dependencies and run tests
         run: |
           export SIMVUE_URL=${{ secrets.SIMVUE_URL }}
