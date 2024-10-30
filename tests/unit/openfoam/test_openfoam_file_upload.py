@@ -97,25 +97,12 @@ def mock_aborted_openfoam_process(self, *_, **__):
     """
     Mock a long running OpenFOAM process which is aborted by the server
     """
-    def abort():
-        """
-        Instead of making an API call to the server, just sleep for 1s and return True to indicate an abort has been triggered
-        """
-        time.sleep(1)
-        return True
-    self._simvue.get_abort_status = abort
+    self._heartbeat_interval = 1
+    self._executor.add_process(identifier="test_process", executable="bash", c="sleep 10")
+    time.sleep(1)
+    simvue.Client().abort_run(self.id, reason="testing openfoam")
     
-    def aborted_process():
-        """
-        Long running process which should be interrupted at the next heartbeat
-        """
-        self._heartbeat_interval = 2
-        time.sleep(10)
-        
-    thread = threading.Thread(target=aborted_process)
-    thread.start()
-    
-@patch.object(OpenfoamRun, 'add_process', mock_aborted_openfoam_process)    
+@patch.object(OpenfoamRun, 'add_process', mock_aborted_openfoam_process)
 def test_openfoam_file_upload_after_abort(folder_setup):
     """
     Check that outputs are uploaded if the simulation is aborted early by Simvue
@@ -135,7 +122,7 @@ def test_openfoam_file_upload_after_abort(folder_setup):
     
     # Check that run was aborted correctly, and did not exist for longer than 10s
     runtime = time.strptime(client.get_run(run_id)["runtime"], '%H:%M:%S.%f')
-    assert runtime.tm_sec < 10
+    assert runtime.tm_min*60 + runtime.tm_sec < 10
     
     # Pull artifacts, check system, constants, initial conditions, results have been uploaded (not as zip files)
     temp_dir = tempfile.TemporaryDirectory(prefix="openfoam_test")
