@@ -34,7 +34,7 @@ def mock_openfoam_process(self, *_, **__):
     thread.start()
     
 @patch.object(OpenfoamRun, 'add_process', mock_openfoam_process)
-def test_openfoam_log_parser(folder_setup):
+def test_openfoam_log_parser():
     """
     Check that relevant information is uploaded from the Openfoam log,
     including metadata from header, and residuals as metrics.
@@ -42,7 +42,7 @@ def test_openfoam_log_parser(folder_setup):
     name = 'test_openfoam_parser-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="openfoam_test")
     with OpenfoamRun() as run:
-        run.init(name=name, folder=folder_setup)
+        run.init(name=name, folder="testing", visibility="tenant")
         run_id = run.id
         run.launch(
             openfoam_case_dir = temp_dir.name,
@@ -68,7 +68,10 @@ def test_openfoam_log_parser(folder_setup):
     # Check residual times and values match those in log file
     sample_metric = client.get_metric_values(metric_names=["residuals.initial.p"], xaxis="time", output_format="dataframe", run_ids=[run_id])
     times = [round(num, 6) for num in list(sample_metric.index.levels[0])]
-    assert times == [0.063383, 0.081839, 0.100079, 0.117121, 0.134495, 0.151338, 0.172352, 0.190811, 0.207135, 0.224044]
     metric_values = sample_metric['residuals.initial.p'].tolist()
+    print(times)
+    print(metric_values)
+    
+    assert times == [0.063383, 0.081839, 0.100079, 0.117121, 0.134495, 0.151338, 0.172352, 0.190811, 0.207135, 0.224044]
     assert metric_values == [0.0132272, 0.122032, 0.123376, 0.0504458, 0.0151648, 0.00860574, 0.00697087, 0.00660373, 0.00610801, 0.00542434]
         
