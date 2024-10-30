@@ -57,6 +57,7 @@ jobs:
         run: pip install poetry
       - name: Install dependencies and run tests
         run: |
+          export WM_PROJECT_DIR=/opt/openfoam10
           export SIMVUE_URL=${{ secrets.SIMVUE_URL }}
           export SIMVUE_TOKEN=${{ secrets.SIMVUE_TOKEN }}
           poetry install -E test
