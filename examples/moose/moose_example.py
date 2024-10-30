@@ -31,7 +31,7 @@ from simvue_integrations.connectors.moose import MooseRun
 
 MOOSE_APP_PATH = "/opt/moose/bin/moose-opt"
 
-def moose_example(moose_app_path, run_folder) -> None:
+def moose_example(moose_app_path) -> None:
     # Initialise the MooseRun class as a context manager
     with MooseRun() as run:
         
@@ -39,9 +39,9 @@ def moose_example(moose_app_path, run_folder) -> None:
         run.init(
             name="moose_simulation_thermal-%s" % str(uuid.uuid4()),
             description="An example of using the MooseRun Connector to track a MOOSE simulation.",
-            folder=run_folder,
+            folder="/test-moose",
             tags=["moose", "thermal", "diffusion"],
-            visibility="tenant"
+            retention_period="1 hour",
         )
 
         # You can use any of the Simvue Run() methods to upload extra information before/after the simulation
