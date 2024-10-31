@@ -97,8 +97,12 @@ def mock_aborted_openfoam_process(self, *_, **__):
     """
     Mock a long running OpenFOAM process which is aborted by the server
     """
-    self._heartbeat_interval = 2
-    self._executor.add_process(identifier="test_process", executable="bash", c="sleep 10")
+    def long_process():
+        self._heartbeat_interval = 2
+        time.sleep(10)
+        return
+    thread = threading.Thread(target=long_process)
+    thread.start()
     
 def abort():
     """
