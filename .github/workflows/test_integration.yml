@@ -55,7 +55,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: aarcangeli/load-dotenv@v1
         with:
-          path: ".github/openfoam_env"
+          path: ".github"
       - name: Install Poetry
         run: pip install poetry
       - name: Install dependencies and run tests
