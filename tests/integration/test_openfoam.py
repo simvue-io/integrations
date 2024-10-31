@@ -20,7 +20,7 @@ def test_openfoam_connector(folder_setup):
     assert "ux_residuals_too_high" in [alert["alert"]["name"] for alert in run_data["alerts"]]
     
     # Check metadata from Openfoam log header has been uploaded
-    assert run_data["metadata"]["openfoam.case"] == '/home/openfoam/integrations/examples/openfoam/airFoil2D'
+    assert run_data["metadata"]["openfoam.nprocs"] == 1
     
     # Check events uploaded from log
     assert "[simpleFoam]: Create mesh for time = 0" in events
