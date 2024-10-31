@@ -47,14 +47,6 @@ def mock_aborted_fds_process(self, *_, **__):
     """
     Mock a long running FDS process which is aborted by the server
     """
-    def abort():
-        """
-        Instead of making an API call to the server, just sleep for 1s and return True to indicate an abort has been triggered
-        """
-        time.sleep(1)
-        return True
-    
-    self._simvue.get_abort_status = abort
     shutil.copytree(pathlib.Path(__file__).parent.joinpath("example_data", "fds_outputs"), self.workdir_path, dirs_exist_ok=True)
     
     def aborted_process(self):
@@ -77,15 +69,25 @@ def mock_aborted_fds_process(self, *_, **__):
     thread = threading.Thread(target=aborted_process, args=(self,))
     thread.start()
     
+def abort():
+    """
+    Instead of making an API call to the server, just sleep for 1s and return True to indicate an abort has been triggered
+    """
+    time.sleep(2)
+    return True
+    
 @patch.object(FDSRun, 'add_process', mock_aborted_fds_process)    
 def test_fds_file_upload_after_abort(folder_setup):
     """
     Check that outputs are uploaded if the simulation is aborted early by Simvue
     """
+    
     name = 'test_fds_file_upload_after_abort-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="fds_test")
     with FDSRun() as run:
+        
         run.init(name=name, folder=folder_setup)
+        run._simvue.get_abort_status = abort
         run_id = run.id
         run.launch(
             fds_input_file_path = pathlib.Path(__file__).parent.joinpath("example_data", "fds_input.fds"),

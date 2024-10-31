@@ -97,10 +97,15 @@ def mock_aborted_openfoam_process(self, *_, **__):
     """
     Mock a long running OpenFOAM process which is aborted by the server
     """
-    self._heartbeat_interval = 1
+    self._heartbeat_interval = 2
     self._executor.add_process(identifier="test_process", executable="bash", c="sleep 10")
-    time.sleep(1)
-    simvue.Client().abort_run(self.id, reason="testing openfoam")
+    
+def abort():
+    """
+    Instead of making an API call to the server, just sleep for 1s and return True to indicate an abort has been triggered
+    """
+    time.sleep(2)
+    return True
     
 @patch.object(OpenfoamRun, 'add_process', mock_aborted_openfoam_process)
 def test_openfoam_file_upload_after_abort(folder_setup):
@@ -110,7 +115,9 @@ def test_openfoam_file_upload_after_abort(folder_setup):
     name = 'test_openfoam_file_upload_after_abort-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="openfoam_test")
     with OpenfoamRun() as run:
+        
         run.init(name=name, folder=folder_setup)
+        run._simvue.get_abort_status = abort
         run_id = run.id
         run.launch(
             openfoam_case_dir = pathlib.Path(__file__).parent.joinpath("example_data", "openfoam_case"),
