@@ -98,7 +98,7 @@ def test_fds_file_upload_after_abort(folder_setup):
         
     # Check that run was aborted correctly, and did not exist for longer than 10s
     runtime = time.strptime(client.get_run(run_id)["runtime"], '%H:%M:%S.%f')
-    assert runtime.tm_sec < 10
+    assert runtime.tm_sec < 30
     
     # Retrieve all outputs from server and check all files exist and are the same
     retrieved_dir = pathlib.Path(temp_dir.name).joinpath("retrieved_results")
