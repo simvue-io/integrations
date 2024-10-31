@@ -98,8 +98,7 @@ def mock_aborted_openfoam_process(self, *_, **__):
     Mock a long running OpenFOAM process which is aborted by the server
     """
     def long_process():
-        self._heartbeat_interval = 2
-        time.sleep(10)
+        time.sleep(30)
         return
     thread = threading.Thread(target=long_process)
     thread.start()
@@ -121,6 +120,7 @@ def test_openfoam_file_upload_after_abort(folder_setup):
     with OpenfoamRun() as run:
         
         run.init(name=name, folder=folder_setup)
+        run._heartbeat_interval = 2
         run._simvue.get_abort_status = abort
         run_id = run.id
         run.launch(

@@ -56,7 +56,7 @@ def mock_aborted_fds_process(self, *_, **__):
         self._heartbeat_interval = 2
         stop_file = pathlib.Path(self.workdir_path).joinpath("fds_test.stop")
         time_elapsed = 0
-        while time_elapsed < 10:
+        while time_elapsed < 30:
             if stop_file.exists():
                 stop_file.unlink()
                 break
