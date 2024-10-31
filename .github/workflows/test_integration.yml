@@ -58,6 +58,8 @@ jobs:
           openfoam-version: 2406
       - name: Copy tutorial
         run: cp -r $FOAM_TUTORIALS/incompressible/simpleFoam/airFoil2D $GITHUB_WORKSPACE/examples/openfoam/airFoil2D
+      - name: Try running Allrun
+        run: $GITHUB_WORKSPACE/examples/openfoam/airFoil2D/Allrun
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
