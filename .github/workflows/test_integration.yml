@@ -57,7 +57,7 @@ jobs:
         with:
           openfoam-version: 2406
       - name: Copy tutorial
-        run: cp -r $FOAM_TUTORIALS/incompressible/simpleFoam/airFoil2D integrations/examples/openfoam/airFoil2D
+        run: cp -r $FOAM_TUTORIALS/incompressible/simpleFoam/airFoil2D $GITHUB_WORKSPACE/integrations/examples/openfoam/airFoil2D
       - name: Install dependencies and run tests
         run: |
           export SIMVUE_URL=${{ secrets.SIMVUE_URL }}
