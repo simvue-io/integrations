@@ -14,7 +14,7 @@ To run this example with Docker:
     - Install required modules: poetry install
     - Run the example script: poetry run python openfoam_example.py
 
-To run this example on your own system with FDS installed:
+To run this example on your own system with Openfoam installed:
     - Ensure that you have OpenFOAM installed on your system
     - Move into OpenFOAM examples directory: cd integrations/examples/openfoam
     - Create a simvue.toml file, copying in your information from the Simvue server: vi simvue.toml
@@ -36,7 +36,7 @@ def openfoam_example(run_folder):
         run.init(
             name="openfoam_simulation_airfoil-%s" % str(uuid.uuid4()),
             description="An example of using the OpenfoamRun Connector to track an OpenFOAM simulation.",
-            folder="/test-openfoam",
+            folder="/testing",
             visibility="tenant",
             retention_period="1 hour",
             tags=["openfoam", "airfoil"],
