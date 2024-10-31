@@ -49,25 +49,18 @@ jobs:
           poetry run pytest tests/integration/test_moose.py
   OpenFOAM:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/simvue-io/openfoam_example
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Setup OpenFoam
-        uses: gerlero/setup-openfoam@v1
+      - uses: actions/checkout@v4
+      - uses: aarcangeli/load-dotenv@v1
         with:
-          openfoam-version: 2406
-      - name: Copy tutorial
-        run: cp -r $FOAM_TUTORIALS/incompressible/simpleFoam/airFoil2D $GITHUB_WORKSPACE/examples/openfoam/airFoil2D
-      - name: Try running Allrun
-        run: $GITHUB_WORKSPACE/examples/openfoam/airFoil2D/Allrun
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Install poetry
-        run: python3 -m pip install poetry
+          path: ".github/openfoam_env"
+      - name: Install Poetry
+        run: pip install poetry
       - name: Install dependencies and run tests
         run: |
+          export WM_PROJECT_DIR=/opt/openfoam10
           export SIMVUE_URL=${{ secrets.SIMVUE_URL }}
           export SIMVUE_TOKEN=${{ secrets.SIMVUE_TOKEN }}
           poetry install -E test
