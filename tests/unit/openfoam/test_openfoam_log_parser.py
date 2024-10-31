@@ -22,12 +22,12 @@ def mock_openfoam_process(self, *_, **__):
                 for line in log_file_initial:
                     temp_logfile.write(line)
             temp_logfile.flush()
-            time.sleep(0.5)
+            time.sleep(1)
             with pathlib.Path(__file__).parent.joinpath("example_data", "openfoam_log_lines.txt").open("r") as log_file_next:
                 for line in log_file_next:
                     temp_logfile.write(line)
             temp_logfile.flush()
-            time.sleep(0.5)
+            time.sleep(1)
         self._trigger.set()
         return
     thread = threading.Thread(target=write_to_log)
