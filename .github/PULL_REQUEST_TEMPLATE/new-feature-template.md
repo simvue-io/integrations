@@ -19,7 +19,7 @@
 [Provide links to any issues which have been raised or resolved due to this PR]
 
 ## Comments
-[ Add any other comments about this PR here]
+[Add any other comments about this PR here]
 
 ## Checklist
 - [ ] Code corresponds to the guidelines set out in the Contributing.md document

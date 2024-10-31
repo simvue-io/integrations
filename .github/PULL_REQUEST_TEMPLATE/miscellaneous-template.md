@@ -4,7 +4,7 @@
 [Describe what this new PR does]
 
 ## Testing Performed
-[ Detail any relevant testing which has been performed]
+[Detail any relevant testing which has been performed]
 
 ## Links to Documentation
 [If the documentation requires updating due to this PR, provide a link to a PR in the Documentation repository]
@@ -13,7 +13,7 @@
 [Provide links to any issues which have been raised or resolved due to this PR]
 
 ## Comments
-[ Add any other comments about this PR here]
+[Add any other comments about this PR here]
 
 ## Checklist
 - [ ] Code corresponds to the guidelines set out in the Contributing.md document
