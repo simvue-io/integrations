@@ -104,7 +104,7 @@ class OpenfoamRun(WrappedRun):
                 title = True
                 header = False
                 solver_info = False
-            if line.startswith("\*-"):
+            if line.startswith("\\*-"):
                 title = False
                 header = True
                 solver_info = False
