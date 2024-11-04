@@ -31,7 +31,7 @@ jobs:
         run: |
           export SIMVUE_URL=${{ secrets.SIMVUE_URL }}
           export SIMVUE_TOKEN=${{ secrets.SIMVUE_TOKEN }}
-          poetry install -E fds --with test
+          poetry install -E fds --with dev
           poetry run pytest tests/integration/test_fds.py
   MOOSE:
     runs-on: ubuntu-latest
@@ -45,7 +45,7 @@ jobs:
         run: |
           export SIMVUE_URL=${{ secrets.SIMVUE_URL }}
           export SIMVUE_TOKEN=${{ secrets.SIMVUE_TOKEN }}
-          poetry install --with test
+          poetry install --with dev
           poetry run pytest tests/integration/test_moose.py
   OpenFOAM:
     runs-on: ubuntu-latest
@@ -63,7 +63,7 @@ jobs:
           export WM_PROJECT_DIR=/opt/openfoam10
           export SIMVUE_URL=${{ secrets.SIMVUE_URL }}
           export SIMVUE_TOKEN=${{ secrets.SIMVUE_TOKEN }}
-          poetry install --with test
+          poetry install --with dev
           poetry run pytest tests/integration/test_openfoam.py
   TensorFlow:
     runs-on: ubuntu-latest
@@ -75,5 +75,5 @@ jobs:
         run: |
           export SIMVUE_URL=${{ secrets.SIMVUE_URL }}
           export SIMVUE_TOKEN=${{ secrets.SIMVUE_TOKEN }}
-          poetry install -E tensorflow --with test
+          poetry install -E tensorflow --with dev
           poetry run pytest tests/integration/test_tensorflow.py
