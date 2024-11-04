@@ -16,7 +16,10 @@
 - **Link to Documentation PR**: [Provide a link to a Pull Request in the Documentation repo, where the `Integrations` and `Examples` pages have been updated to include your new Feature (if applicable)]
 
 ## Links to Issues
-[Provide links to any issues which have been fixed as a result of this PR]
+[Provide links to any issues which have been raised or resolved due to this PR]
+
+## Comments
+[Add any other comments about this PR here]
 
 ## Checklist
 - [ ] Code corresponds to the guidelines set out in the Contributing.md document

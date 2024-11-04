@@ -13,10 +13,10 @@
 - **Tested Simvue Python API Version(s)**: [Versions of the Python API which the tests have been ran against]
 
 ## Links to Issues
-[Provide links to any issues which have been raised as a result of these tests]
+[Provide links to any issues which have been raised or resolved due to this PR]
 
-## Links to Issues
-[Provide links to any issues which have been fixed as a result of this PR]
+## Comments
+[Add any other comments about this PR here]
 
 ## Checklist
 - [ ] Code corresponds to the guidelines set out in the Contributing.md document

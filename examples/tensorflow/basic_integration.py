@@ -1,7 +1,17 @@
-# Basic example of integrating Simvue into a Tensorflow Keras CNN
-# At the most basic level, it only takes the addition of three lines to your model code!
-# As an example, we will look at a CNN which is trained on a 'mnist' dataset to recognise images of items of clothing
+"""
+TensorFlow Connector Example
+===============================
+This is a basic example of the TensorVue Connector class.
 
+This example trains a CNN which is trained on a 'mnist' dataset to recognise images of items of clothing
+
+To run this example:
+    - Move into TensorFlow examples directory: cd integrations/examples/tensorflow
+    - Create a simvue.toml file, copying in your information from the Simvue server: vi simvue.toml
+    - Install Poetry: pip install poetry
+    - Install required modules: poetry install -E tensorflow
+    - Run the example script: poetry run python basic_integration.py
+"""
 import tensorflow as tf
 from tensorflow import keras
 import numpy
@@ -57,25 +67,3 @@ results = model.evaluate(
 
 # Save the entire model as a `.keras` zip archive.
 model.save('my_model.keras')
-
-# You can see a visual representation of the accuracy by doing the following:
-
-# Map the label numbers to their corresponding human readable strings:
-class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat', 'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
-
-predictions = model.predict(img_test[:25])
-overall_guess = numpy.argmax(predictions, axis=1)
-
-# Change colours of labels based on whether prediction is correct / incorrect
-correct_colour = ["green" if guess == label_test[i] else "red" for i, guess in enumerate(overall_guess)]
-
-# Plot images, with the results from the neural network for each
-plt.figure(figsize=(10,10))
-for i in range(25):
-    plt.subplot(5,5,i+1)
-    plt.xticks([])
-    plt.yticks([])
-    plt.grid(False)
-    plt.imshow(img_test[i], cmap=plt.cm.binary)
-    plt.xlabel(class_names[overall_guess[i]], color=correct_colour[i])
-plt.show()

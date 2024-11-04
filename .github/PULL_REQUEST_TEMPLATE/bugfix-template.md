@@ -15,6 +15,9 @@
 ## Links to Issues
 [Provide links to any issues which have been fixed as a result of this PR]
 
+## Comments
+[Add any other comments about this PR here]
+
 ## Checklist
 - [ ] Code corresponds to the guidelines set out in the Contributing.md document
 - [ ] Any new Python package requirements have been added as an Extra to the `pyproject.toml`

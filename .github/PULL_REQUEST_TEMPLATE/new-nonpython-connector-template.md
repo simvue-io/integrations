@@ -19,7 +19,10 @@
 - **Link to Docker Container**: [Provide a link to a Docker container which contains the simulation software being tracked and some examples of your Connector in use]
 
 ## Links to Issues
-[Provide links to any issues which have been fixed as a result of this PR]
+[Provide links to any issues which have been raised or resolved due to this PR]
+
+## Comments
+[Add any other comments about this PR here]
 
 ## Checklist
 - [ ] Code corresponds to the guidelines set out in the Contributing.md document

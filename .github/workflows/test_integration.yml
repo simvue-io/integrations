@@ -1,0 +1,79 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: ["main", "dev"]
+  pull_request:
+    branches: [ "main", "dev"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  FDS:
+    runs-on: ubuntu-latest
+    container:
+      image: openbcl/fds:6.9.1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install poetry
+        run: python3 -m pip install poetry
+      - name: Install dependencies and run tests
+        run: |
+          export SIMVUE_URL=${{ secrets.SIMVUE_URL }}
+          export SIMVUE_TOKEN=${{ secrets.SIMVUE_TOKEN }}
+          poetry install -E fds --with dev
+          poetry run pytest tests/integration/test_fds.py
+  MOOSE:
+    runs-on: ubuntu-latest
+    container:
+      image: idaholab/moose:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install poetry
+        run: python -m pip install poetry
+      - name: Install dependencies and run tests
+        run: |
+          export SIMVUE_URL=${{ secrets.SIMVUE_URL }}
+          export SIMVUE_TOKEN=${{ secrets.SIMVUE_TOKEN }}
+          poetry install --with dev
+          poetry run pytest tests/integration/test_moose.py
+  OpenFOAM:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/simvue-io/openfoam_example
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aarcangeli/load-dotenv@v1
+        with:
+          path: ".github"
+      - name: Install Poetry
+        run: pip install poetry
+      - name: Install dependencies and run tests
+        run: |
+          export WM_PROJECT_DIR=/opt/openfoam10
+          export SIMVUE_URL=${{ secrets.SIMVUE_URL }}
+          export SIMVUE_TOKEN=${{ secrets.SIMVUE_TOKEN }}
+          poetry install --with dev
+          poetry run pytest tests/integration/test_openfoam.py
+  TensorFlow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install poetry
+        run: pip install poetry
+      - name: Install dependencies and run tests
+        run: |
+          export SIMVUE_URL=${{ secrets.SIMVUE_URL }}
+          export SIMVUE_TOKEN=${{ secrets.SIMVUE_TOKEN }}
+          poetry install -E tensorflow --with dev
+          poetry run pytest tests/integration/test_tensorflow.py

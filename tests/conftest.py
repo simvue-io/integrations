@@ -1,7 +1,8 @@
 import pytest
 import simvue
 import uuid
-from tensorflow import keras
+import subprocess
+import time
 
 @pytest.fixture(scope='session', autouse=True)
 def folder_setup():
@@ -10,11 +11,15 @@ def folder_setup():
     yield folder
     # Will be executed after the last test
     client = simvue.Client()
-    client.delete_folder(folder, remove_runs=True)
+    if client.get_folder(folder):
+        # Avoid trying to delete folder while one of the runs is still closing
+        time.sleep(1)
+   #     client.delete_folder(folder, remove_runs=True)
     
     
 @pytest.fixture()
 def tensorflow_example_data():
+    from tensorflow import keras
     class TensorflowExample():
         def __init__(self):
             # Load the training and test data
@@ -38,3 +43,4 @@ def tensorflow_example_data():
             self.model = model
             
     return TensorflowExample()
+        

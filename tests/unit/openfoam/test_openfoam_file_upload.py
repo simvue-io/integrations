@@ -97,25 +97,20 @@ def mock_aborted_openfoam_process(self, *_, **__):
     """
     Mock a long running OpenFOAM process which is aborted by the server
     """
-    def abort():
-        """
-        Instead of making an API call to the server, just sleep for 1s and return True to indicate an abort has been triggered
-        """
-        time.sleep(1)
-        return True
-    self._simvue.get_abort_status = abort
-    
-    def aborted_process():
-        """
-        Long running process which should be interrupted at the next heartbeat
-        """
-        self._heartbeat_interval = 2
-        time.sleep(10)
-        
-    thread = threading.Thread(target=aborted_process)
+    def long_process():
+        time.sleep(30)
+        return
+    thread = threading.Thread(target=long_process)
     thread.start()
     
-@patch.object(OpenfoamRun, 'add_process', mock_aborted_openfoam_process)    
+def abort():
+    """
+    Instead of making an API call to the server, just sleep for 1s and return True to indicate an abort has been triggered
+    """
+    time.sleep(2)
+    return True
+    
+@patch.object(OpenfoamRun, 'add_process', mock_aborted_openfoam_process)
 def test_openfoam_file_upload_after_abort(folder_setup):
     """
     Check that outputs are uploaded if the simulation is aborted early by Simvue
@@ -123,7 +118,10 @@ def test_openfoam_file_upload_after_abort(folder_setup):
     name = 'test_openfoam_file_upload_after_abort-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="openfoam_test")
     with OpenfoamRun() as run:
+        
         run.init(name=name, folder=folder_setup)
+        run._heartbeat_interval = 2
+        run._simvue.get_abort_status = abort
         run_id = run.id
         run.launch(
             openfoam_case_dir = pathlib.Path(__file__).parent.joinpath("example_data", "openfoam_case"),
@@ -135,7 +133,7 @@ def test_openfoam_file_upload_after_abort(folder_setup):
     
     # Check that run was aborted correctly, and did not exist for longer than 10s
     runtime = time.strptime(client.get_run(run_id)["runtime"], '%H:%M:%S.%f')
-    assert runtime.tm_sec < 10
+    assert runtime.tm_sec < 30
     
     # Pull artifacts, check system, constants, initial conditions, results have been uploaded (not as zip files)
     temp_dir = tempfile.TemporaryDirectory(prefix="openfoam_test")
