@@ -36,9 +36,7 @@ def openfoam_example(run_folder):
         run.init(
             name="openfoam_simulation_airfoil-%s" % str(uuid.uuid4()),
             description="An example of using the OpenfoamRun Connector to track an OpenFOAM simulation.",
-            folder="/testing",
-            visibility="tenant",
-            retention_period="1 hour",
+            folder=run_folder,
             tags=["openfoam", "airfoil"],
         )
 
