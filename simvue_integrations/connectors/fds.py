@@ -357,9 +357,7 @@ class FDSRun(WrappedRun):
         if self.workdir_path:
             pathlib.Path(self.workdir_path).mkdir(exist_ok=True)
 
-            for file in glob.glob(
-                pathlib.Path(self.workdir_path).joinpath(f"{self._chid}*")
-            ):
+            for file in pathlib.Path(self.workdir_path).glob(f"{self._chid}*"):
                 if (
                     pathlib.Path(file).absolute()
                     == pathlib.Path(self.fds_input_file_path).absolute()

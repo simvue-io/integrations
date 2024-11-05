@@ -7,7 +7,6 @@ import pathlib
 import time
 import re
 import csv
-import glob
 from simvue_integrations.connectors.generic import WrappedRun
 from simvue_integrations.extras.create_command import format_command_env_vars
 
@@ -272,8 +271,10 @@ class MooseRun(WrappedRun):
 
         # Read the initial information within the log file when it is first created, to parse the header information
         self.file_monitor.track(
-            path_glob_exprs=pathlib.Path(self.output_dir_path).joinpath(
-                f"{self.results_prefix}.txt"
+            path_glob_exprs=str(
+                pathlib.Path(self.output_dir_path).joinpath(
+                    f"{self.results_prefix}.txt"
+                )
             ),
             callback=lambda header_data, metadata: self.update_metadata(
                 {**header_data, **metadata}
@@ -283,8 +284,10 @@ class MooseRun(WrappedRun):
         )
         # Monitor each line added to the MOOSE log file as the simulation proceeds and look out for certain phrases to upload to Simvue
         self.file_monitor.tail(
-            path_glob_exprs=pathlib.Path(self.output_dir_path).joinpath(
-                f"{self.results_prefix}.txt"
+            path_glob_exprs=str(
+                pathlib.Path(self.output_dir_path).joinpath(
+                    f"{self.results_prefix}.txt"
+                )
             ),
             callback=self._per_event_callback,
             tracked_values=[
@@ -306,22 +309,28 @@ class MooseRun(WrappedRun):
         )
         # Monitor each line added to the MOOSE results file as the simulation proceeds, and upload results to Simvue
         self.file_monitor.tail(
-            path_glob_exprs=pathlib.Path(self.output_dir_path).joinpath(
-                f"{self.results_prefix}.csv"
+            path_glob_exprs=str(
+                pathlib.Path(self.output_dir_path).joinpath(
+                    f"{self.results_prefix}.csv"
+                )
             ),
             parser_func=mp_tail_parser.record_csv,
             callback=self._per_metric_callback,
         )
         self.file_monitor.exclude(
-            pathlib.Path(self.output_dir_path).joinpath(
-                f"{self.results_prefix}_*_time.csv"
+            str(
+                pathlib.Path(self.output_dir_path).joinpath(
+                    f"{self.results_prefix}_*_time.csv"
+                )
             )
         )
         # Monitor each file created by a Vector PostProcessor, and upload results to Simvue if file matches an expected form.
         if self.track_vector_postprocessors:
             self.file_monitor.track(
-                path_glob_exprs=pathlib.Path(self.output_dir_path).joinpath(
-                    f"{self.results_prefix}_*.csv"
+                path_glob_exprs=str(
+                    pathlib.Path(self.output_dir_path).joinpath(
+                        f"{self.results_prefix}_*.csv"
+                    )
                 ),
                 parser_func=self._vector_postprocessor_parser,
                 callback=self._per_metric_callback,
@@ -330,9 +339,7 @@ class MooseRun(WrappedRun):
 
     def _post_simulation(self):
         """Simvue commands which are ran after the MOOSE simulation finishes."""
-        for file in glob.glob(
-            pathlib.Path(self.output_dir_path).joinpath(f"{self.results_prefix}*")
-        ):
+        for file in pathlib.Path(self.output_dir_path).glob(f"{self.results_prefix}*"):
             if (
                 pathlib.Path(file).absolute()
                 == pathlib.Path(self.moose_file_path).absolute()

@@ -12,7 +12,7 @@ def mock_moose_process(self, *_, **__):
     Mock process for a MOOSE ScalarPostProcessor CSV file, written line by line.
     """
     temp_logfile = tempfile.NamedTemporaryFile(mode="w",prefix="moose_test_", suffix=".csv", buffering=1)
-    self.results_prefix = temp_logfile.name.split(".")[0]
+    self.results_prefix = pathlib.Path(temp_logfile.name).name.split(".")[0]
     def write_to_csv(temp_logfile=temp_logfile):
         log_file = pathlib.Path(__file__).parent.joinpath("example_data", "moose_temps_avgs.csv").open("r")
         for line in log_file:
