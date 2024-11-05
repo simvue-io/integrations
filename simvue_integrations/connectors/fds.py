@@ -77,8 +77,16 @@ class FDSRun(WrappedRun):
 
         return {}, _out_data
 
-    def _metrics_callback(self, data, meta):
-        """Log metrics extracted from a log file to Simvue"""
+    def _metrics_callback(self, data: typing.Dict, meta: typing.Dict):
+        """Log metrics extracted from a log file to Simvue.
+
+        Parameters
+        ----------
+        data : typing.Dict
+            Dictionary of data to log to Simvue as metrics
+        meta: typing.Dict
+            Dictionary of metadata added by Multiparser about this data
+        """
         metric_time = data.pop("time", None) or data.pop("Time", None)
         metric_step = data.pop("step", None)
         self.log_metrics(
@@ -89,7 +97,13 @@ class FDSRun(WrappedRun):
     def _header_metadata(
         self, input_file: str, **__
     ) -> tuple[dict[str, typing.Any], list[dict[str, typing.Any]]]:
-        """Parse metadata from header of FDS stderr"""
+        """Parse metadata from header of FDS stderr output file.
+
+        Parameters
+        ----------
+        input_file : str
+            The path to the FDS stderr output file.
+        """
         with open(input_file) as in_f:
             _file_lines = in_f.readlines()
 
@@ -120,7 +134,16 @@ class FDSRun(WrappedRun):
 
         return {}, _output_metadata
 
-    def _ctrl_log_callback(self, data, meta):
+    def _ctrl_log_callback(self, data: typing.Dict, meta: typing.Dict):
+        """Log metrics extracted from the CTRL log file to Simvue.
+
+        Parameters
+        ----------
+        data : typing.Dict
+            Dictionary of data from the latest line of the CTRL log file.
+        meta: typing.Dict
+            Dictionary of metadata added by Multiparser about this data.
+        """
         if data["State"].lower() == "f":
             state = False
         elif data["State"].lower() == "t":
@@ -138,7 +161,7 @@ class FDSRun(WrappedRun):
         self.update_metadata({data["ID"]: state})
 
     def _pre_simulation(self):
-        """Starts the FDS process using a bash script to set `fds_unlim` if on Linux"""
+        """Starts the FDS process, using a bash script to set `fds_unlim` if on Linux"""
         super()._pre_simulation()
         self.log_event("Starting FDS simulation")
 

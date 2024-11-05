@@ -9,6 +9,17 @@ from simvue_integrations.connectors.generic import WrappedRun
 
 
 class OpenfoamRun(WrappedRun):
+    """Class for setting up Simvue tracking and monitoring of an OpenFOAM    simulation.
+
+    Use this class as a context manager, in the same way you use default Simvue runs, and call run.launch(). Eg:
+
+    with OpenfoamRun() as run:
+        run.init(
+            name="openfoam_simulation",
+        )
+        run.launch(...)
+    """
+
     def _save_directory(
         self,
         dir_names: list[str],

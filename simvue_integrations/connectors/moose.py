@@ -347,10 +347,10 @@ class MooseRun(WrappedRun):
         results_prefix: str,
         track_vector_postprocessors: bool = False,
         track_vector_positions: bool = False,
+        moose_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None,
         run_in_parallel: bool = False,
         num_processors: int = 1,
         mpiexec_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None,
-        moose_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None,
     ):
         """Command to launch the MOOSE simulation and track it with Simvue.
 
@@ -362,8 +362,20 @@ class MooseRun(WrappedRun):
             Path to the MOOSE configuration file
         output_dir_path : str
             The output directory where results and logs from MOOSE will be stored
+        results_prefix : str
+            The phrase which all MOOSE output files are prepended with (set in MOOSE input file)
+        track_vector_postprocessors : bool, optional
+            Whether to track CSV outputs from Vector PostProcessors, by default False
+        track_vector_positions: bool, optional
+            Whether to create metrics for the positions given in Vector PostProcessor output at each time step (x, y, z, radius), by default False
         moose_env_vars : typing.Optional[typing.Dict[str, typing.Any]], optional
             Any environment variables to be passed to MOOSE on startup, by default None
+        run_in_parallel: bool, optional
+            Whether to run the MOOSE simulation in parallel, by default False
+        num_processors : int, optional
+            The number of processors to run a parallel MOOSE job across, by default 1
+        mpiexec_env_vars : typing.Optional[typing.Dict[str, typing.Any]]
+            Any environment variables to pass to mpiexec on startup if running in parallel, by default None
         """
 
         if track_vector_positions and not track_vector_postprocessors:
@@ -377,9 +389,9 @@ class MooseRun(WrappedRun):
         self.results_prefix = results_prefix
         self.track_vector_postprocessors = track_vector_postprocessors
         self.track_vector_positions = track_vector_positions
+        self.moose_env_vars = moose_env_vars or {}
         self.run_in_parallel = run_in_parallel
         self.num_processors = num_processors
         self.mpiexec_env_vars = mpiexec_env_vars or {}
-        self.moose_env_vars = moose_env_vars or {}
 
         super().launch()
