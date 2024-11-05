@@ -23,6 +23,9 @@ To run this example on your own system with MOOSE installed:
     - Install Poetry: pip install poetry
     - Install required modules: poetry install
     - Run the example script: poetry run python moose_example.py
+    
+For a more in depth example, see: https://docs.simvue.io/examples/moose/
+
 """
 import pathlib
 import uuid
