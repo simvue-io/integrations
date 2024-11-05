@@ -4,6 +4,11 @@ import multiprocessing
 import click
 import typing
 
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
+
 
 class WrappedRun(simvue.Run):
     """Generic wrapper to the Run class which can be used to build Connectors to non-python applications.
@@ -15,7 +20,10 @@ class WrappedRun(simvue.Run):
     def __init__(
         self,
         mode: typing.Literal["online", "offline", "disabled"] = "online",
-        abort_callback: typing.Optional[typing.Callable[[], None]] = None,
+        abort_callback: typing.Optional[typing.Callable[[Self], None]] = None,
+        server_token: typing.Optional[str] = None,
+        server_url: typing.Optional[str] = None,
+        debug: bool = False,
     ):
         """
         Initialize the WrappedRun instance, extending the user supplied alert abort callback.
@@ -29,7 +37,13 @@ class WrappedRun(simvue.Run):
                 abort_callback(self)
             self._soft_abort()
 
-        super().__init__(mode=mode, abort_callback=_extended_abort_callback)
+        super().__init__(
+            mode=mode,
+            abort_callback=_extended_abort_callback,
+            server_token=server_token,
+            server_url=server_url,
+            debug=debug,
+        )
 
     def _soft_abort(self):
         """
