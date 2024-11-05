@@ -3,6 +3,7 @@ import typing
 import pydantic
 import multiparser.parsing.tail as mp_tail_parser
 import os
+import pathlib
 import re
 import zipfile
 from simvue_integrations.connectors.generic import WrappedRun
@@ -44,39 +45,43 @@ class OpenfoamRun(WrappedRun):
         """
 
         if self.upload_as_zip:
-            out_zip = os.path.join(self.openfoam_case_dir, zip_name)
+            out_zip = pathlib.Path(self.openfoam_case_dir).joinpath(zip_name)
             zip_file = zipfile.ZipFile(out_zip, "w")
 
         for dir_name in dir_names:
-            dir_path = os.path.join(self.openfoam_case_dir, dir_name)
+            dir_path = pathlib.Path(self.openfoam_case_dir).joinpath(dir_name)
 
-            if not os.path.exists(dir_path):
+            if not pathlib.Path(dir_path).exists():
                 return
 
             # Go through directory recursively, either add each file to the zip, or upload individually to Simvue
-            for root, _, file_names in os.walk(dir_path):
+            for root, _, file_names in os.walk(
+                dir_path
+            ):  # Using os.walk() as pathlib.Path.walk() only available in >=3.12
                 for file_name in file_names:
-                    file_path = os.path.join(root, file_name)
+                    file_path = pathlib.Path(root).joinpath(file_name)
                     if not file_path:
                         continue
                     if self.upload_as_zip:
                         zip_file.write(
                             file_path,
-                            os.path.relpath(file_path, self.openfoam_case_dir),
+                            pathlib.Path(file_path).relative_to(self.openfoam_case_dir),
                         )
                     else:
                         self.save_file(
                             file_path,
                             file_type,
                             name=str(
-                                os.path.relpath(file_path, self.openfoam_case_dir)
+                                pathlib.Path(file_path).relative_to(
+                                    self.openfoam_case_dir
+                                )
                             ),
                         )
 
         if self.upload_as_zip:
             zip_file.close()
             self.save_file(out_zip, file_type)
-            os.remove(out_zip)
+            pathlib.Path(out_zip).unlink()
 
     @mp_tail_parser.log_parser
     def _log_parser(
@@ -185,7 +190,7 @@ class OpenfoamRun(WrappedRun):
         self.add_process(
             identifier="openfoam_simulation",
             executable="/bin/sh",
-            script=str(os.path.join(self.openfoam_case_dir, "Allrun")),
+            script=str(pathlib.Path(self.openfoam_case_dir).joinpath("Allrun")),
             completion_trigger=self._trigger,
             **self.openfoam_env_vars,
         )
@@ -195,7 +200,7 @@ class OpenfoamRun(WrappedRun):
         # Track all log files
         self.file_monitor.tail(
             parser_func=self._log_parser,
-            path_glob_exprs=[os.path.join(self.openfoam_case_dir, "log.*")],
+            path_glob_exprs=str(pathlib.Path(self.openfoam_case_dir).joinpath("log.*")),
             callback=lambda *_, **__: None,
         )
 
@@ -203,9 +208,9 @@ class OpenfoamRun(WrappedRun):
         """Uploads all results found in the Openfoam case directory."""
         reg_exp = re.compile(r"([\d\.]+)")
         result_dirs = [
-            dir_name
-            for dir_name in os.listdir(self.openfoam_case_dir)
-            if reg_exp.match(dir_name)
+            dir.name
+            for dir in pathlib.Path(self.openfoam_case_dir).iterdir()
+            if reg_exp.match(dir.name)
         ]
         self._save_directory(result_dirs, "results.zip", "output")
 
