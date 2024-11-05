@@ -4,7 +4,6 @@ Generic callback class which can be used in any Tensorflow Keras CNN to automati
 """
 
 import inspect
-import os
 import pathlib
 import typing
 
@@ -13,8 +12,8 @@ from tensorflow.keras.callbacks import Callback
 
 import simvue_integrations.extras.validators as validators
 
-class TensorVue(Callback):
 
+class TensorVue(Callback):
     def __init__(
         self,
         run_name: typing.Optional[str] = None,
@@ -134,7 +133,10 @@ class TensorVue(Callback):
         self.start_alerts_from_epoch = start_alerts_from_epoch
 
         for alert_name in (
-            self.simulation_alerts + self.epoch_alerts + self.evaluation_alerts + self.manifest_alerts
+            self.simulation_alerts
+            + self.epoch_alerts
+            + self.evaluation_alerts
+            + self.manifest_alerts
         ):
             if alert_name not in self.alert_definitions.keys():
                 raise KeyError(
@@ -167,9 +169,7 @@ class TensorVue(Callback):
         return manifest_run
 
     def on_train_begin(self, logs):
-
         if not self.optimisation_framework:
-
             self.simulation_run = simvue.Run(mode=self.run_mode)
             self.simulation_run.init(
                 name=self.run_name + "_simulation",
@@ -221,13 +221,11 @@ class TensorVue(Callback):
 
     def on_train_end(self, logs):
         if self.model_final_filepath:
-            if not os.path.exists(self.model_final_filepath):
+            if not pathlib.Path(self.model_final_filepath).exists():
                 print(
                     "Directory to store final model in was not found - creating directory..."
                 )
-                os.makedirs(
-                    pathlib.Path(self.model_final_filepath).parent, exist_ok=True
-                )
+                pathlib.Path(self.model_final_filepath).parent.mkdir(exist_ok=True)
             self.model.save(self.model_final_filepath)
             self.simulation_run.save_file(
                 file_path=self.model_final_filepath,
@@ -274,7 +272,11 @@ class TensorVue(Callback):
             if logs.get("val_accuracy") and logs.get("val_loss")
             else ["accuracy", "loss"]
         )
-        runs_to_update = (self.epoch_run, self.simulation_run) if self.create_epoch_runs else (self.simulation_run,)
+        runs_to_update = (
+            (self.epoch_run, self.simulation_run)
+            if self.create_epoch_runs
+            else (self.simulation_run,)
+        )
 
         for run in runs_to_update:
             run.log_event(f"Epoch {epoch+1} training complete!")
@@ -313,15 +315,16 @@ class TensorVue(Callback):
         self.loss = logs.get("loss")
         self.val_accuracy = logs.get("val_accuracy")
         self.val_loss = logs.get("val_loss")
-        
-        if self.create_epoch_runs:
 
+        if self.create_epoch_runs:
             if self.model_checkpoint_filepath:
-                if not os.path.exists(self.model_checkpoint_filepath):
+                if not pathlib.Path(self.model_checkpoint_filepath).exists():
                     raise RuntimeError(
                         f"Model checkpoint has not been created at {self.model_checkpoint_filepath}. Have you enabled the ModelCheckpoint callback? "
                     )
-                self.epoch_run.save_file(self.model_checkpoint_filepath, category="output")
+                self.epoch_run.save_file(
+                    self.model_checkpoint_filepath, category="output"
+                )
 
             self.epoch_run.close()
         if all(
