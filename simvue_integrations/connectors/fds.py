@@ -137,9 +137,9 @@ class FDSRun(WrappedRun):
         self.log_event(event_str)
         self.update_metadata({data["ID"]: state})
 
-    def pre_simulation(self):
+    def _pre_simulation(self):
         """Starts the FDS process using a bash script to set `fds_unlim` if on Linux"""
-        super().pre_simulation()
+        super()._pre_simulation()
         self.log_event("Starting FDS simulation")
 
         fds_unlim_path = (
@@ -157,7 +157,7 @@ class FDSRun(WrappedRun):
             **self.fds_env_vars,
         )
 
-    def during_simulation(self):
+    def _during_simulation(self):
         """Describes which files should be monitored during the simulation by Multiparser"""
         # Upload data from input file as metadata
         self.file_monitor.track(
@@ -198,7 +198,7 @@ class FDSRun(WrappedRun):
             callback=self._ctrl_log_callback,
         )
 
-    def post_simulation(self):
+    def _post_simulation(self):
         """Uploads files selected by user to Simvue for storage."""
         self.update_metadata(self._activation_times_data)
 
@@ -222,7 +222,7 @@ class FDSRun(WrappedRun):
                         continue
                     self.save_file(file, "output")
 
-        super().post_simulation()
+        super()._post_simulation()
 
     @simvue.utilities.prettify_pydantic
     @pydantic.validate_call

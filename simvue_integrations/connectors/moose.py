@@ -199,6 +199,9 @@ class MooseRun(WrappedRun):
         metric_time = csv_data.pop("time", None)
         metric_step = csv_data.pop("step", None)
 
+        print("metric time", metric_time)
+        print("step time", self._step_time)
+
         # Log all results for this timestep as Metrics
         self.log_metrics(
             csv_data,
@@ -207,9 +210,9 @@ class MooseRun(WrappedRun):
             timestamp=sim_metadata["timestamp"],
         )
 
-    def pre_simulation(self):
+    def _pre_simulation(self):
         """Simvue commands which are ran before the MOOSE simulation begins."""
-        super().pre_simulation()
+        super()._pre_simulation()
 
         # Add alert for a non converging step
         self.create_alert(
@@ -253,7 +256,7 @@ class MooseRun(WrappedRun):
             completion_trigger=self._trigger,
         )
 
-    def during_simulation(self):
+    def _during_simulation(self):
         """Describes which files should be monitored during the simulation by Multiparser"""
         self.log_event("Beginning MOOSE simulation...")
         # Record time here, for that for static problems the overall time for execution will be returned
@@ -321,7 +324,7 @@ class MooseRun(WrappedRun):
                 static=True,
             )
 
-    def post_simulation(self):
+    def _post_simulation(self):
         """Simvue commands which are ran after the MOOSE simulation finishes."""
         for file in glob.glob(
             os.path.join(self.output_dir_path, f"{self.results_prefix}*")
@@ -330,7 +333,7 @@ class MooseRun(WrappedRun):
                 continue
             self.save_file(file, "output")
 
-        super().post_simulation()
+        super()._post_simulation()
 
     @simvue.utilities.prettify_pydantic
     @pydantic.validate_call

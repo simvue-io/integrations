@@ -161,9 +161,9 @@ class OpenfoamRun(WrappedRun):
 
         return {}, metrics
 
-    def pre_simulation(self):
+    def _pre_simulation(self):
         """Uploads inputs from the system, constant and 0 directories, and adds the Openfoam process."""
-        super().pre_simulation()
+        super()._pre_simulation()
 
         # Save the files in the System, Constant, and initial conditions ('0') directories
         self._save_directory(["system", "constant", "0"], "inputs.zip", "input")
@@ -179,7 +179,7 @@ class OpenfoamRun(WrappedRun):
             **self.openfoam_env_vars,
         )
 
-    def during_simulation(self):
+    def _during_simulation(self):
         """Tracks any log files produced by Openfoam."""
         # Track all log files
         self.file_monitor.tail(
@@ -188,7 +188,7 @@ class OpenfoamRun(WrappedRun):
             callback=lambda *_, **__: None,
         )
 
-    def post_simulation(self):
+    def _post_simulation(self):
         """Uploads all results found in the Openfoam case directory."""
         reg_exp = re.compile(r"([\d\.]+)")
         result_dirs = [
@@ -198,7 +198,7 @@ class OpenfoamRun(WrappedRun):
         ]
         self._save_directory(result_dirs, "results.zip", "output")
 
-        super().post_simulation()
+        super()._post_simulation()
 
     @simvue.utilities.prettify_pydantic
     @pydantic.validate_call
