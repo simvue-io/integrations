@@ -34,7 +34,7 @@ from simvue_integrations.connectors.moose import MooseRun
 
 MOOSE_APP_PATH = "/opt/moose/bin/moose-opt"
 
-def moose_example(moose_app_path) -> None:
+def moose_example(moose_app_path, parallel = False) -> None:
     # Initialise the MooseRun class as a context manager
     with MooseRun() as run:
         
@@ -68,6 +68,9 @@ def moose_example(moose_app_path) -> None:
             # You can optionally choose to track VectorPostProcessor outputs too:
             track_vector_postprocessors = True,
             track_vector_positions = False,
+            # And you can choose whether to run it in parallel
+            run_in_parallel = parallel,
+            num_processors = 2
         )
 
         # Once the simulation is complete, you can upload any final items to the Simvue run before it closes

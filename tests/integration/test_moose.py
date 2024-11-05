@@ -5,13 +5,14 @@ import pathlib
 import tempfile
 import simvue
 
-def test_moose_connector():
+@pytest.mark.parametrize("parallel", (True, False), ids=("parallel", "serial"))
+def test_moose_connector(parallel):
     try:
         subprocess.run("/opt/moose/bin/moose-opt")
     except FileNotFoundError:
         pytest.skip("You are attempting to run MOOSE Integration Tests without having MOOSE installed.")
     
-    run_id = moose_example("/opt/moose/bin/moose-opt")
+    run_id = moose_example("/opt/moose/bin/moose-opt", parallel)
     
     client = simvue.Client()
     run_data = client.get_run(run_id)
@@ -26,6 +27,11 @@ def test_moose_connector():
     
     # Check metadata from MOOSE log header has been uploaded
     assert run_data["metadata"]["moose.executioner"] == "Transient"
+    
+    if parallel:
+        assert run_data["metadata"]["moose.num_processors"] == 2
+    else:
+        assert run_data["metadata"]["moose.num_processors"] == 1
     
     # Check events uploaded from log
     assert "Time Step 1, time = 2, dt = 2" in events
