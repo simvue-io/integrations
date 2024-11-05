@@ -4,9 +4,7 @@ import platform
 import pathlib
 import pydantic
 import glob
-import os.path
 import re
-import os
 import f90nml
 import multiparser.parsing.tail as mp_tail_parser
 import multiparser.parsing.file as mp_file_parser
@@ -19,7 +17,7 @@ class FDSRun(WrappedRun):
         """
         If an abort is triggered, creates a '.stop' file so that FDS simulation is stopped gracefully.
         """
-        if not os.path.exists(f"{self._results_prefix}.stop"):
+        if not pathlib.Path(f"{self._results_prefix}.stop").exists():
             with open(f"{self._results_prefix}.stop", "w") as stop_file:
                 stop_file.write("FDS simulation aborted due to Simvue Alert.")
                 stop_file.close()
@@ -227,20 +225,24 @@ class FDSRun(WrappedRun):
 
         if self.upload_files is None:
             for file in glob.glob(f"{self._results_prefix}*"):
-                if os.path.abspath(file) == os.path.abspath(self.fds_input_file_path):
+                if (
+                    pathlib.Path(file).absolute()
+                    == pathlib.Path(self.fds_input_file_path).absolute()
+                ):
                     continue
                 self.save_file(file, "output")
         else:
             if self.workdir_path:
                 self.upload_files = [
-                    str(os.path.join(self.workdir_path, path))
+                    str(pathlib.Path(self.workdir_path).joinpath(path))
                     for path in self.upload_files
                 ]
 
             for path in self.upload_files:
                 for file in glob.glob(path):
-                    if os.path.abspath(file) == os.path.abspath(
-                        self.fds_input_file_path
+                    if (
+                        pathlib.Path(file).absolute()
+                        == pathlib.Path(self.fds_input_file_path).absolute()
                     ):
                         continue
                     self.save_file(file, "output")
@@ -353,15 +355,20 @@ class FDSRun(WrappedRun):
         self._chid = nml["head"]["chid"]
 
         if self.workdir_path:
-            os.makedirs(self.workdir_path, exist_ok=True)
+            pathlib.Path(self.workdir_path).mkdir(exist_ok=True)
 
-            for file in glob.glob(os.path.join(self.workdir_path, f"{self._chid}*")):
-                if os.path.abspath(file) == os.path.abspath(self.fds_input_file_path):
+            for file in glob.glob(
+                pathlib.Path(self.workdir_path).joinpath(f"{self._chid}*")
+            ):
+                if (
+                    pathlib.Path(file).absolute()
+                    == pathlib.Path(self.fds_input_file_path).absolute()
+                ):
                     continue
-                os.remove(file)
+                pathlib.Path(file).unlink()
 
         self._results_prefix = (
-            str(os.path.join(self.workdir_path, self._chid))
+            str(pathlib.Path(self.workdir_path).joinpath(self._chid))
             if self.workdir_path
             else self._chid
         )
