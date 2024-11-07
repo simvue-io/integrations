@@ -217,9 +217,6 @@ class MooseRun(WrappedRun):
         metric_time = csv_data.pop("time", None)
         metric_step = csv_data.pop("step", None)
 
-        print("metric time", metric_time)
-        print("step time", self._step_time)
-
         # Log all results for this timestep as Metrics
         self.log_metrics(
             csv_data,
