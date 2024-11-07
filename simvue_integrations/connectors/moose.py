@@ -71,7 +71,7 @@ class MooseRun(WrappedRun):
             key = key.strip()
             key = key.replace(" ", "_").lower()
             # Replace any characters which will fail server side validation of key name with dashes
-            key = re.sub("[^\w\-\s\.]+", "-", key)
+            key = re.sub(r"[^\w\-\s\.]+", "-", key)
             # Ignore lines which correspond to 'titles'
             if not value:
                 continue

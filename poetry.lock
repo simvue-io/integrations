@@ -1319,9 +1319,9 @@ files = [
 
 [package.dependencies]
 numpy = [
-    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
-    {version = ">=1.23.3", markers = "python_version >= \"3.11\" and python_version < \"3.12\""},
     {version = ">=1.21.2", markers = "python_version >= \"3.10\" and python_version < \"3.11\""},
+    {version = ">=1.23.3", markers = "python_version >= \"3.11\" and python_version < \"3.12\""},
+    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
 ]
 
 [package.extras]
@@ -1663,9 +1663,9 @@ files = [
 
 [package.dependencies]
 numpy = [
-    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
-    {version = ">=1.23.2", markers = "python_version == \"3.11\""},
     {version = ">=1.22.4", markers = "python_version < \"3.11\""},
+    {version = ">=1.23.2", markers = "python_version == \"3.11\""},
+    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
 ]
 python-dateutil = ">=2.8.2"
 pytz = ">=2020.1"
@@ -2401,13 +2401,13 @@ files = [
 
 [[package]]
 name = "simvue"
-version = "1.1.1"
+version = "1.1.2"
 description = "Simulation tracking and monitoring"
 optional = false
 python-versions = "<4.0,>=3.9"
 files = [
-    {file = "simvue-1.1.1-py3-none-any.whl", hash = "sha256:ec7d76e16adb4d9763f34dca496c1184a717de0f5a5920a3f0c5d7ac116e7144"},
-    {file = "simvue-1.1.1.tar.gz", hash = "sha256:f23ccc7e06155563edde4e53361c93dc1dad3b44c20728586aac181be6d1ae12"},
+    {file = "simvue-1.1.2-py3-none-any.whl", hash = "sha256:577d4fa5493aeb41761f2dd22208618b7714f521ff3ca0d733d5f8dcf231fb1d"},
+    {file = "simvue-1.1.2.tar.gz", hash = "sha256:54475e2e5beb7da6b9e1f9b145d41cea91506bdf69f75e8bb163851e465e7347"},
 ]
 
 [package.dependencies]
@@ -2748,13 +2748,13 @@ files = [
 
 [[package]]
 name = "werkzeug"
-version = "3.1.1"
+version = "3.1.2"
 description = "The comprehensive WSGI web application library."
 optional = true
 python-versions = ">=3.9"
 files = [
-    {file = "werkzeug-3.1.1-py3-none-any.whl", hash = "sha256:a71124d1ef06008baafa3d266c02f56e1836a5984afd6dd6c9230669d60d9fb5"},
-    {file = "werkzeug-3.1.1.tar.gz", hash = "sha256:8cd39dfbdfc1e051965f156163e2974e52c210f130810e9ad36858f0fd3edad4"},
+    {file = "werkzeug-3.1.2-py3-none-any.whl", hash = "sha256:4f7d1a5de312c810a8a2c6f0b47e9f6a7cffb7c8322def35e4d4d9841ff85597"},
+    {file = "werkzeug-3.1.2.tar.gz", hash = "sha256:f471a4cd167233077e9d2a8190c3471c5bc520c636a9e3c1e9300c33bced03bc"},
 ]
 
 [package.dependencies]
@@ -2892,4 +2892,4 @@ tensorflow = ["mnist", "tensorflow"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "8db1bb1cff8a9a80cd2364145eaa0dbf4832f63f20b84efe3b4e1b846c4f3a3b"
+content-hash = "f099c53a6ba1ab54bb42b5e3a5e5f770eedda4cd695095593382742f5ad259dc"
