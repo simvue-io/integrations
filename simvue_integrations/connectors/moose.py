@@ -23,6 +23,25 @@ class MooseRun(WrappedRun):
         run.launch(...)
     """
 
+    moose_application_path: pydantic.FilePath = None
+    moose_file_path: pydantic.FilePath = None
+    output_dir_path: typing.Union[str, pydantic.DirectoryPath] = None
+    results_prefix: str = None
+    track_vector_postprocessors: bool = None
+    track_vector_positions: bool = None
+    moose_env_vars: typing.Dict[str, typing.Any] = None
+    run_in_parallel: bool = None
+    num_processors: int = None
+    mpiexec_env_vars: typing.Dict[str, typing.Any] = None
+
+    _time = time.time()
+    # This represents the step number and time of the step, ie when MOOSE says 'Time Step X, time = Y'
+    _step_num = 0
+    _step_time = 0
+    # Initialize counters for keeping track of the number of linear and nonlinear steps involved in each solve
+    _nonlinear = 0
+    _linear = 0
+
     @mp_file_parser.file_parser
     def _moose_header_parser(self, input_file: str, **__) -> typing.Dict[str, str]:
         """Method which parses the header of the MOOSE log file and returns the data from it as a dictionary.
@@ -260,14 +279,9 @@ class MooseRun(WrappedRun):
     def _during_simulation(self):
         """Describes which files should be monitored during the simulation by Multiparser"""
         self.log_event("Beginning MOOSE simulation...")
+
         # Record time here, for that for static problems the overall time for execution will be returned
         self._time = time.time()
-        # This represents the step number and time of the step, ie when MOOSE says 'Time Step X, time = Y'
-        self._step_num = 0
-        self._step_time = 0
-        # Initialize counters for keeping track of the number of linear and nonlinear steps involved in each solve
-        self._nonlinear = 0
-        self._linear = 0
 
         # Read the initial information within the log file when it is first created, to parse the header information
         self.file_monitor.track(
