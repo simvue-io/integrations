@@ -1,4 +1,4 @@
-# Misellaneous - [Enter PR Title]
+# Miscellaneous - [Enter PR Title]
 
 ## Description
 [Describe what this new PR does]

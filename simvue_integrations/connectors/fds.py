@@ -4,9 +4,7 @@ import platform
 import pathlib
 import pydantic
 import glob
-import os.path
 import re
-import os
 import f90nml
 import multiparser.parsing.tail as mp_tail_parser
 import multiparser.parsing.file as mp_file_parser
@@ -15,11 +13,94 @@ from simvue_integrations.connectors.generic import WrappedRun
 
 
 class FDSRun(WrappedRun):
+    """Class for setting up Simvue tracking and monitoring of an FDS simulation.
+
+    Use this class as a context manager, in the same way you use default Simvue runs, and call run.launch(). Eg:
+
+    with FDSRun() as run:
+        run.init(
+            name="fds_simulation",
+        )
+        run.launch(...)
+    """
+
+    fds_input_file_path: pydantic.FilePath = None
+    workdir_path: typing.Union[str, pydantic.DirectoryPath] = None
+    upload_files: typing.List[str] = None
+    ulimit: typing.Union[str, int] = None
+    fds_env_vars: typing.Dict[str, typing.Any] = None
+
+    _activation_times: bool = False
+    _activation_times_data: typing.Dict[str, float] = {}
+    _chid: str = None
+    _results_prefix: str = None
+    _patterns: typing.List[typing.Dict[str, typing.Pattern]] = [
+        {"pattern": re.compile(r"\s+Time\sStep\s+(\d+).*"), "name": "step"},
+        {
+            "pattern": re.compile(r"\s+Step\sSize:.*Total\sTime:\s+([\d\.]+)\ss.*"),
+            "name": "time",
+        },
+        {
+            "pattern": re.compile(r"\s+Pressure\sIterations:\s(\d+)$"),
+            "name": "pressure_iteration",
+        },
+        {
+            "pattern": re.compile(
+                r"\s+Maximum\sVelocity\sError:\s+([\d\.\-\+E]+)\son\sMesh\s\d+\sat\s\(\d+,\d+,\d+\)$"
+            ),
+            "name": "max_velocity_error",
+        },
+        {
+            "pattern": re.compile(
+                r"\s+Maximum\sPressure\sError:\s+([\d\.\-\+E]+)\son\sMesh\s\d+\sat\s\(\d+,\d+,\d+\)$"
+            ),
+            "name": "max_pressure_error",
+        },
+        {
+            "pattern": re.compile(
+                r"\s+Max\sCFL\snumber:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
+            ),
+            "name": "max_cfl",
+        },
+        {
+            "pattern": re.compile(
+                r"\s+Max\sdivergence:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
+            ),
+            "name": "max_divergence",
+        },
+        {
+            "pattern": re.compile(
+                r"\s+Min\sdivergence:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
+            ),
+            "name": "min_divergence",
+        },
+        {
+            "pattern": re.compile(
+                r"\s+Max\sVN\snumber:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
+            ),
+            "name": "max_vn",
+        },
+        {
+            "pattern": re.compile(r"\s+No.\sof\sLagrangian\sParticles:\s+(\d+)$"),
+            "name": "num_lagrangian_particles",
+        },
+        {
+            "pattern": re.compile(r"\s+Total\sHeat\sRelease\sRate:\s+([\d\.\-]+)\skW$"),
+            "name": "total_heat_release_rate",
+        },
+        {
+            "pattern": re.compile(
+                r"\s+Radiation\sLoss\sto\sBoundaries:\s+([\d\.\-]+)\skW$"
+            ),
+            "name": "radiation_loss_to_boundaries",
+        },
+    ]
+
     def _soft_abort(self):
         """
         If an abort is triggered, creates a '.stop' file so that FDS simulation is stopped gracefully.
         """
-        if not os.path.exists(f"{self._results_prefix}.stop"):
+        if not pathlib.Path(f"{self._results_prefix}.stop").exists():
             with open(f"{self._results_prefix}.stop", "w") as stop_file:
                 stop_file.write("FDS simulation aborted due to Simvue Alert.")
                 stop_file.close()
@@ -77,8 +158,16 @@ class FDSRun(WrappedRun):
 
         return {}, _out_data
 
-    def _metrics_callback(self, data, meta):
-        """Log metrics extracted from a log file to Simvue"""
+    def _metrics_callback(self, data: typing.Dict, meta: typing.Dict):
+        """Log metrics extracted from a log file to Simvue.
+
+        Parameters
+        ----------
+        data : typing.Dict
+            Dictionary of data to log to Simvue as metrics
+        meta: typing.Dict
+            Dictionary of metadata added by Multiparser about this data
+        """
         metric_time = data.pop("time", None) or data.pop("Time", None)
         metric_step = data.pop("step", None)
         self.log_metrics(
@@ -89,7 +178,13 @@ class FDSRun(WrappedRun):
     def _header_metadata(
         self, input_file: str, **__
     ) -> tuple[dict[str, typing.Any], list[dict[str, typing.Any]]]:
-        """Parse metadata from header of FDS stderr"""
+        """Parse metadata from header of FDS stderr output file.
+
+        Parameters
+        ----------
+        input_file : str
+            The path to the FDS stderr output file.
+        """
         with open(input_file) as in_f:
             _file_lines = in_f.readlines()
 
@@ -120,7 +215,14 @@ class FDSRun(WrappedRun):
 
         return {}, _output_metadata
 
-    def _ctrl_log_callback(self, data, meta):
+    def _ctrl_log_callback(self, data: typing.Dict, _):
+        """Log metrics extracted from the CTRL log file to Simvue.
+
+        Parameters
+        ----------
+        data : typing.Dict
+            Dictionary of data from the latest line of the CTRL log file.
+        """
         if data["State"].lower() == "f":
             state = False
         elif data["State"].lower() == "t":
@@ -137,9 +239,9 @@ class FDSRun(WrappedRun):
         self.log_event(event_str)
         self.update_metadata({data["ID"]: state})
 
-    def pre_simulation(self):
-        """Starts the FDS process using a bash script to set `fds_unlim` if on Linux"""
-        super().pre_simulation()
+    def _pre_simulation(self):
+        """Starts the FDS process, using a bash script to set `fds_unlim` if on Linux"""
+        super()._pre_simulation()
         self.log_event("Starting FDS simulation")
 
         fds_unlim_path = (
@@ -157,7 +259,7 @@ class FDSRun(WrappedRun):
             **self.fds_env_vars,
         )
 
-    def during_simulation(self):
+    def _during_simulation(self):
         """Describes which files should be monitored during the simulation by Multiparser"""
         # Upload data from input file as metadata
         self.file_monitor.track(
@@ -198,31 +300,35 @@ class FDSRun(WrappedRun):
             callback=self._ctrl_log_callback,
         )
 
-    def post_simulation(self):
+    def _post_simulation(self):
         """Uploads files selected by user to Simvue for storage."""
         self.update_metadata(self._activation_times_data)
 
         if self.upload_files is None:
             for file in glob.glob(f"{self._results_prefix}*"):
-                if os.path.abspath(file) == os.path.abspath(self.fds_input_file_path):
+                if (
+                    pathlib.Path(file).absolute()
+                    == pathlib.Path(self.fds_input_file_path).absolute()
+                ):
                     continue
                 self.save_file(file, "output")
         else:
             if self.workdir_path:
                 self.upload_files = [
-                    str(os.path.join(self.workdir_path, path))
+                    str(pathlib.Path(self.workdir_path).joinpath(path))
                     for path in self.upload_files
                 ]
 
             for path in self.upload_files:
                 for file in glob.glob(path):
-                    if os.path.abspath(file) == os.path.abspath(
-                        self.fds_input_file_path
+                    if (
+                        pathlib.Path(file).absolute()
+                        == pathlib.Path(self.fds_input_file_path).absolute()
                     ):
                         continue
                     self.save_file(file, "output")
 
-        super().post_simulation()
+        super()._post_simulation()
 
     @simvue.utilities.prettify_pydantic
     @pydantic.validate_call
@@ -260,69 +366,6 @@ class FDSRun(WrappedRun):
         self.ulimit = ulimit
         self.fds_env_vars = fds_env_vars or {}
 
-        self._patterns = [
-            {"pattern": re.compile(r"\s+Time\sStep\s+(\d+).*"), "name": "step"},
-            {
-                "pattern": re.compile(r"\s+Step\sSize:.*Total\sTime:\s+([\d\.]+)\ss.*"),
-                "name": "time",
-            },
-            {
-                "pattern": re.compile(r"\s+Pressure\sIterations:\s(\d+)$"),
-                "name": "pressure_iteration",
-            },
-            {
-                "pattern": re.compile(
-                    r"\s+Maximum\sVelocity\sError:\s+([\d\.\-\+E]+)\son\sMesh\s\d+\sat\s\(\d+,\d+,\d+\)$"
-                ),
-                "name": "max_velocity_error",
-            },
-            {
-                "pattern": re.compile(
-                    r"\s+Maximum\sPressure\sError:\s+([\d\.\-\+E]+)\son\sMesh\s\d+\sat\s\(\d+,\d+,\d+\)$"
-                ),
-                "name": "max_pressure_error",
-            },
-            {
-                "pattern": re.compile(
-                    r"\s+Max\sCFL\snumber:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
-                ),
-                "name": "max_cfl",
-            },
-            {
-                "pattern": re.compile(
-                    r"\s+Max\sdivergence:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
-                ),
-                "name": "max_divergence",
-            },
-            {
-                "pattern": re.compile(
-                    r"\s+Min\sdivergence:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
-                ),
-                "name": "min_divergence",
-            },
-            {
-                "pattern": re.compile(
-                    r"\s+Max\sVN\snumber:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
-                ),
-                "name": "max_vn",
-            },
-            {
-                "pattern": re.compile(r"\s+No.\sof\sLagrangian\sParticles:\s+(\d+)$"),
-                "name": "num_lagrangian_particles",
-            },
-            {
-                "pattern": re.compile(
-                    r"\s+Total\sHeat\sRelease\sRate:\s+([\d\.\-]+)\skW$"
-                ),
-                "name": "total_heat_release_rate",
-            },
-            {
-                "pattern": re.compile(
-                    r"\s+Radiation\sLoss\sto\sBoundaries:\s+([\d\.\-]+)\skW$"
-                ),
-                "name": "radiation_loss_to_boundaries",
-            },
-        ]
         self._activation_times = False
         self._activation_times_data = {}
 
@@ -330,15 +373,18 @@ class FDSRun(WrappedRun):
         self._chid = nml["head"]["chid"]
 
         if self.workdir_path:
-            os.makedirs(self.workdir_path, exist_ok=True)
+            pathlib.Path(self.workdir_path).mkdir(exist_ok=True)
 
-            for file in glob.glob(os.path.join(self.workdir_path, f"{self._chid}*")):
-                if os.path.abspath(file) == os.path.abspath(self.fds_input_file_path):
+            for file in pathlib.Path(self.workdir_path).glob(f"{self._chid}*"):
+                if (
+                    pathlib.Path(file).absolute()
+                    == pathlib.Path(self.fds_input_file_path).absolute()
+                ):
                     continue
-                os.remove(file)
+                pathlib.Path(file).unlink()
 
         self._results_prefix = (
-            str(os.path.join(self.workdir_path, self._chid))
+            str(pathlib.Path(self.workdir_path).joinpath(self._chid))
             if self.workdir_path
             else self._chid
         )

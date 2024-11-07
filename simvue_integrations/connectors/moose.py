@@ -3,11 +3,10 @@ import typing
 import pydantic
 import multiparser.parsing.file as mp_file_parser
 import multiparser.parsing.tail as mp_tail_parser
-import os
+import pathlib
 import time
 import re
 import csv
-import glob
 from simvue_integrations.connectors.generic import WrappedRun
 from simvue_integrations.extras.create_command import format_command_env_vars
 
@@ -23,6 +22,25 @@ class MooseRun(WrappedRun):
         )
         run.launch(...)
     """
+
+    moose_application_path: pydantic.FilePath = None
+    moose_file_path: pydantic.FilePath = None
+    output_dir_path: typing.Union[str, pydantic.DirectoryPath] = None
+    results_prefix: str = None
+    track_vector_postprocessors: bool = None
+    track_vector_positions: bool = None
+    moose_env_vars: typing.Dict[str, typing.Any] = None
+    run_in_parallel: bool = None
+    num_processors: int = None
+    mpiexec_env_vars: typing.Dict[str, typing.Any] = None
+
+    _time = time.time()
+    # This represents the step number and time of the step, ie when MOOSE says 'Time Step X, time = Y'
+    _step_num = 0
+    _step_time = 0
+    # Initialize counters for keeping track of the number of linear and nonlinear steps involved in each solve
+    _nonlinear = 0
+    _linear = 0
 
     @mp_file_parser.file_parser
     def _moose_header_parser(self, input_file: str, **__) -> typing.Dict[str, str]:
@@ -53,7 +71,7 @@ class MooseRun(WrappedRun):
             key = key.strip()
             key = key.replace(" ", "_").lower()
             # Replace any characters which will fail server side validation of key name with dashes
-            key = re.sub("[^\w\-\s\.]+", "-", key)
+            key = re.sub(r"[^\w\-\s\.]+", "-", key)
             # Ignore lines which correspond to 'titles'
             if not value:
                 continue
@@ -84,14 +102,14 @@ class MooseRun(WrappedRun):
         """
         metrics = {}
         # Get name of vector which is being calculated by VectorPostProcessor from filename
-        file_name = os.path.basename(input_file)
+        file_name = pathlib.Path(input_file).name
         vector_name, serial_num = file_name.replace(
             f"{self.results_prefix}_", ""
         ).rsplit("_", 1)
 
         # If user has enabled time_data in their MOOSE file, get latest line from this file and save time
         time_file = f"{input_file.rsplit('_', 1)[0]}_time.csv"
-        if os.path.exists(time_file):
+        if pathlib.Path(time_file).exists():
             with open(time_file, newline="\n") as in_t:
                 final_line = [in_t.readlines()[-1]]
                 current_time_data = next(csv.reader(final_line))
@@ -207,9 +225,9 @@ class MooseRun(WrappedRun):
             timestamp=sim_metadata["timestamp"],
         )
 
-    def pre_simulation(self):
+    def _pre_simulation(self):
         """Simvue commands which are ran before the MOOSE simulation begins."""
-        super().pre_simulation()
+        super()._pre_simulation()
 
         # Add alert for a non converging step
         self.create_alert(
@@ -221,15 +239,17 @@ class MooseRun(WrappedRun):
         )
 
         # Save the MOOSE file for this run to the Simvue server
-        if os.path.exists(self.moose_file_path):
+        if pathlib.Path(self.moose_file_path).exists:
             self.save_file(self.moose_file_path, "input")
 
         # Save the MOOSE Makefile
-        if os.path.exists(
-            os.path.join(os.path.dirname(self.moose_application_path), "Makefile")
+        if (
+            pathlib.Path(self.moose_application_path)
+            .parent.joinpath("Makefile")
+            .exists()
         ):
             self.save_file(
-                os.path.join(os.path.dirname(self.moose_application_path), "Makefile"),
+                pathlib.Path(self.moose_application_path).parent.joinpath("Makefile"),
                 "input",
             )
 
@@ -253,22 +273,19 @@ class MooseRun(WrappedRun):
             completion_trigger=self._trigger,
         )
 
-    def during_simulation(self):
+    def _during_simulation(self):
         """Describes which files should be monitored during the simulation by Multiparser"""
         self.log_event("Beginning MOOSE simulation...")
+
         # Record time here, for that for static problems the overall time for execution will be returned
         self._time = time.time()
-        # This represents the step number and time of the step, ie when MOOSE says 'Time Step X, time = Y'
-        self._step_num = 0
-        self._step_time = 0
-        # Initialize counters for keeping track of the number of linear and nonlinear steps involved in each solve
-        self._nonlinear = 0
-        self._linear = 0
 
         # Read the initial information within the log file when it is first created, to parse the header information
         self.file_monitor.track(
-            path_glob_exprs=os.path.join(
-                self.output_dir_path, f"{self.results_prefix}.txt"
+            path_glob_exprs=str(
+                pathlib.Path(self.output_dir_path).joinpath(
+                    f"{self.results_prefix}.txt"
+                )
             ),
             callback=lambda header_data, metadata: self.update_metadata(
                 {**header_data, **metadata}
@@ -278,8 +295,10 @@ class MooseRun(WrappedRun):
         )
         # Monitor each line added to the MOOSE log file as the simulation proceeds and look out for certain phrases to upload to Simvue
         self.file_monitor.tail(
-            path_glob_exprs=os.path.join(
-                self.output_dir_path, f"{self.results_prefix}.txt"
+            path_glob_exprs=str(
+                pathlib.Path(self.output_dir_path).joinpath(
+                    f"{self.results_prefix}.txt"
+                )
             ),
             callback=self._per_event_callback,
             tracked_values=[
@@ -301,36 +320,45 @@ class MooseRun(WrappedRun):
         )
         # Monitor each line added to the MOOSE results file as the simulation proceeds, and upload results to Simvue
         self.file_monitor.tail(
-            path_glob_exprs=os.path.join(
-                self.output_dir_path, f"{self.results_prefix}.csv"
+            path_glob_exprs=str(
+                pathlib.Path(self.output_dir_path).joinpath(
+                    f"{self.results_prefix}.csv"
+                )
             ),
             parser_func=mp_tail_parser.record_csv,
             callback=self._per_metric_callback,
         )
         self.file_monitor.exclude(
-            os.path.join(self.output_dir_path, f"{self.results_prefix}_*_time.csv")
+            str(
+                pathlib.Path(self.output_dir_path).joinpath(
+                    f"{self.results_prefix}_*_time.csv"
+                )
+            )
         )
         # Monitor each file created by a Vector PostProcessor, and upload results to Simvue if file matches an expected form.
         if self.track_vector_postprocessors:
             self.file_monitor.track(
-                path_glob_exprs=os.path.join(
-                    self.output_dir_path, f"{self.results_prefix}_*.csv"
+                path_glob_exprs=str(
+                    pathlib.Path(self.output_dir_path).joinpath(
+                        f"{self.results_prefix}_*.csv"
+                    )
                 ),
                 parser_func=self._vector_postprocessor_parser,
                 callback=self._per_metric_callback,
                 static=True,
             )
 
-    def post_simulation(self):
+    def _post_simulation(self):
         """Simvue commands which are ran after the MOOSE simulation finishes."""
-        for file in glob.glob(
-            os.path.join(self.output_dir_path, f"{self.results_prefix}*")
-        ):
-            if os.path.abspath(file) == os.path.abspath(self.moose_file_path):
+        for file in pathlib.Path(self.output_dir_path).glob(f"{self.results_prefix}*"):
+            if (
+                pathlib.Path(file).absolute()
+                == pathlib.Path(self.moose_file_path).absolute()
+            ):
                 continue
             self.save_file(file, "output")
 
-        super().post_simulation()
+        super()._post_simulation()
 
     @simvue.utilities.prettify_pydantic
     @pydantic.validate_call
@@ -344,10 +372,10 @@ class MooseRun(WrappedRun):
         results_prefix: str,
         track_vector_postprocessors: bool = False,
         track_vector_positions: bool = False,
+        moose_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None,
         run_in_parallel: bool = False,
         num_processors: int = 1,
         mpiexec_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None,
-        moose_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None,
     ):
         """Command to launch the MOOSE simulation and track it with Simvue.
 
@@ -359,8 +387,20 @@ class MooseRun(WrappedRun):
             Path to the MOOSE configuration file
         output_dir_path : str
             The output directory where results and logs from MOOSE will be stored
+        results_prefix : str
+            The phrase which all MOOSE output files are prepended with (set in MOOSE input file)
+        track_vector_postprocessors : bool, optional
+            Whether to track CSV outputs from Vector PostProcessors, by default False
+        track_vector_positions: bool, optional
+            Whether to create metrics for the positions given in Vector PostProcessor output at each time step (x, y, z, radius), by default False
         moose_env_vars : typing.Optional[typing.Dict[str, typing.Any]], optional
             Any environment variables to be passed to MOOSE on startup, by default None
+        run_in_parallel: bool, optional
+            Whether to run the MOOSE simulation in parallel, by default False
+        num_processors : int, optional
+            The number of processors to run a parallel MOOSE job across, by default 1
+        mpiexec_env_vars : typing.Optional[typing.Dict[str, typing.Any]]
+            Any environment variables to pass to mpiexec on startup if running in parallel, by default None
         """
 
         if track_vector_positions and not track_vector_postprocessors:
@@ -374,9 +414,9 @@ class MooseRun(WrappedRun):
         self.results_prefix = results_prefix
         self.track_vector_postprocessors = track_vector_postprocessors
         self.track_vector_positions = track_vector_positions
+        self.moose_env_vars = moose_env_vars or {}
         self.run_in_parallel = run_in_parallel
         self.num_processors = num_processors
         self.mpiexec_env_vars = mpiexec_env_vars or {}
-        self.moose_env_vars = moose_env_vars or {}
 
         super().launch()

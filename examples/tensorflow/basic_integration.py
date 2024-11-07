@@ -11,6 +11,8 @@ To run this example:
     - Install Poetry: pip install poetry
     - Install required modules: poetry install -E tensorflow
     - Run the example script: poetry run python basic_integration.py
+    
+For a more in depth example, see: https://docs.simvue.io/examples/tensorflow/
 """
 import tensorflow as tf
 from tensorflow import keras

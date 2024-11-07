@@ -22,6 +22,8 @@ To run this example on your own system with FDS installed:
     - Install Poetry: pip install poetry
     - Install required modules: poetry install -E fds
     - Run the example script: poetry run python fds_example.py
+    
+For a more in depth example, see: https://docs.simvue.io/examples/fds/
 """
 
 import pathlib

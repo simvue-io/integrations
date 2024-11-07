@@ -12,7 +12,9 @@ def mock_moose_process(self, *_, **__):
     Mock process for a MOOSE ScalarPostProcessor CSV file, written line by line.
     """
     temp_logfile = tempfile.NamedTemporaryFile(mode="w",prefix="moose_test_", suffix=".csv", buffering=1)
-    self.results_prefix = temp_logfile.name.split(".")[0]
+    self.results_prefix = pathlib.Path(temp_logfile.name).name.split(".")[0]
+    self.output_dir_path = pathlib.Path(temp_logfile.name).parent
+
     def write_to_csv(temp_logfile=temp_logfile):
         log_file = pathlib.Path(__file__).parent.joinpath("example_data", "moose_temps_avgs.csv").open("r")
         for line in log_file:
@@ -40,7 +42,7 @@ def test_scalar_pp_parser(folder_setup):
         run.launch(
             moose_application_path=pathlib.Path(__file__),
             moose_file_path=pathlib.Path(__file__),
-            output_dir_path=f"/tmp/",
+            output_dir_path="overwritten_in_mocker",
             results_prefix="overwritten_in_mocker",
         )
            
