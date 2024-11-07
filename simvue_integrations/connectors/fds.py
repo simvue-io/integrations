@@ -13,6 +13,89 @@ from simvue_integrations.connectors.generic import WrappedRun
 
 
 class FDSRun(WrappedRun):
+    """Class for setting up Simvue tracking and monitoring of an FDS simulation.
+
+    Use this class as a context manager, in the same way you use default Simvue runs, and call run.launch(). Eg:
+
+    with FDSRun() as run:
+        run.init(
+            name="fds_simulation",
+        )
+        run.launch(...)
+    """
+
+    fds_input_file_path: pydantic.FilePath = None
+    workdir_path: typing.Union[str, pydantic.DirectoryPath] = None
+    upload_files: typing.List[str] = None
+    ulimit: typing.Union[str, int] = None
+    fds_env_vars: typing.Dict[str, typing.Any] = None
+
+    _activation_times: bool = False
+    _activation_times_data: typing.Dict[str, float] = {}
+    _chid: str = None
+    _results_prefix: str = None
+    _patterns: typing.List[typing.Dict[str, typing.Pattern]] = [
+        {"pattern": re.compile(r"\s+Time\sStep\s+(\d+).*"), "name": "step"},
+        {
+            "pattern": re.compile(r"\s+Step\sSize:.*Total\sTime:\s+([\d\.]+)\ss.*"),
+            "name": "time",
+        },
+        {
+            "pattern": re.compile(r"\s+Pressure\sIterations:\s(\d+)$"),
+            "name": "pressure_iteration",
+        },
+        {
+            "pattern": re.compile(
+                r"\s+Maximum\sVelocity\sError:\s+([\d\.\-\+E]+)\son\sMesh\s\d+\sat\s\(\d+,\d+,\d+\)$"
+            ),
+            "name": "max_velocity_error",
+        },
+        {
+            "pattern": re.compile(
+                r"\s+Maximum\sPressure\sError:\s+([\d\.\-\+E]+)\son\sMesh\s\d+\sat\s\(\d+,\d+,\d+\)$"
+            ),
+            "name": "max_pressure_error",
+        },
+        {
+            "pattern": re.compile(
+                r"\s+Max\sCFL\snumber:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
+            ),
+            "name": "max_cfl",
+        },
+        {
+            "pattern": re.compile(
+                r"\s+Max\sdivergence:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
+            ),
+            "name": "max_divergence",
+        },
+        {
+            "pattern": re.compile(
+                r"\s+Min\sdivergence:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
+            ),
+            "name": "min_divergence",
+        },
+        {
+            "pattern": re.compile(
+                r"\s+Max\sVN\snumber:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
+            ),
+            "name": "max_vn",
+        },
+        {
+            "pattern": re.compile(r"\s+No.\sof\sLagrangian\sParticles:\s+(\d+)$"),
+            "name": "num_lagrangian_particles",
+        },
+        {
+            "pattern": re.compile(r"\s+Total\sHeat\sRelease\sRate:\s+([\d\.\-]+)\skW$"),
+            "name": "total_heat_release_rate",
+        },
+        {
+            "pattern": re.compile(
+                r"\s+Radiation\sLoss\sto\sBoundaries:\s+([\d\.\-]+)\skW$"
+            ),
+            "name": "radiation_loss_to_boundaries",
+        },
+    ]
+
     def _soft_abort(self):
         """
         If an abort is triggered, creates a '.stop' file so that FDS simulation is stopped gracefully.
@@ -132,15 +215,13 @@ class FDSRun(WrappedRun):
 
         return {}, _output_metadata
 
-    def _ctrl_log_callback(self, data: typing.Dict, meta: typing.Dict):
+    def _ctrl_log_callback(self, data: typing.Dict, _):
         """Log metrics extracted from the CTRL log file to Simvue.
 
         Parameters
         ----------
         data : typing.Dict
             Dictionary of data from the latest line of the CTRL log file.
-        meta: typing.Dict
-            Dictionary of metadata added by Multiparser about this data.
         """
         if data["State"].lower() == "f":
             state = False
@@ -285,69 +366,6 @@ class FDSRun(WrappedRun):
         self.ulimit = ulimit
         self.fds_env_vars = fds_env_vars or {}
 
-        self._patterns = [
-            {"pattern": re.compile(r"\s+Time\sStep\s+(\d+).*"), "name": "step"},
-            {
-                "pattern": re.compile(r"\s+Step\sSize:.*Total\sTime:\s+([\d\.]+)\ss.*"),
-                "name": "time",
-            },
-            {
-                "pattern": re.compile(r"\s+Pressure\sIterations:\s(\d+)$"),
-                "name": "pressure_iteration",
-            },
-            {
-                "pattern": re.compile(
-                    r"\s+Maximum\sVelocity\sError:\s+([\d\.\-\+E]+)\son\sMesh\s\d+\sat\s\(\d+,\d+,\d+\)$"
-                ),
-                "name": "max_velocity_error",
-            },
-            {
-                "pattern": re.compile(
-                    r"\s+Maximum\sPressure\sError:\s+([\d\.\-\+E]+)\son\sMesh\s\d+\sat\s\(\d+,\d+,\d+\)$"
-                ),
-                "name": "max_pressure_error",
-            },
-            {
-                "pattern": re.compile(
-                    r"\s+Max\sCFL\snumber:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
-                ),
-                "name": "max_cfl",
-            },
-            {
-                "pattern": re.compile(
-                    r"\s+Max\sdivergence:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
-                ),
-                "name": "max_divergence",
-            },
-            {
-                "pattern": re.compile(
-                    r"\s+Min\sdivergence:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
-                ),
-                "name": "min_divergence",
-            },
-            {
-                "pattern": re.compile(
-                    r"\s+Max\sVN\snumber:\s+([\d\.E\-\+]+)\sat\s\(\d+,\d+,\d+\)$"
-                ),
-                "name": "max_vn",
-            },
-            {
-                "pattern": re.compile(r"\s+No.\sof\sLagrangian\sParticles:\s+(\d+)$"),
-                "name": "num_lagrangian_particles",
-            },
-            {
-                "pattern": re.compile(
-                    r"\s+Total\sHeat\sRelease\sRate:\s+([\d\.\-]+)\skW$"
-                ),
-                "name": "total_heat_release_rate",
-            },
-            {
-                "pattern": re.compile(
-                    r"\s+Radiation\sLoss\sto\sBoundaries:\s+([\d\.\-]+)\skW$"
-                ),
-                "name": "radiation_loss_to_boundaries",
-            },
-        ]
         self._activation_times = False
         self._activation_times_data = {}
 
