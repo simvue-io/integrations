@@ -21,6 +21,12 @@ class OpenfoamRun(WrappedRun):
         run.launch(...)
     """
 
+    openfoam_case_dir: pydantic.DirectoryPath = None
+    upload_as_zip: bool = None
+    openfoam_env_vars: typing.Dict[str, typing.Any] = None
+
+    _metadata_uploaded: bool = None
+
     def _save_directory(
         self,
         dir_names: list[str],
@@ -128,9 +134,9 @@ class OpenfoamRun(WrappedRun):
             elif line.startswith("// *"):
                 title = False
                 header = False
-                if not self.metadata_uploaded:
+                if not self._metadata_uploaded:
                     self.update_metadata(header_metadata)
-                    self.metadata_uploaded = True
+                    self._metadata_uploaded = True
                 solver_info = True
                 continue
 
@@ -238,6 +244,5 @@ class OpenfoamRun(WrappedRun):
         self.openfoam_case_dir = openfoam_case_dir
         self.upload_as_zip = upload_as_zip
         self.openfoam_env_vars = openfoam_env_vars or {}
-        self.metadata_uploaded = False
 
         super().launch()
