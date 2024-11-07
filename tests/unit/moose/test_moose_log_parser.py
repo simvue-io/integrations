@@ -13,7 +13,8 @@ def mock_moose_process(self, *_, **__):
     """
     temp_logfile = tempfile.NamedTemporaryFile(mode="w",prefix="moose_test_", suffix=".txt", buffering=1)
     self.results_prefix = pathlib.Path(temp_logfile.name).name.split(".")[0]
-    print(self.results_prefix)
+    self.output_dir_path = pathlib.Path(temp_logfile.name).parent
+
     def write_to_log():
         log_file = pathlib.Path(__file__).parent.joinpath("example_data", "moose_log.txt").open("r")
         for line in log_file:
@@ -39,7 +40,7 @@ def test_moose_log_parser(folder_setup):
         run.launch(
             moose_application_path=pathlib.Path(__file__),
             moose_file_path=pathlib.Path(__file__),
-            output_dir_path=f"/tmp/",
+            output_dir_path="overwritten_in_mocker",
             results_prefix="overwritten_in_mocker",
         )
            
