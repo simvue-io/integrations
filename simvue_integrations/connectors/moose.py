@@ -25,8 +25,6 @@ class MooseRun(WrappedRun):
 
     moose_application_path: pydantic.FilePath = None
     moose_file_path: pydantic.FilePath = None
-    output_dir_path: typing.Union[str, pydantic.DirectoryPath] = None
-    results_prefix: str = None
     track_vector_postprocessors: bool = None
     track_vector_positions: bool = None
     moose_env_vars: typing.Dict[str, typing.Any] = None
@@ -34,6 +32,8 @@ class MooseRun(WrappedRun):
     num_processors: int = None
     mpiexec_env_vars: typing.Dict[str, typing.Any] = None
 
+    _output_dir_path: typing.Union[str, pydantic.DirectoryPath] = None
+    _results_prefix: str = None
     _time = time.time()
     # This represents the step number and time of the step, ie when MOOSE says 'Time Step X, time = Y'
     _step_num = 0
@@ -82,14 +82,16 @@ class MooseRun(WrappedRun):
 
         # Try to retrieve some useful things
         if file_base := input_metadata.get(f"{prefix}.Outputs.file_base", None):
-            self.output_dir_path, self.results_prefix = file_base.rsplit("/", 1)
+            self._output_dir_path, self._results_prefix = file_base.rsplit("/", 1)
+            print(self._results_prefix)
         else:
             raise KeyError(
                 "Could not find file_base in your MOOSE file.\n"
                 "Please add 'file_base' to your Outputs section, in the form <results directory path>/<results file prefix>."
             )
 
-        self._dt = input_metadata.get(f"{prefix}.Executioner.dt", None)
+        if _dt := input_metadata.get(f"{prefix}.Executioner.dt", None):
+            self._dt = float(_dt)
 
     @mp_file_parser.file_parser
     def _moose_header_parser(self, input_file: str, **__) -> typing.Dict[str, str]:
@@ -153,7 +155,7 @@ class MooseRun(WrappedRun):
         # Get name of vector which is being calculated by VectorPostProcessor from filename
         file_name = pathlib.Path(input_file).name
         vector_name, serial_num = file_name.replace(
-            f"{self.results_prefix}_", ""
+            f"{self._results_prefix}_", ""
         ).rsplit("_", 1)
 
         # If user has enabled time_data in their MOOSE file, get latest line from this file and save time
@@ -268,9 +270,9 @@ class MooseRun(WrappedRun):
         metric_time = csv_data.pop("time", None)
         metric_step = csv_data.pop("step", None)
 
-        if not metric_step and self._dt:
+        if self._dt and not metric_step:
             # Has come from a scalar PostProcessor, can assume step = time / dt
-            metric_time = metric_step / self._dt
+            metric_step = metric_time / self._dt
 
         # Log all results for this timestep as Metrics
         self.log_metrics(
@@ -324,7 +326,6 @@ class MooseRun(WrappedRun):
             "off",
         ]
         command += format_command_env_vars(self.moose_env_vars)
-
         self.add_process(
             "moose_simulation",
             *command,
@@ -341,8 +342,8 @@ class MooseRun(WrappedRun):
         # Read the initial information within the log file when it is first created, to parse the header information
         self.file_monitor.track(
             path_glob_exprs=str(
-                pathlib.Path(self.output_dir_path).joinpath(
-                    f"{self.results_prefix}.txt"
+                pathlib.Path(self._output_dir_path).joinpath(
+                    f"{self._results_prefix}.txt"
                 )
             ),
             callback=lambda header_data, metadata: self.update_metadata(
@@ -354,8 +355,8 @@ class MooseRun(WrappedRun):
         # Monitor each line added to the MOOSE log file as the simulation proceeds and look out for certain phrases to upload to Simvue
         self.file_monitor.tail(
             path_glob_exprs=str(
-                pathlib.Path(self.output_dir_path).joinpath(
-                    f"{self.results_prefix}.txt"
+                pathlib.Path(self._output_dir_path).joinpath(
+                    f"{self._results_prefix}.txt"
                 )
             ),
             callback=self._per_event_callback,
@@ -379,8 +380,8 @@ class MooseRun(WrappedRun):
         # Monitor each line added to the MOOSE results file as the simulation proceeds, and upload results to Simvue
         self.file_monitor.tail(
             path_glob_exprs=str(
-                pathlib.Path(self.output_dir_path).joinpath(
-                    f"{self.results_prefix}.csv"
+                pathlib.Path(self._output_dir_path).joinpath(
+                    f"{self._results_prefix}.csv"
                 )
             ),
             parser_func=mp_tail_parser.record_csv,
@@ -388,8 +389,8 @@ class MooseRun(WrappedRun):
         )
         self.file_monitor.exclude(
             str(
-                pathlib.Path(self.output_dir_path).joinpath(
-                    f"{self.results_prefix}_*_time.csv"
+                pathlib.Path(self._output_dir_path).joinpath(
+                    f"{self._results_prefix}_*_time.csv"
                 )
             )
         )
@@ -397,8 +398,8 @@ class MooseRun(WrappedRun):
         if self.track_vector_postprocessors:
             self.file_monitor.track(
                 path_glob_exprs=str(
-                    pathlib.Path(self.output_dir_path).joinpath(
-                        f"{self.results_prefix}_*.csv"
+                    pathlib.Path(self._output_dir_path).joinpath(
+                        f"{self._results_prefix}_*.csv"
                     )
                 ),
                 parser_func=self._vector_postprocessor_parser,
@@ -408,7 +409,9 @@ class MooseRun(WrappedRun):
 
     def _post_simulation(self):
         """Simvue commands which are ran after the MOOSE simulation finishes."""
-        for file in pathlib.Path(self.output_dir_path).glob(f"{self.results_prefix}*"):
+        for file in pathlib.Path(self._output_dir_path).glob(
+            f"{self._results_prefix}*"
+        ):
             if (
                 pathlib.Path(file).absolute()
                 == pathlib.Path(self.moose_file_path).absolute()
@@ -424,10 +427,6 @@ class MooseRun(WrappedRun):
         self,
         moose_application_path: pydantic.FilePath,
         moose_file_path: pydantic.FilePath,
-        output_dir_path: typing.Union[
-            str, pydantic.DirectoryPath
-        ],  # as this might not exist yet
-        results_prefix: str,
         track_vector_postprocessors: bool = False,
         track_vector_positions: bool = False,
         moose_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None,
@@ -443,10 +442,6 @@ class MooseRun(WrappedRun):
             Path to the MOOSE application file
         moose_file_path : pydantic.FilePath
             Path to the MOOSE configuration file
-        output_dir_path : str
-            The output directory where results and logs from MOOSE will be stored
-        results_prefix : str
-            The phrase which all MOOSE output files are prepended with (set in MOOSE input file)
         track_vector_postprocessors : bool, optional
             Whether to track CSV outputs from Vector PostProcessors, by default False
         track_vector_positions: bool, optional
@@ -468,8 +463,6 @@ class MooseRun(WrappedRun):
 
         self.moose_application_path = moose_application_path
         self.moose_file_path = moose_file_path
-        self.output_dir_path = output_dir_path
-        self.results_prefix = results_prefix
         self.track_vector_postprocessors = track_vector_postprocessors
         self.track_vector_positions = track_vector_positions
         self.moose_env_vars = moose_env_vars or {}
