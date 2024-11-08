@@ -62,9 +62,6 @@ def moose_example(moose_app_path, parallel = False) -> None:
         run.launch(
             moose_application_path=moose_app_path,
             moose_file_path=pathlib.Path(__file__).parent.joinpath("thermal_bar.i"),
-            # These should match those defined in the Outputs section of the MOOSE file:
-            output_dir_path="/tmp/simvue/results",
-            results_prefix="simvue_thermal",
             # You can optionally choose to track VectorPostProcessor outputs too:
             track_vector_postprocessors = True,
             track_vector_positions = False,

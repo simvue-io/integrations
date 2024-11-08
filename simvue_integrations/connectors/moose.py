@@ -76,7 +76,11 @@ class MooseRun(WrappedRun):
                     # Not interested in uploading long inputs like these as metadata, so ignore for now
                     if ";" in match.group(2):
                         continue
-                    input_metadata[f"{key}.{match.group(1)}"] = match.group(2).strip()
+                    try:
+                        val = float(match.group(2).strip())
+                    except ValueError:
+                        val = match.group(2).strip()
+                    input_metadata[f"{key}.{match.group(1)}"] = val
 
         self.update_metadata(input_metadata)
 
