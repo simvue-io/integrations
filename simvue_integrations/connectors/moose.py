@@ -42,6 +42,43 @@ class MooseRun(WrappedRun):
     _nonlinear = 0
     _linear = 0
 
+    def _moose_input_parser(self, input_file: pathlib.Path):
+        """
+        Parse MOOSE input file, and create a dictionary of metadata with dot notation representing indentation of keys.
+
+        Parameters
+        ----------
+        input_file: pathlib.Path
+            The path to the MOOSE input file
+        """
+        input_metadata = {}
+        key = input_file.name.split(".")[0]
+
+        with open(input_file, "r") as file:
+            for line in file:
+                line = line.strip()
+                # Find lines which represent ends of blocks
+                # Could be similar to [] or [../] - so check for square brackets with any number of non alphanumeric chars between
+                if re.search(r"\[[^\w]*\]", line):
+                    # Remove that block from the key - split at the last dot in the key and remove what comes after
+                    key = key.rsplit(".", 1)[0]
+                # Find lines which represent starts of new blocks
+                # Eg [Mesh] - so look for square brackets with any characters between (already screened out end blocks above)
+                elif new_key := re.search(r"\[.+\]", line):
+                    # Add the title of the new block to the key, dot separated notation
+                    key += f".{new_key.group().strip('[]/.')}"
+                # Find lines which represent a key value pair, <key> = <value>
+                # Make sure to remove in line comments from the value
+                elif match := re.search(r"(\w*)\s*=\s*([^#]+)(#+.*)?", line):
+                    # If the value ends with a ;, it means it is a multi line array input
+                    # Not interested in uploading long inputs like these as metadata, so ignore for now
+                    if ";" in match.group(2):
+                        continue
+                    input_metadata[f"{key}.{match.group(1)}"] = match.group(2).strip()
+
+        self.update_metadata(input_metadata)
+        self._input_metadata = input_metadata
+
     @mp_file_parser.file_parser
     def _moose_header_parser(self, input_file: str, **__) -> typing.Dict[str, str]:
         """Method which parses the header of the MOOSE log file and returns the data from it as a dictionary.
