@@ -41,6 +41,7 @@ class MooseRun(WrappedRun):
     # Initialize counters for keeping track of the number of linear and nonlinear steps involved in each solve
     _nonlinear = 0
     _linear = 0
+    _dt = None
 
     def _moose_input_parser(self, input_file: pathlib.Path):
         """
@@ -52,7 +53,8 @@ class MooseRun(WrappedRun):
             The path to the MOOSE input file
         """
         input_metadata = {}
-        key = input_file.name.split(".")[0]
+        prefix = input_file.name.split(".")[0]
+        key = prefix
 
         with open(input_file, "r") as file:
             for line in file:
@@ -77,7 +79,17 @@ class MooseRun(WrappedRun):
                     input_metadata[f"{key}.{match.group(1)}"] = match.group(2).strip()
 
         self.update_metadata(input_metadata)
-        self._input_metadata = input_metadata
+
+        # Try to retrieve some useful things
+        if file_base := input_metadata.get(f"{prefix}.Outputs.file_base", None):
+            self.output_dir_path, self.results_prefix = file_base.rsplit("/", 1)
+        else:
+            raise KeyError(
+                "Could not find file_base in your MOOSE file.\n"
+                "Please add 'file_base' to your Outputs section, in the form <results directory path>/<results file prefix>."
+            )
+
+        self._dt = input_metadata.get(f"{prefix}.Executioner.dt", None)
 
     @mp_file_parser.file_parser
     def _moose_header_parser(self, input_file: str, **__) -> typing.Dict[str, str]:
@@ -154,6 +166,8 @@ class MooseRun(WrappedRun):
                 metrics["step"] = current_time_data[1]
         else:
             metrics["step"] = int(serial_num.split(".")[0])
+            if self._dt:
+                metrics["time"] = metrics["step"] * self._dt
 
         with open(input_file, newline="") as in_f:
             read_csv = csv.DictReader(in_f)
@@ -254,6 +268,10 @@ class MooseRun(WrappedRun):
         metric_time = csv_data.pop("time", None)
         metric_step = csv_data.pop("step", None)
 
+        if not metric_step and self._dt:
+            # Has come from a scalar PostProcessor, can assume step = time / dt
+            metric_time = metric_step / self._dt
+
         # Log all results for this timestep as Metrics
         self.log_metrics(
             csv_data,
@@ -278,6 +296,9 @@ class MooseRun(WrappedRun):
         # Save the MOOSE file for this run to the Simvue server
         if pathlib.Path(self.moose_file_path).exists:
             self.save_file(self.moose_file_path, "input")
+
+        # Parse the MOOSE input file
+        self._moose_input_parser(pathlib.Path(self.moose_file_path))
 
         # Save the MOOSE Makefile
         if (
