@@ -12,7 +12,12 @@ def mock_moose_process(self, *_, **__):
     # No need to do anything this time, just set termination trigger
     self._trigger.set()
     return True
-    
+
+def mock_input_parser(self, *_, **__):
+    self._output_dir_path = str(pathlib.Path(__file__).parent.joinpath("example_data", "moose_outputs"))
+    self._results_prefix = "moose_test"
+
+@patch.object(MooseRun, '_moose_input_parser', mock_input_parser)
 @patch.object(MooseRun, 'add_process', mock_moose_process)
 def test_moose_file_upload(folder_setup):
     """
@@ -26,9 +31,8 @@ def test_moose_file_upload(folder_setup):
         run.launch(
             moose_application_path=pathlib.Path(__file__),
             moose_file_path=pathlib.Path(__file__),
-            output_dir_path=pathlib.Path(__file__).parent.joinpath("example_data", "moose_outputs"),
-            results_prefix="moose_test",
         )
+        print(run._output_dir_path)
         
         client = simvue.Client()
         
@@ -58,7 +62,8 @@ def mock_aborted_moose_process(self, *_, **__):
         
     thread = threading.Thread(target=aborted_process)
     thread.start()
-    
+
+@patch.object(MooseRun, '_moose_input_parser', mock_input_parser)
 @patch.object(MooseRun, 'add_process', mock_aborted_moose_process)    
 def test_moose_file_upload_after_abort(folder_setup):
     """
@@ -72,8 +77,6 @@ def test_moose_file_upload_after_abort(folder_setup):
         run.launch(
             moose_application_path=pathlib.Path(__file__),
             moose_file_path=pathlib.Path(__file__),
-            output_dir_path=pathlib.Path(__file__).parent.joinpath("example_data", "moose_outputs"),
-            results_prefix="moose_test",
         )
     
     client = simvue.Client()

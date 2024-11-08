@@ -87,7 +87,6 @@ class MooseRun(WrappedRun):
         # Try to retrieve some useful things
         if file_base := input_metadata.get(f"{prefix}.Outputs.file_base", None):
             self._output_dir_path, self._results_prefix = file_base.rsplit("/", 1)
-            print(self._results_prefix)
         else:
             raise KeyError(
                 "Could not find file_base in your MOOSE file.\n"
