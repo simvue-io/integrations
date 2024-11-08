@@ -50,7 +50,7 @@ The exact contents of both of the above options can be obtained directly by clic
 
 ## Usage example
 ```python
-from simvue_integrations import FDSRun
+from simvue_integrations.connectors.moose import MooseRun
 
 ...
 
@@ -60,17 +60,19 @@ if __name__ == "__main__":
 
     # Using a context manager means that the status will be set to completed automatically,
     # and also means that if the code exits with an exception this will be reported to Simvue
-    with MOOSERun() as run:
+    with MooseRun() as run:
 
         # Specify a run name, metadata (dict), tags (list), description, folder
-        run.init('my-moose-simulation',
-                 {'simulation_type': 'thermal', 'heat_capacity': 900},               # Metadaata
-                 ['moose'],                                                          # Tags
-                 'MOOSE simulation of thermal properties of component.',             # Description
-                 '/component-1/thermal')                                             # Folder path
+        run.init(
+          name = 'my-moose-simulation',                                # Run name
+          {'simulation_type': 'thermal', 'heat_capacity': 900},        # Metadata
+          ['moose',],                                                  # Tags
+          'MOOSE simulation of thermal properties of component.',      # Description
+          '/component-1/thermal'                                       # Folder path
+        )
 
         # Set folder details if necessary
-        run.set_folder_details('/component-1/thermal',                 # Folder full path
+        run.set_folder_details('/component-1/thermal',                 # Full path to folder
                                metadata={},                            # Metadata
                                tags=['moose'],                         # Tags
                                description='Thermal study of design.') # Description
@@ -93,8 +95,7 @@ if __name__ == "__main__":
         run.launch(
             moose_application_path='app/moose-opt',   # Path to MOOSE application
             moose_file_path='thermal.i',              # Path to MOOSE input file
-            output_dir_path='results/thermal',        # Path to directory where results are stored
-            results_prefix="thermal",)                # Prefix for all results files
+            )
 
 ```
 
