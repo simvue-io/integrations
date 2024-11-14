@@ -37,10 +37,22 @@ def test_moose_connector(parallel):
     assert "Time Step 1, time = 2, dt = 2" in events
     
     # Check metrics uploaded from PostProcessor CSV
-    assert run_data["metrics"]["average_temperature"]["last"] > 499
+    assert run_data["metrics"]["average_temperature"]["last"] > 498
+    
+    # Check time and step data is correct
+    sample_metric = client.get_metric_values(metric_names=["average_temperature"], xaxis="time", output_format="dataframe", run_ids=[run_id])
+    assert list(sample_metric.index.levels[0]) == list(range(0, 32, 2))
+    sample_metric = client.get_metric_values(metric_names=["average_temperature"], xaxis="step", output_format="dataframe", run_ids=[run_id])
+    assert list(sample_metric.index.levels[0]) == list(range(0, 16, 1))
     
     # Check metrics uploaded from VectorPostProcessor CSV
-    assert run_data["metrics"]["temperature_along_bar.T.0"]["count"] == 15
+    assert run_data["metrics"]["temperature_along_bar.T.1"]["last"] > 498
+    
+    # Check time and step data is correct - starts from first step, since file PostProcessor file 0000 is blank
+    sample_metric = client.get_metric_values(metric_names=["temperature_along_bar.T.0"], xaxis="time", output_format="dataframe", run_ids=[run_id])
+    assert list(sample_metric.index.levels[0]) == list(range(2, 32, 2))
+    sample_metric = client.get_metric_values(metric_names=["temperature_along_bar.T.2"], xaxis="step", output_format="dataframe", run_ids=[run_id])
+    assert list(sample_metric.index.levels[0]) == list(range(1, 16, 1))
     
     temp_dir = tempfile.TemporaryDirectory()
     

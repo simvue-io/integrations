@@ -1,7 +1,7 @@
 import pytest
 import simvue
 import uuid
-import subprocess
+import pathlib
 import time
 
 @pytest.fixture(scope='session', autouse=True)

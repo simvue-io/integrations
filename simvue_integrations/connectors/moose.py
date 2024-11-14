@@ -25,8 +25,6 @@ class MooseRun(WrappedRun):
 
     moose_application_path: pydantic.FilePath = None
     moose_file_path: pydantic.FilePath = None
-    output_dir_path: typing.Union[str, pydantic.DirectoryPath] = None
-    results_prefix: str = None
     track_vector_postprocessors: bool = None
     track_vector_positions: bool = None
     moose_env_vars: typing.Dict[str, typing.Any] = None
@@ -34,6 +32,8 @@ class MooseRun(WrappedRun):
     num_processors: int = None
     mpiexec_env_vars: typing.Dict[str, typing.Any] = None
 
+    _output_dir_path: typing.Union[str, pydantic.DirectoryPath] = None
+    _results_prefix: str = None
     _time = time.time()
     # This represents the step number and time of the step, ie when MOOSE says 'Time Step X, time = Y'
     _step_num = 0
@@ -41,6 +41,60 @@ class MooseRun(WrappedRun):
     # Initialize counters for keeping track of the number of linear and nonlinear steps involved in each solve
     _nonlinear = 0
     _linear = 0
+    _dt = None
+
+    def _moose_input_parser(self, input_file: pathlib.Path):
+        """
+        Parse MOOSE input file, and create a dictionary of metadata with dot notation representing indentation of keys.
+
+        Parameters
+        ----------
+        input_file: pathlib.Path
+            The path to the MOOSE input file
+        """
+        input_metadata = {}
+        prefix = input_file.name.split(".")[0]
+        key = prefix
+
+        with open(input_file, "r") as file:
+            for line in file:
+                line = line.strip()
+                # Find lines which represent ends of blocks
+                # Could be similar to [] or [../] - so check for square brackets with any number of non alphanumeric chars between
+                if re.search(r"\[[^\w]*\]", line):
+                    # Remove that block from the key - split at the last dot in the key and remove what comes after
+                    key = key.rsplit(".", 1)[0]
+                # Find lines which represent starts of new blocks
+                # Eg [Mesh] - so look for square brackets with any characters between (already screened out end blocks above)
+                elif new_key := re.search(r"\[.+\]", line):
+                    # Add the title of the new block to the key, dot separated notation
+                    key += f".{new_key.group().strip('[]/.')}"
+                # Find lines which represent a key value pair, <key> = <value>
+                # Make sure to remove in line comments from the value
+                elif match := re.search(r"(\w*)\s*=\s*([^#]+)(#+.*)?", line):
+                    # If the value ends with a ;, it means it is a multi line array input
+                    # Not interested in uploading long inputs like these as metadata, so ignore for now
+                    if ";" in match.group(2):
+                        continue
+                    try:
+                        val = float(match.group(2).strip())
+                    except ValueError:
+                        val = match.group(2).strip()
+                    input_metadata[f"{key}.{match.group(1)}"] = val
+
+        self.update_metadata(input_metadata)
+
+        # Try to retrieve some useful things
+        if file_base := input_metadata.get(f"{prefix}.Outputs.file_base", None):
+            self._output_dir_path, self._results_prefix = file_base.rsplit("/", 1)
+        else:
+            raise KeyError(
+                "Could not find file_base in your MOOSE file.\n"
+                "Please add 'file_base' to your Outputs section, in the form <results directory path>/<results file prefix>."
+            )
+
+        if _dt := input_metadata.get(f"{prefix}.Executioner.dt", None):
+            self._dt = float(_dt)
 
     @mp_file_parser.file_parser
     def _moose_header_parser(self, input_file: str, **__) -> typing.Dict[str, str]:
@@ -104,7 +158,7 @@ class MooseRun(WrappedRun):
         # Get name of vector which is being calculated by VectorPostProcessor from filename
         file_name = pathlib.Path(input_file).name
         vector_name, serial_num = file_name.replace(
-            f"{self.results_prefix}_", ""
+            f"{self._results_prefix}_", ""
         ).rsplit("_", 1)
 
         # If user has enabled time_data in their MOOSE file, get latest line from this file and save time
@@ -117,6 +171,8 @@ class MooseRun(WrappedRun):
                 metrics["step"] = current_time_data[1]
         else:
             metrics["step"] = int(serial_num.split(".")[0])
+            if self._dt:
+                metrics["time"] = metrics["step"] * self._dt
 
         with open(input_file, newline="") as in_f:
             read_csv = csv.DictReader(in_f)
@@ -217,6 +273,10 @@ class MooseRun(WrappedRun):
         metric_time = csv_data.pop("time", None)
         metric_step = csv_data.pop("step", None)
 
+        if self._dt and not metric_step:
+            # Has come from a scalar PostProcessor, can assume step = time / dt
+            metric_step = metric_time / self._dt
+
         # Log all results for this timestep as Metrics
         self.log_metrics(
             csv_data,
@@ -242,6 +302,9 @@ class MooseRun(WrappedRun):
         if pathlib.Path(self.moose_file_path).exists:
             self.save_file(self.moose_file_path, "input")
 
+        # Parse the MOOSE input file
+        self._moose_input_parser(pathlib.Path(self.moose_file_path))
+
         # Save the MOOSE Makefile
         if (
             pathlib.Path(self.moose_application_path)
@@ -266,7 +329,6 @@ class MooseRun(WrappedRun):
             "off",
         ]
         command += format_command_env_vars(self.moose_env_vars)
-
         self.add_process(
             "moose_simulation",
             *command,
@@ -283,8 +345,8 @@ class MooseRun(WrappedRun):
         # Read the initial information within the log file when it is first created, to parse the header information
         self.file_monitor.track(
             path_glob_exprs=str(
-                pathlib.Path(self.output_dir_path).joinpath(
-                    f"{self.results_prefix}.txt"
+                pathlib.Path(self._output_dir_path).joinpath(
+                    f"{self._results_prefix}.txt"
                 )
             ),
             callback=lambda header_data, metadata: self.update_metadata(
@@ -296,8 +358,8 @@ class MooseRun(WrappedRun):
         # Monitor each line added to the MOOSE log file as the simulation proceeds and look out for certain phrases to upload to Simvue
         self.file_monitor.tail(
             path_glob_exprs=str(
-                pathlib.Path(self.output_dir_path).joinpath(
-                    f"{self.results_prefix}.txt"
+                pathlib.Path(self._output_dir_path).joinpath(
+                    f"{self._results_prefix}.txt"
                 )
             ),
             callback=self._per_event_callback,
@@ -321,8 +383,8 @@ class MooseRun(WrappedRun):
         # Monitor each line added to the MOOSE results file as the simulation proceeds, and upload results to Simvue
         self.file_monitor.tail(
             path_glob_exprs=str(
-                pathlib.Path(self.output_dir_path).joinpath(
-                    f"{self.results_prefix}.csv"
+                pathlib.Path(self._output_dir_path).joinpath(
+                    f"{self._results_prefix}.csv"
                 )
             ),
             parser_func=mp_tail_parser.record_csv,
@@ -330,8 +392,8 @@ class MooseRun(WrappedRun):
         )
         self.file_monitor.exclude(
             str(
-                pathlib.Path(self.output_dir_path).joinpath(
-                    f"{self.results_prefix}_*_time.csv"
+                pathlib.Path(self._output_dir_path).joinpath(
+                    f"{self._results_prefix}_*_time.csv"
                 )
             )
         )
@@ -339,8 +401,8 @@ class MooseRun(WrappedRun):
         if self.track_vector_postprocessors:
             self.file_monitor.track(
                 path_glob_exprs=str(
-                    pathlib.Path(self.output_dir_path).joinpath(
-                        f"{self.results_prefix}_*.csv"
+                    pathlib.Path(self._output_dir_path).joinpath(
+                        f"{self._results_prefix}_*.csv"
                     )
                 ),
                 parser_func=self._vector_postprocessor_parser,
@@ -350,7 +412,9 @@ class MooseRun(WrappedRun):
 
     def _post_simulation(self):
         """Simvue commands which are ran after the MOOSE simulation finishes."""
-        for file in pathlib.Path(self.output_dir_path).glob(f"{self.results_prefix}*"):
+        for file in pathlib.Path(self._output_dir_path).glob(
+            f"{self._results_prefix}*"
+        ):
             if (
                 pathlib.Path(file).absolute()
                 == pathlib.Path(self.moose_file_path).absolute()
@@ -366,10 +430,6 @@ class MooseRun(WrappedRun):
         self,
         moose_application_path: pydantic.FilePath,
         moose_file_path: pydantic.FilePath,
-        output_dir_path: typing.Union[
-            str, pydantic.DirectoryPath
-        ],  # as this might not exist yet
-        results_prefix: str,
         track_vector_postprocessors: bool = False,
         track_vector_positions: bool = False,
         moose_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None,
@@ -385,10 +445,6 @@ class MooseRun(WrappedRun):
             Path to the MOOSE application file
         moose_file_path : pydantic.FilePath
             Path to the MOOSE configuration file
-        output_dir_path : str
-            The output directory where results and logs from MOOSE will be stored
-        results_prefix : str
-            The phrase which all MOOSE output files are prepended with (set in MOOSE input file)
         track_vector_postprocessors : bool, optional
             Whether to track CSV outputs from Vector PostProcessors, by default False
         track_vector_positions: bool, optional
@@ -410,8 +466,6 @@ class MooseRun(WrappedRun):
 
         self.moose_application_path = moose_application_path
         self.moose_file_path = moose_file_path
-        self.output_dir_path = output_dir_path
-        self.results_prefix = results_prefix
         self.track_vector_postprocessors = track_vector_postprocessors
         self.track_vector_positions = track_vector_positions
         self.moose_env_vars = moose_env_vars or {}

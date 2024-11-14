@@ -27,6 +27,24 @@ class WrappedRun(simvue.Run):
     ):
         """
         Initialize the WrappedRun instance, extending the user supplied alert abort callback.
+
+        If `abort_callback` is provided the first argument must be this Run instance
+
+        Parameters
+        ----------
+        mode : Literal['online', 'offline', 'disabled'], optional
+            mode of running
+                online - objects sent directly to Simvue server
+                offline - everything is written to disk for later dispatch
+                disabled - disable monitoring completely
+        abort_callback : Callable | None, optional
+            callback executed when the run is aborted
+        server_token : str, optional
+            overwrite value for server token, default is None
+        server_url : str, optional
+            overwrite value for server URL, default is None
+        debug : bool, optional
+            run in debug mode, default is False
         """
 
         def _extended_abort_callback(self):

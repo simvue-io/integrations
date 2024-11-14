@@ -15,34 +15,37 @@ def mock_vector_postprocessor(self, *_, **__):
     """
     def write_to_vector_pp():
         _timefile_lines = pathlib.Path(__file__).parent.joinpath("example_data", "moose_temps_time.csv").open("r").readlines()
-        _timefile = pathlib.Path(self.output_dir_path).joinpath("moose_temps_time.csv").open("w", buffering=1)
+        _timefile = pathlib.Path(self._output_dir_path).joinpath("moose_temps_time.csv").open("w", buffering=1)
         _timefile.write(_timefile_lines[0])
         for num in range(0,6,1):
             _timefile.write(_timefile_lines[num+1])
-            shutil.copy(pathlib.Path(__file__).parent.joinpath("example_data", f"moose_temps_000{num}.csv"), pathlib.Path(self.output_dir_path).joinpath(f"moose_temps_000{num}.csv"))
+            shutil.copy(pathlib.Path(__file__).parent.joinpath("example_data", f"moose_temps_000{num}.csv"), pathlib.Path(self._output_dir_path).joinpath(f"moose_temps_000{num}.csv"))
             time.sleep(0.5)
         _timefile.close()
         self._trigger.set()
         return
     thread = threading.Thread(target=write_to_vector_pp)
     thread.start()
-
+    
+@patch.object(MooseRun, '_moose_input_parser', lambda *_, **__: None) 
 @patch.object(MooseRun, 'add_process', mock_vector_postprocessor)
 def test_moose_vectorpostprocessor_parser_no_positions(folder_setup):
     """
     Test values of VectorPostProcessors at each timestep are uploaded as Metrics,
     when positions are turned off it should not track x, y, or z as metrics.
     """
-    name = 'test_moose_vectorpostprocessor_parser-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="moose_test")
+    name = 'test_moose_vectorpostprocessor_parser-%s' % str(uuid.uuid4())
     with MooseRun() as run:
         run.init(name=name, folder=folder_setup)
         run_id = run.id
+        # Set these here instead of them being read from a MOOSE input file
+        run._output_dir_path = temp_dir.name
+        run._results_prefix = "moose"
+        
         run.launch(
             moose_application_path=pathlib.Path(__file__),
             moose_file_path=pathlib.Path(__file__),
-            output_dir_path=temp_dir.name,
-            results_prefix="moose",
             track_vector_postprocessors=True,
             track_vector_positions=False
         )
@@ -64,7 +67,7 @@ def test_moose_vectorpostprocessor_parser_no_positions(folder_setup):
     metric_ints = [int(val) for val in metric_values]
     assert metric_ints == [366, 549, 641, 694, 729]        
         
-        
+@patch.object(MooseRun, '_moose_input_parser', lambda *_, **__: None) 
 @patch.object(MooseRun, 'add_process', mock_vector_postprocessor)
 def test_moose_vectorpostprocessor_parser_with_positions(folder_setup):    
     """
@@ -76,11 +79,13 @@ def test_moose_vectorpostprocessor_parser_with_positions(folder_setup):
     with MooseRun() as run:
         run.init(name=name, folder=folder_setup)
         run_id = run.id
+        # Set these here instead of them being read from a MOOSE input file
+        run._output_dir_path = temp_dir.name
+        run._results_prefix = "moose"
+        
         run.launch(
             moose_application_path=pathlib.Path(__file__),
             moose_file_path=pathlib.Path(__file__),
-            output_dir_path=temp_dir.name,
-            results_prefix="moose",
             track_vector_postprocessors=True,
             track_vector_positions=True
         )
@@ -102,6 +107,7 @@ def test_moose_vectorpostprocessor_parser_with_positions(folder_setup):
     metric_values = sample_metric_times['temps.x.1'].tolist()
     assert metric_values == [1.0,1.0,1.0,1.0,1.0]
     
+@patch.object(MooseRun, '_moose_input_parser', lambda *_, **__: None)    
 @patch.object(MooseRun, 'add_process', mock_vector_postprocessor)
 def test_moose_vectorpostprocessor_disabled(folder_setup):    
     """
@@ -112,11 +118,13 @@ def test_moose_vectorpostprocessor_disabled(folder_setup):
     with MooseRun() as run:
         run.init(name=name, folder=folder_setup)
         run_id = run.id
+        # Set these here instead of them being read from a MOOSE input file
+        run._output_dir_path = temp_dir.name
+        run._results_prefix = "moose"
+        
         run.launch(
             moose_application_path=pathlib.Path(__file__),
             moose_file_path=pathlib.Path(__file__),
-            output_dir_path=temp_dir.name,
-            results_prefix="moose",
             track_vector_postprocessors=False,
         )
            
