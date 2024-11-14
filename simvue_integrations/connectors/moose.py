@@ -68,7 +68,9 @@ class MooseRun(WrappedRun):
                 # Eg [Mesh] - so look for square brackets with any characters between (already screened out end blocks above)
                 elif new_key := re.search(r"\[.+\]", line):
                     # Add the title of the new block to the key, dot separated notation
-                    key += f".{new_key.group().strip('[]/.')}"
+                    # Remove './' from before the titles of blocks if present
+                    # Replace a '.' with '_' to prevent issues with dot notation of keys, but still allow users to use dots in block names
+                    key += f".{new_key.group().strip('[]/').replace('./', '').replace('.', '_')}"
                 # Find lines which represent a key value pair, <key> = <value>
                 # Make sure to remove in line comments from the value
                 elif match := re.search(r"(\w*)\s*=\s*([^#]+)(#+.*)?", line):
