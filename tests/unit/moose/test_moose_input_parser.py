@@ -43,10 +43,22 @@ testdata = [
             "example_input_3.Executioner.#Preconditioned": "JFNK (default)",
         },
     ),
+    (
+        "example_input_4",
+        {
+            "example_input_4.Mesh.generated.type": "GeneratedMeshGenerator",
+            "example_input_4.VectorPostprocessors.temps_line.points": "'0 0.5 0.5  1 0.5 0.5  2 0.5 0.5  3 0.5 0.5  4 0.5 0.5  5 0.5 0.5  6 0.5 0.5'",
+            "example_input_4.Postprocessors.temp_avg.block": 0,
+            "example_input_4.Postprocessors.temp_max.variable": "'T'",
+        },
+        {
+            "example_input_4.Postprocessors.temp.avg.block": "Shouldn't exist",
+        },
+    ),
 ]
 
 
-@pytest.mark.parametrize("file_name,expected_metadata,not_expected_metadata", testdata, ids=(1, 2, 3))
+@pytest.mark.parametrize("file_name,expected_metadata,not_expected_metadata", testdata, ids=(1, 2, 3, 4))
 def test_moose_input_parser(folder_setup, file_name, expected_metadata, not_expected_metadata):   
     """
     Check information from MOOSE input file is correctly uploaded as metadata
