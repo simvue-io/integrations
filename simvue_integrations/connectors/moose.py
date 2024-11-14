@@ -211,7 +211,7 @@ class MooseRun(WrappedRun):
 
         # Look for relevant keys in the dictionary of data which we are passed in, and log the event with Simvue
         if any(
-            key in ("time_step", "converged", "non_converged", "finished")
+            key in ("time_step", "converged", "non_converged", "terminated", "finished")
             for key in log_data.keys()
         ):
             try:
@@ -254,6 +254,20 @@ class MooseRun(WrappedRun):
             self._nonlinear += 1
         elif "linear" in log_data.keys():
             self._linear += 1
+
+        elif "terminated" in log_data.keys():
+            terminator = re.search(
+                r"Terminator '(.+)' is causing the execution to terminate.",
+                log_data["terminated"],
+            ).group(1)
+
+            self.update_metadata({terminator: True})
+            self.update_tags(
+                [
+                    terminator,
+                ]
+            )
+            self.set_status("terminated")
 
         # If simulation has completed successfully, terminate multiparser
         elif "finished" in log_data.keys():
@@ -370,6 +384,7 @@ class MooseRun(WrappedRun):
                 " Solve Converged!",
                 " Solve Did NOT Converge!",
                 "Finished Executing",
+                re.compile(r"Terminator '.+' is causing the execution to terminate."),
                 re.compile(r" \d+ Nonlinear \|R\|"),
                 re.compile(r"     \d+ Linear \|R\|"),
             ],
@@ -378,6 +393,7 @@ class MooseRun(WrappedRun):
                 "converged",
                 "non_converged",
                 "finished",
+                "terminated",
                 "nonlinear",
                 "linear",
             ],
