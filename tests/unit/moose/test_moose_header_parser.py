@@ -29,8 +29,10 @@ def test_moose_header_parser(folder_setup):
     with MooseRun() as run:
         run.init(name=name, folder=folder_setup)
         run_id = run.id
+        # Set these here instead of them being read from a MOOSE input file
         run._output_dir_path = temp_dir.name
         run._results_prefix = "moose_test"
+
         run.launch(
             moose_application_path=pathlib.Path(__file__),
             moose_file_path=pathlib.Path(__file__),

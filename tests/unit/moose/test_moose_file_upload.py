@@ -32,7 +32,6 @@ def test_moose_file_upload(folder_setup):
             moose_application_path=pathlib.Path(__file__),
             moose_file_path=pathlib.Path(__file__),
         )
-        print(run._output_dir_path)
         
         client = simvue.Client()
         

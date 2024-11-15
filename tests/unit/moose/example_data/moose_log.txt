@@ -230,4 +230,11 @@ Time Step 2, time = 2, dt = 1
      49 Linear |R| = 1.495263e-09
  2 Nonlinear |R| = 1.495259e-09
  Solve Converged!
+
+*** Warning ***
+/home/wk9874/Documents/simvue/integrations/workspace/copper_mug.i:131.5:
+The following warning occurred in the UserObject 'handle-too-hot' of type Terminator.
+
+Terminator 'handle-too-hot' is causing the execution to terminate.
+
 Finished Executing 
