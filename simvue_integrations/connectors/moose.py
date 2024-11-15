@@ -286,7 +286,7 @@ class MooseRun(WrappedRun):
 
         if self._dt and not metric_step:
             # Has come from a scalar PostProcessor, can assume step = time / dt
-            metric_step = metric_time / self._dt
+            metric_step = int(metric_time / self._dt)
 
         # Log all results for this timestep as Metrics
         self.log_metrics(

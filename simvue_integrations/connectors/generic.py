@@ -99,7 +99,6 @@ class WrappedRun(simvue.Run):
         By default, checks whether an abort has been caused by an alert, and if so prints a message and sets
         the run to the terminated state. This method should be called AFTER the rest of your functions in the overriden method.
         """
-        print("inside generic post")
         if self._alert_raised_trigger.is_set():
             self.log_event("Simulation aborted due to an alert being triggered.")
             self._terminated = True
@@ -109,9 +108,7 @@ class WrappedRun(simvue.Run):
                 bold=self._term_color,
             )
         else:
-            print("before log event")
             self.log_event("Simulation Complete!")
-            print("after log event")
 
     def __exit__(self, exc_type, value, traceback):
         _out = super().__exit__(exc_type, value, traceback)
