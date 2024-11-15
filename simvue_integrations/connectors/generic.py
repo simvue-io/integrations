@@ -17,6 +17,8 @@ class WrappedRun(simvue.Run):
     for their given application. Make sure to call the base method as well.
     """
 
+    _terminated = False
+
     def __init__(
         self,
         mode: typing.Literal["online", "offline", "disabled"] = "online",
@@ -97,16 +99,26 @@ class WrappedRun(simvue.Run):
         By default, checks whether an abort has been caused by an alert, and if so prints a message and sets
         the run to the terminated state. This method should be called AFTER the rest of your functions in the overriden method.
         """
+        print("inside generic post")
         if self._alert_raised_trigger.is_set():
             self.log_event("Simulation aborted due to an alert being triggered.")
-            self.set_status("terminated")
+            self._terminated = True
             click.secho(
                 "[simvue] Run was aborted.",
                 fg="red" if self._term_color else None,
                 bold=self._term_color,
             )
         else:
+            print("before log event")
             self.log_event("Simulation Complete!")
+            print("after log event")
+
+    def __exit__(self, exc_type, value, traceback):
+        _out = super().__exit__(exc_type, value, traceback)
+        # If run was terminated, set the status to terminated at the very end so that users can continue to upload to the run as normal
+        if self._terminated:
+            self.set_status("terminated")
+        return _out
 
     def launch(self):
         """Method which launches the simulation and the monitoring.

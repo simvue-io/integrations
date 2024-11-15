@@ -42,7 +42,6 @@ def test_moose_log_parser(folder_setup):
             moose_application_path=pathlib.Path(__file__),
             moose_file_path=pathlib.Path(__file__),
         )
-           
     client = simvue.Client()
     # Check messages correctly extracted from log and added as events
     events = client.get_events(run_id)
@@ -50,12 +49,19 @@ def test_moose_log_parser(folder_setup):
     assert events[3]["message"] == " Solve Converged!"
     assert events[5]["message"] == " Total Nonlinear Iterations: 3."
     assert events[6]["message"] == " Total Linear Iterations: 112."
+    assert events[-2]["message"] == "Terminator 'handle-too-hot' is causing the execution to terminate."
     
     # Check that total linear and nonlinear events from each step uploaded as metrics
     # Correct answers calculated manually from log file
     metrics = client.get_metric_values(metric_names=["total_linear_iterations", "total_nonlinear_iterations"], run_ids=[run_id,], output_format="dict", xaxis="step")
     assert list(metrics['total_linear_iterations'].values()) == [112.0, 107.0]
     assert list(metrics['total_nonlinear_iterations'].values()) == [3.0, 3.0]
+    
+    # Check that reason for termination is added as metadata and tag, and run is set to terminated state
+    run_data = client.get_run(run_id)
+    assert run_data["metadata"]["handle-too-hot"] == True
+    assert "handle-too-hot" in run_data["tags"]
+    assert run_data["status"] == "terminated"
     
         
         

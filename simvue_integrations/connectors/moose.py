@@ -208,10 +208,9 @@ class MooseRun(WrappedRun):
         bool
             Returns False if unable to upload events, to signal an error
         """
-
         # Look for relevant keys in the dictionary of data which we are passed in, and log the event with Simvue
         if any(
-            key in ("time_step", "converged", "non_converged", "terminated", "finished")
+            key in ("time_step", "converged", "non_converged", "terminated")
             for key in log_data.keys()
         ):
             try:
@@ -256,6 +255,8 @@ class MooseRun(WrappedRun):
             self._linear += 1
 
         elif "terminated" in log_data.keys():
+            self._terminated = True
+
             terminator = re.search(
                 r"Terminator '(.+)' is causing the execution to terminate.",
                 log_data["terminated"],
@@ -267,12 +268,6 @@ class MooseRun(WrappedRun):
                     terminator,
                 ]
             )
-            self.set_status("terminated")
-
-        # If simulation has completed successfully, terminate multiparser
-        elif "finished" in log_data.keys():
-            time.sleep(1)  # To allow other processes to complete
-            self._trigger.set()
 
     def _per_metric_callback(
         self, csv_data: typing.Dict[str, float], sim_metadata: typing.Dict[str, str]
@@ -383,7 +378,6 @@ class MooseRun(WrappedRun):
                 re.compile(r"Time Step.*"),
                 " Solve Converged!",
                 " Solve Did NOT Converge!",
-                "Finished Executing",
                 re.compile(r"Terminator '.+' is causing the execution to terminate."),
                 re.compile(r" \d+ Nonlinear \|R\|"),
                 re.compile(r"     \d+ Linear \|R\|"),
@@ -392,7 +386,6 @@ class MooseRun(WrappedRun):
                 "time_step",
                 "converged",
                 "non_converged",
-                "finished",
                 "terminated",
                 "nonlinear",
                 "linear",
