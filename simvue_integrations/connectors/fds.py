@@ -379,7 +379,7 @@ class FDSRun(WrappedRun):
         if self.workdir_path:
             pathlib.Path(self.workdir_path).mkdir(exist_ok=True)
 
-            if upload_files:
+            if clean_workdir:
                 for file in pathlib.Path(self.workdir_path).glob(f"{self._chid}*"):
                     if (
                         pathlib.Path(file).absolute()
