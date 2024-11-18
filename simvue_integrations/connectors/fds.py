@@ -336,6 +336,7 @@ class FDSRun(WrappedRun):
         self,
         fds_input_file_path: pydantic.FilePath,
         workdir_path: typing.Union[str, pydantic.DirectoryPath] = None,
+        clean_workdir: bool = False,
         upload_files: list[str] = None,
         ulimit: typing.Union[str, int] = "unlimited",
         fds_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None,
@@ -351,6 +352,9 @@ class FDSRun(WrappedRun):
             This is where FDS will generate the results from the simulation
             If a directory does not already exist at this path, it will be created
             Uses the current working directory by default.
+        clean_workdir : bool, optional
+            Whether to remove FDS related files from the working directory, by default False
+            Useful when doing optimisation problems to remove results from previous runs.
         upload_files : list[str], optional
             List of results file names to upload to the Simvue server for storage, by default None
             These should be supplied as relative to the working directory specified above (if specified, otherwise relative to cwd)
@@ -375,13 +379,14 @@ class FDSRun(WrappedRun):
         if self.workdir_path:
             pathlib.Path(self.workdir_path).mkdir(exist_ok=True)
 
-            for file in pathlib.Path(self.workdir_path).glob(f"{self._chid}*"):
-                if (
-                    pathlib.Path(file).absolute()
-                    == pathlib.Path(self.fds_input_file_path).absolute()
-                ):
-                    continue
-                pathlib.Path(file).unlink()
+            if upload_files:
+                for file in pathlib.Path(self.workdir_path).glob(f"{self._chid}*"):
+                    if (
+                        pathlib.Path(file).absolute()
+                        == pathlib.Path(self.fds_input_file_path).absolute()
+                    ):
+                        continue
+                    pathlib.Path(file).unlink()
 
         self._results_prefix = (
             str(pathlib.Path(self.workdir_path).joinpath(self._chid))
