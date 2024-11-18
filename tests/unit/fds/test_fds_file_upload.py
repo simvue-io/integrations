@@ -42,6 +42,33 @@ def test_fds_file_upload(folder_setup):
         comparison = filecmp.dircmp(pathlib.Path(__file__).parent.joinpath("example_data", "fds_outputs"), str(retrieved_dir))
         assert not (comparison.diff_files or comparison.left_only or comparison.right_only)
         
+@patch.object(FDSRun, 'add_process', mock_fds_process)
+def test_fds_file_specified_upload(folder_setup):    
+    """
+    Check that all results are uploaded from workdir.
+    """
+    name = 'test_fds_file_specified_upload-%s' % str(uuid.uuid4())
+    temp_dir = tempfile.TemporaryDirectory(prefix="fds_test")
+    with FDSRun() as run:
+        run.init(name=name, folder=folder_setup)
+        run_id = run.id
+        run.launch(
+            fds_input_file_path = pathlib.Path(__file__).parent.joinpath("example_data", "fds_input.fds"),
+            workdir_path = temp_dir.name,
+            upload_files = ["fds_test.smv", "fds_test_1_1.s3d.sz"]
+        )
+        
+        client = simvue.Client()
+        
+        # Retrieve all outputs from server and check all files exist and are the same
+        retrieved_dir = pathlib.Path(temp_dir.name).joinpath("retrieved_results")
+        retrieved_dir.mkdir()
+        client.get_artifacts_as_files(run_id, "output", str(retrieved_dir))
+        comparison = filecmp.dircmp(pathlib.Path(__file__).parent.joinpath("example_data", "fds_outputs"), str(retrieved_dir))
+
+        assert not (comparison.diff_files or comparison.right_only)
+        assert comparison.left_only == ["fds_test_1_1.sf.bnd"]
+        
         
 def mock_aborted_fds_process(self, *_, **__):
     """
