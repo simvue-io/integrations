@@ -43,15 +43,7 @@ def test_moose_file_upload(folder_setup):
 def mock_aborted_moose_process(self, *_, **__):
     """
     Mock a long running MOOSE process which is aborted by the server
-    """
-    def abort():
-        """
-        Instead of making an API call to the server, just sleep for 1s and return True to indicate an abort has been triggered
-        """
-        time.sleep(1)
-        return True
-    self._simvue.get_abort_status = abort
-    
+    """ 
     def aborted_process():
         """
         Long running process which should be interrupted at the next heartbeat
@@ -61,6 +53,13 @@ def mock_aborted_moose_process(self, *_, **__):
         
     thread = threading.Thread(target=aborted_process)
     thread.start()
+
+def abort():
+    """
+    Instead of making an API call to the server, just sleep for 1s and return True to indicate an abort has been triggered
+    """
+    time.sleep(1)
+    return True   
 
 @patch.object(MooseRun, '_moose_input_parser', mock_input_parser)
 @patch.object(MooseRun, 'add_process', mock_aborted_moose_process)    
@@ -72,6 +71,7 @@ def test_moose_file_upload_after_abort(folder_setup):
     temp_dir = tempfile.TemporaryDirectory(prefix="moose_test")
     with MooseRun() as run:
         run.init(name=name, folder=folder_setup)
+        run._simvue.get_abort_status = abort
         run_id = run.id
         run.launch(
             moose_application_path=pathlib.Path(__file__),
