@@ -79,7 +79,7 @@
   [Executioner]
     type = Transient
     end_time = 30
-    dt = 0.1
+    dt = $my_dt
     solve_type = NEWTON
   []
   [Outputs]
