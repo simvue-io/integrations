@@ -96,7 +96,12 @@ class MooseRun(WrappedRun):
             )
 
         if _dt := input_metadata.get(f"{prefix}.Executioner.dt", None):
-            self._dt = float(_dt)
+            try:
+                self._dt = float(_dt)
+            except ValueError:
+                print(
+                    "WARNING: Could not interpret Executioner.dt as a number, falling back to log times and steps. To correct this, make sure 'dt' is a number in your MOOSE input file."
+                )
 
     @mp_file_parser.file_parser
     def _moose_header_parser(self, input_file: str, **__) -> typing.Dict[str, str]:
