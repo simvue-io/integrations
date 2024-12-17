@@ -41,16 +41,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies and run tests
         run: |
-          useradd -g root -m dev
-          su - dev
-          python -m pip install poetry
-          export PATH=/opt/openmpi/bin:$PATH
-          export SIMVUE_URL=${{ secrets.SIMVUE_URL }}
-          export SIMVUE_TOKEN=${{ secrets.SIMVUE_TOKEN }}
-          poetry install --with dev
-          whoami
-          pwd
-          poetry run pytest tests/integration/test_moose.py
+          useradd -g root -m dev; su - dev; python -m pip install poetry; export PATH=/opt/openmpi/bin:$PATH; export SIMVUE_URL=${{ secrets.SIMVUE_URL }}; export SIMVUE_TOKEN=${{ secrets.SIMVUE_TOKEN }}; poetry install --with dev; whoami; pwd; poetry run pytest tests/integration/test_moose.py
   OpenFOAM:
     runs-on: ubuntu-latest
     container:
