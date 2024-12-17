@@ -35,8 +35,13 @@ def test_adding_alerts(folder_setup, tensorflow_example_data):
                 "trigger_abort": False,
                 "notification": "email",
             },
+            "model_diverged": {
+                "source": "events",
+                "frequency": 1,
+                "pattern": "Model diverged with loss = NaN",
+            },
         },
-        simulation_alerts=["loss_above_half"],
+        simulation_alerts=["loss_above_half", "model_diverged"],
         evaluation_alerts=["loss_above_half","accuracy_below_80_percent"],
         epoch_alerts=["accuracy_below_80_percent"],
         start_alerts_from_epoch=2
@@ -69,8 +74,8 @@ def test_adding_alerts(folder_setup, tensorflow_example_data):
     epoch_run_3 = client.get_runs(filters=[f'name contains {run_name}_epoch_3'], alerts=True)[0]
     
     # Check simulaiton run has one alert added, and that is 'loss_above_half'
-    assert len(simulation_run["alerts"]) == 1
-    assert simulation_run["alerts"][0]["alert"]["name"] == "loss_above_half"
+    assert len(simulation_run["alerts"]) == 2
+    assert [alert["alert"]["name"] for alert in simulation_run["alerts"]] == ["loss_above_half", "model_diverged"]
     
     # Check evaluation run has both alerts added
     assert len(evaluation_run["alerts"]) == 2
@@ -133,6 +138,13 @@ invalid_alerts = [
             "window": 1,
             "threshold": 0.8,
             "new": "hi"
+        },
+    # Shouldn't specify aggregation when source is events
+    {
+            "source": "events",
+            "frequency": 1,
+            "pattern": "test pattern",
+            "aggregation": "sum",
         },
 ]
 
