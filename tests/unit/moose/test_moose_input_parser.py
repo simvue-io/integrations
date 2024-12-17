@@ -81,7 +81,9 @@ def test_moose_input_parser(folder_setup, file_name, expected_metadata, not_expe
         assert run._output_dir_path == "results"
         assert run._results_prefix == file_name
         
-        if file_name != "example_input_2":
+        if file_name in ("example_input_1", "example_input_3"):
             assert run._dt == 0.1
+        else:
+            assert run._dt == None
         
         

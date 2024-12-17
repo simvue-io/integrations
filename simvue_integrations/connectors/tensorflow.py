@@ -122,8 +122,8 @@ class TensorVue(Callback):
         self.eval_run = evaluation_run
 
         if alert_definitions:
-            for alert_definition in alert_definitions.values():
-                validators.AlertValidator(**alert_definition)
+            for alert_name, alert_definition in alert_definitions.items():
+                validators.AlertValidator(name=alert_name, **alert_definition)
 
         self.alert_definitions = alert_definitions or {}
         self.manifest_alerts = manifest_alerts or []

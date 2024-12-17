@@ -67,7 +67,8 @@ def moose_example(moose_app_path, parallel = False) -> None:
             track_vector_positions = False,
             # And you can choose whether to run it in parallel
             run_in_parallel = parallel,
-            num_processors = 2
+            num_processors = 2,
+            mpiexec_env_vars = {"allow-run-as-root": True}
         )
 
         # Once the simulation is complete, you can upload any final items to the Simvue run before it closes
