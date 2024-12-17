@@ -50,6 +50,8 @@ jobs:
           export PATH=/opt/openmpi/bin:$PATH
           export SIMVUE_URL=${{ secrets.SIMVUE_URL }}
           export SIMVUE_TOKEN=${{ secrets.SIMVUE_TOKEN }}
+          whoami
+          pwd
           poetry install --with dev
           poetry run pytest tests/integration/test_moose.py
   OpenFOAM:
