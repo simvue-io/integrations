@@ -38,10 +38,6 @@ jobs:
     container:
       image: idaholab/moose:latest
     steps:
-      - name: Make new user
-        run: |
-          useradd -g root -m dev
-          su - dev
       - uses: actions/checkout@v4
       - name: Install poetry
         run: python -m pip install poetry
