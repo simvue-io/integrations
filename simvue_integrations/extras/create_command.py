@@ -1,17 +1,32 @@
+"""Create Command.
+
+Function for creating a command from a dictionary of user inputs.
+"""
+
 import typing
+
+
 # TODO: This is copied from run.py in python-api, could just make it a function there and call that instead of repeating here
-#temp
-def format_command_env_vars(cmd_kwargs: typing.Dict[str, typing.Union[bool, str, float, int]]):
-    """Create a list of strings representing environment variables to a command from a dictionary of kwarg key:value pairs
+# temp
+def format_command_env_vars(
+    cmd_kwargs: typing.Dict[str, typing.Union[bool, str, float, int]],
+) -> list[str]:
+    """Create a list of strings representing environment variables to a command from a dictionary of kwarg key:value pairs.
 
     Parameters
     ----------
     cmd_kwargs : typing.Dict[str, typing.Union[bool, str, float, int]]
         The variables to pass to the command, in a dictionary
+
+    Returns
+    -------
+    cmd_list : list[str]
+        A list of strings representing a command
+
     """
     cmd_list = []
     for kwarg, val in cmd_kwargs.items():
-        kwarg = kwarg.strip('-')
+        kwarg = kwarg.strip("-")
         if len(kwarg) == 1:
             if isinstance(val, bool) and val:
                 cmd_list += [f"-{kwarg}"]
@@ -30,5 +45,5 @@ def format_command_env_vars(cmd_kwargs: typing.Dict[str, typing.Union[bool, str,
                     cmd_list += [f"--{kwarg}={val}"]
                 else:
                     cmd_list += [f"--{kwarg}", str(val)]
-                
+
     return cmd_list

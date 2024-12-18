@@ -1,5 +1,5 @@
-"""Tensorflow Integration
-----------------------------
+"""Tensorflow Integration.
+
 Generic callback class which can be used in any Tensorflow Keras CNN to automatically add Simvue tracking and monitoring.
 """
 
@@ -14,6 +14,8 @@ import simvue_integrations.extras.validators as validators
 
 
 class TensorVue(simvue.Run, Callback):
+    """Tensorflow Callback class for adding Simvue integration."""
+
     def __init__(
         self,
         run_name: typing.Optional[str] = None,
@@ -41,7 +43,7 @@ class TensorVue(simvue.Run, Callback):
         simulation_run: typing.Optional[simvue.Run] = None,
         evaluation_run: typing.Optional[simvue.Run] = None,
     ):
-        """Tensorflow Callback class for adding Simvue integration
+        """Tensorflow Callback class for adding Simvue integration.
 
         Parameters
         ----------
@@ -55,21 +57,21 @@ class TensorVue(simvue.Run, Callback):
         run_description : typing.Optional[str], optional
            Description of the run, by default None
             If using the optimisation framework, any description provided here will be overriden by the description from the Workspace
-        run_tags : list[str], optional
+        run_tags : typing.Optional[list[str]], optional
             Tags associated with the run, by default None
-        run_metadata: dict, optional
+        run_metadata: typing.Optional[dict], optional
             Metadata associated with this run, by default None
         run_mode : typing.Literal["online", "offline"]
             Whether Simvue should run in Online or Offline mode, by default Online
-        alert_definitions : dict[str, dict[str, typing.Union[str, int, float]]], optional
+        alert_definitions : typing.Optional[dict[str, dict[str, typing.Union[str, int, float]]]], optional
             Definitions of any alerts to add to the run, by default None
-        manifest_alerts : list[str], optional
+        manifest_alerts : typing.Optional[list[str]], optional
             Which of the alerts defined above to add to the manifest run, by default None
-        simulation_alerts : list[str], optional
+        simulation_alerts : typing.Optional[list[str]], optional
             Which of the alerts defined above to add to the simulation run, by default None
-        epoch_alerts : list[str], optional
+        epoch_alerts : typing.Optional[list[str]], optional
             Which of the alerts defined above to add to the epoch runs, by default None
-        evaluation_alerts : list[str], optional
+        evaluation_alerts : typing.Optional[list[str]], optional
             Which of the alerts defined above to add to the evaluation runs, by default None
         start_alerts_from_epoch : int, optional
             The number of the epoch which you would like to begin setting alerts for, by default 0
@@ -81,11 +83,11 @@ class TensorVue(simvue.Run, Callback):
             The location where the final model should be stored after training is complete, by default "/tmp/simvue/final_model.keras"
         evaluation_parameter: str, optional
             The parameter to check the value of after each Epoch, eitheer accuracy, loss, val_accuracy, or val_loss
-        evaluation_target: float. optional
+        evaluation_target: float, optional
             The target value of the parameter, which will cause the training to stop if satisfied
         evaluation_condition: validators.Operator, optional
             How you wish to compare the latest value of the parameter to the target value
-        create_epoch_runs: bool, optional
+        create_epoch_runs: typing.Optional[bool], optional
             Whether to create runs for the training data for each Epoch individually, by default True
         optimisation_framework : bool, optional
             Whether to use the Simvue ML Optimisation framework, by default False
@@ -102,6 +104,7 @@ class TensorVue(simvue.Run, Callback):
             Raised if the ML Optimisation framework is not enabled and no run name was provided
         KeyError
             Raised if attempted to add an alert to a run which was not defined
+
         """
         if not optimisation_framework and not run_name:
             raise ValueError("Must provide a run name!")
@@ -149,7 +152,15 @@ class TensorVue(simvue.Run, Callback):
 
         super().__init__()
 
-    def create_manifest_run(self):
+    def create_manifest_run(self) -> simvue.Run:
+        """Create a Manifest run with user defined inputs.
+
+        Returns
+        -------
+        simvue.Run
+            The manifest run
+
+        """
         manifest_run = simvue.Run(mode=self.run_mode)
         manifest_run.init(
             name=f"{self.run_name}_manifest",
@@ -173,7 +184,20 @@ class TensorVue(simvue.Run, Callback):
             )
         return manifest_run
 
-    def on_train_begin(self, logs):
+    def on_train_begin(self, logs: dict):
+        """Upload relevant information to Simvue at the start of the training session.
+
+        Parameters
+        ----------
+        logs : dict
+            Currently no data is passed into this argument by Tensorflow.
+
+        Raises
+        ------
+        RuntimeError
+            Raised if the optimisation framework is enabled, but no simulation run has been initialised.
+
+        """
         if not self.optimisation_framework:
             self.simulation_run = simvue.Run(mode=self.run_mode)
             self.simulation_run.init(
@@ -225,7 +249,15 @@ class TensorVue(simvue.Run, Callback):
             name="model_config",
         )
 
-    def on_train_end(self, logs):
+    def on_train_end(self, logs: dict):
+        """Upload relevant information to Simvue at the end of the training session.
+
+        Parameters
+        ----------
+        logs : dict
+            The output from the final call of on_epoch_end
+
+        """
         if self.model_final_filepath:
             if not pathlib.Path(self.model_final_filepath).exists():
                 print(
@@ -243,7 +275,22 @@ class TensorVue(simvue.Run, Callback):
 
         self.simulation_run = None
 
-    def on_epoch_begin(self, epoch, logs):
+    def on_epoch_begin(self, epoch: int, logs: dict) -> None:
+        """Upload relevant information to Simvue at the start of a new epoch.
+
+        Parameters
+        ----------
+        epoch : int
+            The epoch currently being trained
+        logs : dict
+            Currently no data is passed into this argument by Tensorflow.
+
+        Returns
+        -------
+        None
+            If the user does not want Epoch runs, exit this method after logging an Event
+
+        """
         self.simulation_run.log_event(f"Starting Epoch {epoch+1}:")
 
         if not self.create_epoch_runs:
@@ -273,7 +320,24 @@ class TensorVue(simvue.Run, Callback):
                 )
         self.epoch_run.log_event("Beginning training...")
 
-    def on_epoch_end(self, epoch, logs):
+    def on_epoch_end(self, epoch: int, logs: dict):
+        """Upload relevant information to Simvue at the end of an epoch.
+
+        Parameters
+        ----------
+        epoch : int
+            The epoch currently being trained
+        logs : dict
+            Metrics for this training (and validation) epoch, such as accuracy and loss
+
+        Raises
+        ------
+        FileNotFoundError
+            Raised if a model checkpoint file location has been specified, but no file can be found
+        RuntimeError
+            Raised if an evalation parameter has been specified for early stopping, but this cannot be found in the logs
+
+        """
         available_metrics = (
             ["accuracy", "loss", "val_accuracy", "val_loss"]
             if logs.get("val_accuracy") and logs.get("val_loss")
@@ -326,7 +390,7 @@ class TensorVue(simvue.Run, Callback):
         if self.create_epoch_runs:
             if self.model_checkpoint_filepath:
                 if not pathlib.Path(self.model_checkpoint_filepath).exists():
-                    raise RuntimeError(
+                    raise FileNotFoundError(
                         f"Model checkpoint has not been created at {self.model_checkpoint_filepath}. Have you enabled the ModelCheckpoint callback? "
                     )
                 self.epoch_run.save_file(
@@ -352,7 +416,22 @@ class TensorVue(simvue.Run, Callback):
                 self.simulation_run.log_event(termination_message)
                 print(termination_message)
 
-    def on_train_batch_begin(self, batch, logs):
+    def on_train_batch_begin(self, batch: int, logs: dict) -> None:
+        """Upload relevant information to Simvue at the start of a new training batch.
+
+        Parameters
+        ----------
+        batch : int
+            The batch being trained
+        logs : dict
+            Currently no data is passed into this argument by Tensorflow.
+
+        Returns
+        -------
+        None
+            If the user does not want Epoch runs, exit the method as there is nothing to log
+
+        """
         # Print progress in 10% increments, to prevent message spam
         if not self.create_epoch_runs:
             return
@@ -363,7 +442,22 @@ class TensorVue(simvue.Run, Callback):
                 f"Training is {10* int((batch) / (self.params.get('steps') / 10))}% complete."
             )
 
-    def on_train_batch_end(self, batch, logs):
+    def on_train_batch_end(self, batch: int, logs: dict) -> None:
+        """Upload relevant information to Simvue at the end of a training batch.
+
+        Parameters
+        ----------
+        batch : int
+            The batch being trained
+        logs : dict
+            Aggregated metrics for this training up to this batch, such as accuracy and loss
+
+        Returns
+        -------
+        None
+            If the user does not want Epoch runs, exit the method as there is nothing to log
+
+        """
         if not self.create_epoch_runs:
             return
         self.epoch_run.log_metrics(
@@ -373,7 +467,20 @@ class TensorVue(simvue.Run, Callback):
             }
         )
 
-    def on_test_begin(self, logs):
+    def on_test_begin(self, logs: dict):
+        """Upload relevant information to Simvue at the start of validation or evaluation.
+
+        Parameters
+        ----------
+        logs : dict
+            Currently no data is passed into this argument by Tensorflow.
+
+        Raises
+        ------
+        RuntimeError
+            Raised if the optimisation framework is enabled, but no evaluation run has been passed in.
+
+        """
         if self.simulation_run:  # This is here because these can be called during training if validation set provided
             if self.create_epoch_runs:
                 self.epoch_run.log_event("Validating results...")
@@ -416,7 +523,15 @@ class TensorVue(simvue.Run, Callback):
                 name="model_config",
             )
 
-    def on_test_end(self, logs):
+    def on_test_end(self, logs: dict):
+        """Upload relevant information to Simvue at the end of validation or evaluation.
+
+        Parameters
+        ----------
+        logs : dict
+            Aggregated accuracy/loss metrics for the test, output from the final call of on_test_batch_end
+
+        """
         if not self.simulation_run:
             self.eval_run.log_event("Accuracy and Loss values after evaluation:")
             self.eval_run.log_event(
@@ -428,7 +543,17 @@ class TensorVue(simvue.Run, Callback):
             if not self.optimisation_framework:
                 self.eval_run.close()
 
-    def on_test_batch_begin(self, batch, logs):
+    def on_test_batch_begin(self, batch: int, logs: dict):
+        """Upload relevant information to Simvue at the start of a validation or evaluation batch.
+
+        Parameters
+        ----------
+        batch : int
+            The batch being trained
+        logs : dict
+            Currently no data is passed into this argument by Tensorflow.
+
+        """
         if not self.simulation_run:
             if int((batch) / (self.params.get("steps") / 10)) != int(
                 (batch + 1) / (self.params.get("steps") / 10)
@@ -437,7 +562,17 @@ class TensorVue(simvue.Run, Callback):
                     f"Evaluation is {10* int((batch) / (self.params.get('steps') / 10))}% complete."
                 )
 
-    def on_test_batch_end(self, batch, logs):
+    def on_test_batch_end(self, batch: int, logs: dict):
+        """Upload relevant information to Simvue at the end of a validation or evaluation batch.
+
+        Parameters
+        ----------
+        batch : int
+            The batch being trained
+        logs : dict
+            Aggregated metrics for this evaluation up to this batch, such as accuracy and loss
+
+        """
         if self.simulation_run:
             if self.create_epoch_runs:
                 self.epoch_run.log_metrics(

@@ -1,18 +1,25 @@
-import simvue
+"""MOOSE Connector.
+
+This module provides functionality for using Simvue to track and monitor a MOOSE simulation.
+"""
+
+import csv
+import pathlib
+import re
+import time
 import typing
-import pydantic
+
 import multiparser.parsing.file as mp_file_parser
 import multiparser.parsing.tail as mp_tail_parser
-import pathlib
-import time
-import re
-import csv
+import pydantic
+import simvue
+
 from simvue_integrations.connectors.generic import WrappedRun
 from simvue_integrations.extras.create_command import format_command_env_vars
 
 
 class MooseRun(WrappedRun):
-    """Class for setting up Simvue tracking and monitoring of a MOOSE simulation.
+    """Class for setting up Simvue to track and monitor of a MOOSE simulation.
 
     Use this class as a context manager, in the same way you use default Simvue runs, and call run.launch(). Eg:
 
@@ -44,13 +51,18 @@ class MooseRun(WrappedRun):
     _dt = None
 
     def _moose_input_parser(self, input_file: pathlib.Path):
-        """
-        Parse MOOSE input file, and create a dictionary of metadata with dot notation representing indentation of keys.
+        """Parse MOOSE input file, and create a dictionary of metadata with dot notation representing indentation of keys.
 
         Parameters
         ----------
         input_file: pathlib.Path
             The path to the MOOSE input file
+
+        Raises
+        ------
+        KeyError
+            Raised if there is no 'file_base' parameter in the MOOSE file Output section, since the connector requires this to find output files.
+
         """
         input_metadata = {}
         prefix = input_file.name.split(".")[0]
@@ -105,17 +117,20 @@ class MooseRun(WrappedRun):
 
     @mp_file_parser.file_parser
     def _moose_header_parser(self, input_file: str, **__) -> typing.Dict[str, str]:
-        """Method which parses the header of the MOOSE log file and returns the data from it as a dictionary.
+        """Parse the header of the MOOSE log file and return the data from it as a dictionary.
 
         Parameters
         ----------
         input_file : str
             The path to the file where the console log is stored.
+        **__
+            Additional unused keyword arguments
 
         Returns
         -------
         typing.Dict[str, str]
             The parsed data from the header of the MOOSE log file
+
         """
         # Open the log file, and read header lines (which contains information about the MOOSE version used etc)
         with open(input_file) as file:
@@ -149,17 +164,20 @@ class MooseRun(WrappedRun):
         input_file: str,
         **__,
     ) -> typing.Dict[str, str]:
-        """Parser for reading data from VectorPostProcessor CSV files
+        """Parse data from VectorPostProcessor CSV files.
 
         Parameters
         ----------
         input_file : str
             Path to the VectorPostProcessor CSV file
+        **__
+            Additional unused keyword arguments
 
         Returns
         -------
         typing.Dict[str, str]
             A dictionary of metadata and data contained in the CSV file
+
         """
         metrics = {}
         # Get name of vector which is being calculated by VectorPostProcessor from filename
@@ -201,17 +219,19 @@ class MooseRun(WrappedRun):
 
         return {}, metrics
 
-    def _per_event_callback(self, log_data: typing.Dict[str, str], _):
-        """Method which looks out for certain phrases in the MOOSE log, and adds them to the Events log
+    def _per_event_callback(self, log_data: typing.Dict[str, str], _) -> bool:
+        """Look out for certain phrases in the MOOSE log, and adds them to the Events log.
 
         Parameters
         ----------
         log_data : typing.Dict[str, str]
             Phrases of interest identified by the file monitor
+
         Returns
         -------
         bool
             Returns False if unable to upload events, to signal an error
+
         """
         # Look for relevant keys in the dictionary of data which we are passed in, and log the event with Simvue
         if any(
@@ -285,6 +305,7 @@ class MooseRun(WrappedRun):
             The data from the latest line in the CSV file
         sim_metadata : typing.Dict[str, str]
             The metadata about when this line was read by Multiparser
+
         """
         metric_time = csv_data.pop("time", None)
         metric_step = csv_data.pop("step", None)
@@ -302,7 +323,7 @@ class MooseRun(WrappedRun):
         )
 
     def _pre_simulation(self):
-        """Simvue commands which are ran before the MOOSE simulation begins."""
+        """Upload information to Simvue before the MOOSE simulation begins."""
         super()._pre_simulation()
 
         # Add alert for a non converging step
@@ -352,7 +373,7 @@ class MooseRun(WrappedRun):
         )
 
     def _during_simulation(self):
-        """Describes which files should be monitored during the simulation by Multiparser"""
+        """Describe which files should be monitored during the simulation by Multiparser."""
         self.log_event("Beginning MOOSE simulation...")
 
         # Record time here, for that for static problems the overall time for execution will be returned
@@ -427,7 +448,7 @@ class MooseRun(WrappedRun):
             )
 
     def _post_simulation(self):
-        """Simvue commands which are ran after the MOOSE simulation finishes."""
+        """Upload informatino to Simvue after the MOOSE simulation finishes."""
         for file in pathlib.Path(self._output_dir_path).glob(
             f"{self._results_prefix}*"
         ):
@@ -473,8 +494,13 @@ class MooseRun(WrappedRun):
             The number of processors to run a parallel MOOSE job across, by default 1
         mpiexec_env_vars : typing.Optional[typing.Dict[str, typing.Any]]
             Any environment variables to pass to mpiexec on startup if running in parallel, by default None
-        """
 
+        Raises
+        ------
+        ValueError
+            Raised if conflicting values of track_vector_positions and track_vector_postprocessors are found.
+
+        """
         if track_vector_positions and not track_vector_postprocessors:
             raise ValueError(
                 "Vector positions can only be tracked if vector postprocessor tracking is enabled."
