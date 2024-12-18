@@ -1,16 +1,23 @@
-import simvue
-import typing
-import pydantic
-import multiparser.parsing.tail as mp_tail_parser
+"""OpenFOAM Connector.
+
+This module provides functionality for using Simvue to track and monitor an OpenFOAM simulation.
+"""
+
 import os
 import pathlib
 import re
+import typing
 import zipfile
+
+import multiparser.parsing.tail as mp_tail_parser
+import pydantic
+import simvue
+
 from simvue_integrations.connectors.generic import WrappedRun
 
 
 class OpenfoamRun(WrappedRun):
-    """Class for setting up Simvue tracking and monitoring of an OpenFOAM    simulation.
+    """Class for setting up Simvue tracking and monitoring of an OpenFOAM simulation.
 
     Use this class as a context manager, in the same way you use default Simvue runs, and call run.launch(). Eg:
 
@@ -48,8 +55,8 @@ class OpenfoamRun(WrappedRun):
             Name of the zip file to create, if upload_to_zip is True
         file_type : typing.Literal["input", "output", "code"]
             The category of files being uploaded
-        """
 
+        """
         if self.upload_as_zip:
             out_zip = pathlib.Path(self.openfoam_case_dir).joinpath(zip_name)
             zip_file = zipfile.ZipFile(out_zip, "w")
@@ -58,7 +65,8 @@ class OpenfoamRun(WrappedRun):
             dir_path = pathlib.Path(self.openfoam_case_dir).joinpath(dir_name)
 
             if not pathlib.Path(dir_path).exists():
-                return
+                print(f"WARNING: Could not find directory {dir_path} - skipping!")
+                continue
 
             # Go through directory recursively, either add each file to the zip, or upload individually to Simvue
             for root, _, file_names in os.walk(
@@ -93,7 +101,7 @@ class OpenfoamRun(WrappedRun):
     def _log_parser(
         self, file_content: str, **__
     ) -> tuple[dict[str, typing.Any], dict[str, typing.Any]]:
-        """Parses information from any Openfoam log file, and uploads key data to Simvue.
+        """Parse information from any Openfoam log file, and uploads key data to Simvue.
 
         Uploads information from the header of the file as Metadata to the Run, uploads log messages from the file
         which are produced before the solve begins as Events, and then uploads residuals values as Metrics.
@@ -102,13 +110,15 @@ class OpenfoamRun(WrappedRun):
         ----------
         file_content : str
             The latest additions to the file.
+        **__
+            Additional unused keyword arguments
 
         Returns
         -------
-        tuple[dict[str,typing.Any], dict[str, typing.Any]]
+        tuple[dict[str, typing.Any], dict[str, typing.Any]]
             An (empty) dictionary of metadata, and a dictionary of any metrics obtained from the file.
-        """
 
+        """
         exp1: re.Pattern[str] = re.compile(
             r"^(.+):  Solving for (.+), Initial residual = (.+), Final residual = (.+), No Iterations (.+)$"
         )
@@ -184,7 +194,7 @@ class OpenfoamRun(WrappedRun):
         return {}, metrics
 
     def _pre_simulation(self):
-        """Uploads inputs from the system, constant and 0 directories, and adds the Openfoam process."""
+        """Upload inputs from the system, constant and 0 directories, and adds the Openfoam process."""
         super()._pre_simulation()
 
         # Save the files in the System, Constant, and initial conditions ('0') directories
@@ -202,7 +212,7 @@ class OpenfoamRun(WrappedRun):
         )
 
     def _during_simulation(self):
-        """Tracks any log files produced by Openfoam."""
+        """Track any log files produced by Openfoam."""
         # Track all log files
         self.file_monitor.tail(
             parser_func=self._log_parser,
@@ -211,7 +221,7 @@ class OpenfoamRun(WrappedRun):
         )
 
     def _post_simulation(self):
-        """Uploads all results found in the Openfoam case directory."""
+        """Upload all results found in the Openfoam case directory."""
         reg_exp = re.compile(r"([\d\.]+)")
         result_dirs = [
             dir.name
@@ -240,6 +250,7 @@ class OpenfoamRun(WrappedRun):
             Whether to upload inputs and outputs as zip files, by default True
         openfoam_env_vars : typing.Optional[typing.Dict[str, typing.Any]], optional
             A dictionary of any environment variables to pass to the Openfoam simulation, by default None
+
         """
         self.openfoam_case_dir = openfoam_case_dir
         self.upload_as_zip = upload_as_zip

@@ -67,4 +67,4 @@ _Simvue_ utilises the [Ruff](https://github.com/astral-sh/ruff) linter and forma
 
 ## :book: Documentation
 
-To ensure functions, methods and classes are documented appropriately _Simvue_  follows the Numpy docstring convention. We also ask that if adding new features or Connectors you ensure these are mentioned within the official [documentation](https://github.com/simvue-io/docs). 
+To ensure functions, methods and classes are documented appropriately _Simvue_  follows the Numpy docstring convention. We also ask that if adding new features or Connectors you ensure these are mentioned within the official [documentation](https://github.com/simvue-io/docs).

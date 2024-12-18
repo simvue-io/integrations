@@ -1,13 +1,19 @@
-import simvue
-import typing
-import platform
-import pathlib
-import pydantic
+"""FDS Connector.
+
+This module provides functionality for using Simvue to track and monitor an FDS (Fire Dynamics Simulator) simulation.
+"""
+
 import glob
+import pathlib
+import platform
 import re
+import typing
+
 import f90nml
-import multiparser.parsing.tail as mp_tail_parser
 import multiparser.parsing.file as mp_file_parser
+import multiparser.parsing.tail as mp_tail_parser
+import pydantic
+import simvue
 
 from simvue_integrations.connectors.generic import WrappedRun
 
@@ -97,9 +103,7 @@ class FDSRun(WrappedRun):
     ]
 
     def _soft_abort(self):
-        """
-        If an abort is triggered, creates a '.stop' file so that FDS simulation is stopped gracefully.
-        """
+        """Create a '.stop' file so that FDS simulation is stopped gracefully if an abort is triggered."""
         if not pathlib.Path(f"{self._results_prefix}.stop").exists():
             with open(f"{self._results_prefix}.stop", "w") as stop_file:
                 stop_file.write("FDS simulation aborted due to Simvue Alert.")
@@ -109,19 +113,21 @@ class FDSRun(WrappedRun):
     def _log_parser(
         self, file_content: str, **__
     ) -> tuple[dict[str, typing.Any], list[dict[str, typing.Any]]]:
-        """Parses an FDS log file line by line as it is written, and extracts relevant information
+        """Parse an FDS log file line by line as it is written, and extracts relevant information.
 
         Parameters
         ----------
         file_content : str
             The next line of the log file
+        **__
+            Additional unused keyword arguments
 
         Returns
         -------
-        tuple[dict[str,typing.Any], list[dict[str, typing.Any]]]
+        tuple[dict[str, typing.Any], list[dict[str, typing.Any]]]
             An (empty) dictionary of metadata, and a dictionary of metrics data extracted from the log
-        """
 
+        """
         _out_data = []
         _out_record = {}
 
@@ -167,6 +173,7 @@ class FDSRun(WrappedRun):
             Dictionary of data to log to Simvue as metrics
         meta: typing.Dict
             Dictionary of metadata added by Multiparser about this data
+
         """
         metric_time = data.pop("time", None) or data.pop("Time", None)
         metric_step = data.pop("step", None)
@@ -184,6 +191,14 @@ class FDSRun(WrappedRun):
         ----------
         input_file : str
             The path to the FDS stderr output file.
+        **__
+            Additional unused keyword arguments
+
+        Returns
+        -------
+        tuple[dict[str, typing.Any], list[dict[str, typing.Any]]]
+            An (empty) dictionary of metadata, and a dictionary of data to upload as metadata to the Simvue run
+
         """
         with open(input_file) as in_f:
             _file_lines = in_f.readlines()
@@ -222,6 +237,7 @@ class FDSRun(WrappedRun):
         ----------
         data : typing.Dict
             Dictionary of data from the latest line of the CTRL log file.
+
         """
         if data["State"].lower() == "f":
             state = False
@@ -240,7 +256,7 @@ class FDSRun(WrappedRun):
         self.update_metadata({data["ID"]: state})
 
     def _pre_simulation(self):
-        """Starts the FDS process, using a bash script to set `fds_unlim` if on Linux"""
+        """Start the FDS process, using a bash script to set `fds_unlim` if on Linux."""
         super()._pre_simulation()
         self.log_event("Starting FDS simulation")
 
@@ -260,7 +276,7 @@ class FDSRun(WrappedRun):
         )
 
     def _during_simulation(self):
-        """Describes which files should be monitored during the simulation by Multiparser"""
+        """Describe which files should be monitored during the simulation by Multiparser."""
         # Upload data from input file as metadata
         self.file_monitor.track(
             path_glob_exprs=str(self.fds_input_file_path),
@@ -301,7 +317,7 @@ class FDSRun(WrappedRun):
         )
 
     def _post_simulation(self):
-        """Uploads files selected by user to Simvue for storage."""
+        """Upload files selected by user to Simvue for storage."""
         self.update_metadata(self._activation_times_data)
 
         if self.upload_files is None:
@@ -347,7 +363,7 @@ class FDSRun(WrappedRun):
         ----------
         fds_input_file_path : pydantic.FilePath
             Path to the FDS input file to use in the simulation
-        workdir_path : str, optional
+        workdir_path : typing.Union[str, pydantic.DirectoryPath], optional
             Path to a directory which you would like FDS to run in, by default None
             This is where FDS will generate the results from the simulation
             If a directory does not already exist at this path, it will be created
@@ -363,6 +379,7 @@ class FDSRun(WrappedRun):
             Value to set your stack size to (for Linux and MacOS), by default "unlimited"
         fds_env_vars : typing.Optional[typing.Dict[str, typing.Any]], optional
             Environment variables to provide to FDS when executed, by default None
+
         """
         self.fds_input_file_path = fds_input_file_path
         self.workdir_path = workdir_path

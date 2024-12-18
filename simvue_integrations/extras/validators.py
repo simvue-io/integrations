@@ -1,11 +1,12 @@
-"""Common
-----------
+"""Common.
+
 Classses which could be used in the construction of multiple adapters.
 """
 # ruff: noqa: DOC201
 
 import enum
 from typing import Callable, Literal, Optional, Union
+
 from pydantic import BaseModel, Field, PositiveInt, ValidationInfo, field_validator
 
 NAME_REGEX: str = r"^[a-zA-Z0-9\-\_\s\/\.:]+$"
@@ -38,7 +39,7 @@ def check_input(
     required_when_name: str,
     required_when_values: list,
 ) -> Union[str, float, int, None]:
-    """Checks that alert fields are correctly defined in cases where parameters are only required if another parameter is set.
+    """Check that alert fields are correctly defined in cases where parameters are only required if another parameter is set.
 
     Parameters
     ----------
@@ -62,6 +63,7 @@ def check_input(
     ------
     ValueError
         Raised if the parameter IS required but has NOT been provided, or if the parameter is NOT required but HAS been provided
+
     """
     other_values = validation_info.data
     if (
@@ -80,6 +82,8 @@ def check_input(
 
 
 class AlertValidator(BaseModel, extra="forbid"):  # type: ignore
+    """Validate the alerts when provided as a dictionary, before they are passed to create_alert."""
+
     name: Optional[str] = Field(None, pattern=NAME_REGEX)
     source: Literal["metrics", "events", "user"]
     frequency: Optional[PositiveInt] = Field(default=None, validate_default=True)
@@ -104,47 +108,47 @@ class AlertValidator(BaseModel, extra="forbid"):  # type: ignore
     trigger_abort: Optional[bool] = Field(default=None, validate_default=True)
 
     @field_validator("frequency")
-    def check_frequency(cls, v, validation_info):
-        """Checks that frequency is specified if the alert source is metrics or events."""
+    def _check_frequency(cls, v, validation_info):
+        """Check that frequency is specified if the alert source is metrics or events."""
         return check_input(
             v, validation_info, "frequency", "source", ["metrics", "events"]
         )
 
     @field_validator("pattern")
-    def check_pattern(cls, v, validation_info):
-        """Checks that pattern is specified if the alert source is events."""
+    def _check_pattern(cls, v, validation_info):
+        """Check that pattern is specified if the alert source is events."""
         return check_input(v, validation_info, "pattern", "source", ["events"])
 
     @field_validator("rule")
-    def check_rule(cls, v, validation_info):
-        """Checks that rule is specified if the alert source is metrics."""
+    def _check_rule(cls, v, validation_info):
+        """Check that rule is specified if the alert source is metrics."""
         return check_input(v, validation_info, "rule", "source", ["metrics"])
 
     @field_validator("metric")
-    def check_metric(cls, v, validation_info):
-        """Checks that metric is specified if the alert source is metrics."""
+    def _check_metric(cls, v, validation_info):
+        """Check that metric is specified if the alert source is metrics."""
         return check_input(v, validation_info, "metric", "source", ["metrics"])
 
     @field_validator("aggregation")
-    def check_aggregation(cls, v, validation_info):
-        """Checks that aggregation is specified if the alert source is metrics."""
+    def _check_aggregation(cls, v, validation_info):
+        """Check that aggregation is specified if the alert source is metrics."""
         return check_input(v, validation_info, "aggregation", "source", ["metrics"])
 
     @field_validator("window")
-    def check_window(cls, v, validation_info):
-        """Checks that window is specified if the alert source is metrics."""
+    def _check_window(cls, v, validation_info):
+        """Check that window is specified if the alert source is metrics."""
         return check_input(v, validation_info, "window", "source", ["metrics"])
 
     @field_validator("threshold")
-    def check_threshold(cls, v, validation_info):
-        """Checks that threshold is specified if the alert rule is 'is above' or 'is below'."""
+    def _check_threshold(cls, v, validation_info):
+        """Check that threshold is specified if the alert rule is 'is above' or 'is below'."""
         return check_input(
             v, validation_info, "threshold", "rule", ["is above", "is below"]
         )
 
     @field_validator("range_low")
-    def check_range_low(cls, v, validation_info):
-        """Checks that range_low is specified if the alert rule is 'is outside range' or 'is inside range'."""
+    def _check_range_low(cls, v, validation_info):
+        """Check that range_low is specified if the alert rule is 'is outside range' or 'is inside range'."""
         return check_input(
             v,
             validation_info,
@@ -154,8 +158,8 @@ class AlertValidator(BaseModel, extra="forbid"):  # type: ignore
         )
 
     @field_validator("range_high")
-    def check_range_high(cls, v, validation_info):
-        """Checks that range_high is specified if the alert rule is 'is outside range' or 'is inside range'."""
+    def _check_range_high(cls, v, validation_info):
+        """Check that range_high is specified if the alert rule is 'is outside range' or 'is inside range'."""
         return check_input(
             v,
             validation_info,
