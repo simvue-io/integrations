@@ -13,13 +13,14 @@ from tensorflow.keras.callbacks import Callback
 import simvue_integrations.extras.validators as validators
 
 
-class TensorVue(Callback):
+class TensorVue(simvue.Run, Callback):
     def __init__(
         self,
         run_name: typing.Optional[str] = None,
         run_folder: typing.Optional[str] = None,
         run_description: typing.Optional[str] = None,
         run_tags: typing.Optional[list[str]] = None,
+        run_metadata: typing.Optional[dict] = None,
         run_mode: typing.Literal["online", "offline"] = "online",
         alert_definitions: typing.Optional[
             dict[str, dict[str, typing.Union[str, int, float]]]
@@ -34,8 +35,8 @@ class TensorVue(Callback):
         model_final_filepath: str = "/tmp/simvue/final_model.keras",
         evaluation_parameter: str = None,
         evaluation_target: float = None,
-        create_epoch_runs: typing.Optional[bool] = True,
         evaluation_condition: validators.Operator = None,
+        create_epoch_runs: typing.Optional[bool] = True,
         optimisation_framework: bool = False,
         simulation_run: typing.Optional[simvue.Run] = None,
         evaluation_run: typing.Optional[simvue.Run] = None,
@@ -56,6 +57,8 @@ class TensorVue(Callback):
             If using the optimisation framework, any description provided here will be overriden by the description from the Workspace
         run_tags : list[str], optional
             Tags associated with the run, by default None
+        run_metadata: dict, optional
+            Metadata associated with this run, by default None
         run_mode : typing.Literal["online", "offline"]
             Whether Simvue should run in Online or Offline mode, by default Online
         alert_definitions : dict[str, dict[str, typing.Union[str, int, float]]], optional
@@ -109,6 +112,7 @@ class TensorVue(Callback):
             or f"Tracking and monitoring of the training and evaluation of {self.run_name} Tensorflow algorithm."
         )
         self.run_tags = run_tags or []
+        self.run_metadata = run_metadata or {}
         self.run_mode = run_mode
         self.script_filepath = script_filepath
         self.model_checkpoint_filepath = model_checkpoint_filepath
@@ -155,6 +159,7 @@ class TensorVue(Callback):
             ],
             folder=self.run_folder,
             description=self.run_description,
+            metadata=self.run_metadata,
         )
         for alert_name in self.manifest_alerts:
             manifest_run.create_alert(
@@ -180,6 +185,7 @@ class TensorVue(Callback):
                     "simulation",
                     "training",
                 ],
+                metadata=self.run_metadata,
             )
         elif not self.simulation_run:
             raise RuntimeError(
@@ -249,6 +255,7 @@ class TensorVue(Callback):
             folder=self.run_folder,
             description=f"Tracking the training performed during Epoch {epoch+1}.",
             tags=self.run_tags + ["epoch", "training"],
+            metadata=self.run_metadata,
         )
 
         if epoch + 1 >= self.start_alerts_from_epoch:
@@ -378,6 +385,7 @@ class TensorVue(Callback):
                     folder=self.run_folder,
                     description="Tracking the evaluation performed on the final model.",
                     tags=self.run_tags + ["evaluation"],
+                    metadata=self.run_metadata,
                 )
             elif not self.eval_run:
                 raise RuntimeError(
