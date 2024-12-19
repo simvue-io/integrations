@@ -20,7 +20,7 @@ import pathlib
 from tensorflow.keras.callbacks import ModelCheckpoint
 
 # Firstly we import our Tensorflow integration:
-import simvue_integrations.connectors.tensorflow as sv_tf
+import simvue_integrations.plugins.tensorflow as sv_tf
 
 def tensorflow_example(run_folder):
     # Load the training and test data

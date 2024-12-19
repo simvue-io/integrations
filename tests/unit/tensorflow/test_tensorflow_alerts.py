@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow import keras
 import uuid
 import simvue
-import simvue_integrations.connectors.tensorflow as sv_tf
+import simvue_integrations.plugins.tensorflow as sv_tf
 from simvue_integrations.extras.validators import AlertValidator
 import pytest
 import pydantic
