@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-Allow easy connection between Simvue and common simulation software packages, allowing for easy tracking and monitoring of simulations in real time.
+Allow easy connection between Simvue and common software packages, allowing for easy tracking and monitoring of simulations in real time.
 </p>
 
 <div align="center">
