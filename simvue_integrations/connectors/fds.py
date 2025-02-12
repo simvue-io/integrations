@@ -178,7 +178,10 @@ class FDSRun(WrappedRun):
         metric_time = data.pop("time", None) or data.pop("Time", None)
         metric_step = data.pop("step", None)
         self.log_metrics(
-            data, timestamp=meta["timestamp"], time=metric_time, step=metric_step
+            data,
+            timestamp=meta["timestamp"].replace(" ", ""),
+            time=metric_time,
+            step=metric_step,
         )
 
     @mp_file_parser.file_parser

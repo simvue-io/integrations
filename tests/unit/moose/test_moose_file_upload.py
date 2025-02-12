@@ -71,7 +71,7 @@ def test_moose_file_upload_after_abort(folder_setup):
     temp_dir = tempfile.TemporaryDirectory(prefix="moose_test")
     with MooseRun() as run:
         run.init(name=name, folder=folder_setup)
-        run._simvue.get_abort_status = abort
+        run._sv_obj.get_abort_status = abort
         run_id = run.id
         run.launch(
             moose_application_path=pathlib.Path(__file__),

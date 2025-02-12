@@ -86,7 +86,7 @@ class WrappedRun(simvue.Run):
         """
         self._trigger = multiprocessing.Event()
 
-        if not self._simvue:
+        if not self._sv_obj:
             self._error("Run must be initialized before launching the simulation.")
             return False
 

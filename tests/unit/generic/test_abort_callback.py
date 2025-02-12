@@ -15,7 +15,7 @@ def mock_aborted_process(self, *_, **__):
         """
         time.sleep(1)
         return True
-    self._simvue.get_abort_status = abort
+    self._sv_obj.get_abort_status = abort
     
     def aborted_process():
         """

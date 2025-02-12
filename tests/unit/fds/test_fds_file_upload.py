@@ -114,7 +114,7 @@ def test_fds_file_upload_after_abort(folder_setup):
     with FDSRun() as run:
         
         run.init(name=name, folder=folder_setup)
-        run._simvue.get_abort_status = abort
+        run._sv_obj.get_abort_status = abort
         run_id = run.id
         run.launch(
             fds_input_file_path = pathlib.Path(__file__).parent.joinpath("example_data", "fds_input.fds"),

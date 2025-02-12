@@ -64,7 +64,7 @@ def test_fds_devc_parser(folder_setup):
         
     # Check that 9 metrics have been created, one for each metric in the CSV
     metrics_names = client.get_metrics_names(run_id)
-    assert len(metrics_names) == 9
+    assert sum(1 for name in metrics_names) == 9
     
     # Get all metrics from run, check last value of each matches last set of lines in file
     metrics = client.get_run(run_id)["metrics"]
