@@ -319,7 +319,7 @@ class MooseRun(WrappedRun):
             csv_data,
             step=metric_step or self._step_num,
             time=metric_time or self._step_time,
-            timestamp=sim_metadata["timestamp"].replace(" ", ""),
+            timestamp=sim_metadata["timestamp"].replace(" ", "T"),
         )
 
     def _pre_simulation(self):

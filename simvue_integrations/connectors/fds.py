@@ -179,7 +179,7 @@ class FDSRun(WrappedRun):
         metric_step = data.pop("step", None)
         self.log_metrics(
             data,
-            timestamp=meta["timestamp"].replace(" ", ""),
+            timestamp=meta["timestamp"].replace(" ", "T"),
             time=metric_time,
             step=metric_step,
         )

@@ -67,7 +67,7 @@ def test_fds_devc_parser(folder_setup):
     assert sum(1 for name in metrics_names) == 9
     
     # Get all metrics from run, check last value of each matches last set of lines in file
-    metrics = client.get_run(run_id)["metrics"]
+    metrics = dict(client.get_run(run_id).metrics)
     csvFile = pandas.read_csv(pathlib.Path(__file__).parent.joinpath("example_data", "fds_devc.csv"))
 
     expected_metric_names = csvFile.iloc[0][1:].values.tolist()
@@ -75,7 +75,7 @@ def test_fds_devc_parser(folder_setup):
     expected_metric_last_values = csvFile.iloc[-1][1:].values.tolist()
     expected_metric_last_values = [float(val) for val in expected_metric_last_values]
     expected_metric_last_values.sort()
-    
+      
     actual_metric_names = [key for key in metrics.keys()]
     actual_metric_names.sort()
     actual_metric_last_values = [value["last"] for value in metrics.values()]
