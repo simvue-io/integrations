@@ -327,9 +327,8 @@ class MooseRun(WrappedRun):
         super()._pre_simulation()
 
         # Add alert for a non converging step
-        self.create_alert(
+        self.create_event_alert(
             name="step_not_converged",
-            source="events",
             frequency=1,
             pattern=" Solve Did NOT Converge!",
             notification="email",

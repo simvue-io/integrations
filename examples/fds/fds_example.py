@@ -44,10 +44,9 @@ def fds_example(run_folder) -> None:
         )
         
         # You can use any of the Simvue Run() methods to upload extra information before/after the simulation
-        run.create_alert(
+        run.create_metric_threshold_alert(
             name="visibility_below_three_metres",
             metric="eye_level_visibility",
-            source="metrics",
             frequency=1,
             rule="is below",
             threshold=3,

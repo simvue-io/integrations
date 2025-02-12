@@ -81,8 +81,8 @@ if __name__ == "__main__":
         run.save_file('mesh,e', 'input')
 
         # Add an alert (the alert definition will be created if necessary)
-        run.create_alert(name='temp-too-high',   # Name of Alert
-                      source='metrics',          # Source
+        run.create_metric_threshold_alert(
+                      name='temp-too-high',      # Name of Alert
                       rule='is above',           # Rule
                       metric='temperature',      # Metric
                       frequency=1,               # Frequency

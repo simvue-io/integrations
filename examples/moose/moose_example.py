@@ -48,9 +48,8 @@ def moose_example(moose_app_path, parallel = False) -> None:
         )
 
         # You can use any of the Simvue Run() methods to upload extra information before/after the simulation
-        run.create_alert(
+        run.create_metric_threhsold_alert(
             name='avg_temp_above_500',
-            source='metrics',
             metric='average_temerature',
             rule='is above',
             threshold=500.0,
