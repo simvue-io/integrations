@@ -70,7 +70,7 @@ def test_moose_input_parser(folder_setup, file_name, expected_metadata, not_expe
 
         
         client = simvue.Client()
-        metadata = client.get_run(run_id)['metadata']
+        metadata = client.get_run(run_id).metadata
         # Check that keys and values parsed correctly
         for key, value in expected_metadata.items():
             assert metadata.get(key) == value

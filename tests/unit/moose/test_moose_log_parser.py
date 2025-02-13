@@ -59,9 +59,9 @@ def test_moose_log_parser(folder_setup):
     
     # Check that reason for termination is added as metadata and tag, and run is set to terminated state
     run_data = client.get_run(run_id)
-    assert run_data["metadata"]["handle-too-hot"] == True
-    assert "handle-too-hot" in run_data["tags"]
-    assert run_data["status"] == "terminated"
+    assert run_data.metadata["handle-too-hot"] == True
+    assert "handle-too-hot" in run_data.tags
+    assert run_data.status == "terminated"
     
         
         

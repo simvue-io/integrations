@@ -54,7 +54,7 @@ def test_moose_vectorpostprocessor_parser_no_positions(folder_setup):
     
     # Check that 7 metrics have been created for positions along the bar 0-6
     metrics_names = client.get_metrics_names(run_id)
-    assert len(metrics_names) == 7
+    assert sum(1 for i in metrics_names) == 7
     
     # Get metric with ID '1', check that time and step values are correct
     sample_metric_times = client.get_metric_values(metric_names=["temps.T.1"], xaxis="time", output_format="dataframe", run_ids=[run_id])
@@ -95,7 +95,7 @@ def test_moose_vectorpostprocessor_parser_with_positions(folder_setup):
     # Check that 28 metrics have been created for positions along the bar 0-6
     # One for each of T, X, Y, Z
     metrics_names = client.get_metrics_names(run_id)
-    assert len(metrics_names) == 28
+    assert sum(1 for i in metrics_names) == 28
     
     # Get metric with ID '1', check that time and step values are correct
     sample_metric_times = client.get_metric_values(metric_names=["temps.x.1"], xaxis="time", output_format="dataframe", run_ids=[run_id])
@@ -132,4 +132,4 @@ def test_moose_vectorpostprocessor_disabled(folder_setup):
     
     # Check that no metrics are recorded
     metrics_names = client.get_metrics_names(run_id)
-    assert len(metrics_names) == 0
+    assert sum(1 for i in metrics_names) == 0
