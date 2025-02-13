@@ -43,6 +43,6 @@ def test_fds_header_parser(folder_setup):
     assert run_data["fds.revision_date"] == "Sun Apr 7 17:05:06 2024 -0400"
     assert run_data["fds.compiler"] == "Intel(R) Fortran Intel(R) 64 Compiler Classic for applications running on Intel(R) 64, Version 2021.7.1 Build 20221019_000000"
     assert run_data["fds.compilation_date"] == "Apr 09, 2024 13:24:51"
-    assert run_data["fds.mpi_processes"] == 1
-    assert run_data["fds.mpi_version"] == 3.1
+    assert run_data["fds.mpi_processes"] == '1'
+    assert run_data["fds.mpi_version"] == '3.1'
     assert run_data["fds.mpi_library_version"] == "Intel(R) MPI Library 2021.6 for Linux* OS"
