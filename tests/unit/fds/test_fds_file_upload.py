@@ -1,4 +1,5 @@
 from simvue_integrations.connectors.fds import FDSRun
+from simvue.api.objects import Run
 import pathlib
 from unittest.mock import patch, MagicMock
 import tempfile
@@ -103,7 +104,8 @@ def abort(self):
     time.sleep(2)
     return True
     
-@patch.object(FDSRun, 'add_process', mock_aborted_fds_process)    
+@patch.object(FDSRun, 'add_process', mock_aborted_fds_process)
+@patch.object(Run, 'abort_trigger', abort) 
 def test_fds_file_upload_after_abort(folder_setup):
     """
     Check that outputs are uploaded if the simulation is aborted early by Simvue
@@ -113,7 +115,6 @@ def test_fds_file_upload_after_abort(folder_setup):
     with FDSRun() as run:
         
         run.init(name=name, folder=folder_setup)
-        run._sv_obj.abort_trigger = MagicMock(side_effect=abort) # TODO: FIX
         run_id = run.id
         run.launch(
             fds_input_file_path = pathlib.Path(__file__).parent.joinpath("example_data", "fds_input.fds"),
