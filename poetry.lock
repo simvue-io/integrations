@@ -2593,7 +2593,7 @@ plot = ["matplotlib (>=3.10.0,<4.0.0)", "plotly (>=6.0.0,<7.0.0)"]
 type = "git"
 url = "https://github.com/simvue-io/python-api.git"
 reference = "wk9874/offline_fixes"
-resolved_reference = "cd80cda4fac74232df8d763356790eb5db958c5e"
+resolved_reference = "5a69cb1ec4173712c8faca844a2a54e73a7ddd10"
 
 [[package]]
 name = "six"
