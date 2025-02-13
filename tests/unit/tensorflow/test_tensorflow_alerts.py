@@ -63,32 +63,32 @@ def test_adding_alerts(folder_setup, tensorflow_example_data):
         tensorflow_example_data.label_test,
         callbacks=[tensorvue]
     )    
-    
+
     client = simvue.Client()
     
     # Retrieve each type of alert from server
-    simulation_run = client.get_runs(filters=[f'name contains {run_name}_simulation'], alerts=True)[0]
-    evaluation_run = client.get_runs(filters=[f'name contains {run_name}_evaluation'], alerts=True)[0]
-    epoch_run_1 = client.get_runs(filters=[f'name contains {run_name}_epoch_1'], alerts=True)[0]
-    epoch_run_2 = client.get_runs(filters=[f'name contains {run_name}_epoch_2'], alerts=True)[0]
-    epoch_run_3 = client.get_runs(filters=[f'name contains {run_name}_epoch_3'], alerts=True)[0]
-    
+    simulation_run = next(client.get_runs(filters=[f'name contains {run_name}_simulation'], alerts=True))[1]
+    evaluation_run = next(client.get_runs(filters=[f'name contains {run_name}_evaluation'], alerts=True))[1]
+    epoch_run_1 = next(client.get_runs(filters=[f'name contains {run_name}_epoch_1'], alerts=True))[1]
+    epoch_run_2 = next(client.get_runs(filters=[f'name contains {run_name}_epoch_2'], alerts=True))[1]
+    epoch_run_3 = next(client.get_runs(filters=[f'name contains {run_name}_epoch_3'], alerts=True))[1]
+        
     # Check simulaiton run has one alert added, and that is 'loss_above_half'
-    assert len(simulation_run["alerts"]) == 2
-    assert [alert["alert"]["name"] for alert in simulation_run["alerts"]] == ["loss_above_half", "model_diverged"]
+    assert len(simulation_run.alerts) == 2
+    assert sorted([alert["name"] for alert in simulation_run.get_alert_details()]) == sorted(["loss_above_half", "model_diverged"])
     
     # Check evaluation run has both alerts added
-    assert len(evaluation_run["alerts"]) == 2
-    assert [alert["alert"]["name"] for alert in evaluation_run["alerts"]] == ["accuracy_below_80_percent", "loss_above_half"]
+    assert len(evaluation_run.alerts) == 2
+    assert sorted([alert["name"] for alert in evaluation_run.get_alert_details()]) == sorted(["accuracy_below_80_percent", "loss_above_half"])
     
     # Check first epoch run has no alerts defined, since alerts should start from epoch 2
-    assert len(epoch_run_1["alerts"]) == 0
+    assert len(epoch_run_1.alerts) == 0
     
     # Check epoch runs 2 and 3 each have one alert defined, and that is 'accuracy_below_80_percent'
-    assert len(epoch_run_2["alerts"]) == 1
-    assert epoch_run_2["alerts"][0]["alert"]["name"] == "accuracy_below_80_percent"
-    assert len(epoch_run_3["alerts"]) == 1
-    assert epoch_run_3["alerts"][0]["alert"]["name"] == "accuracy_below_80_percent"
+    assert len(epoch_run_2.alerts) == 1
+    assert next(epoch_run_2.get_alert_details())["name"] == "accuracy_below_80_percent"
+    assert len(epoch_run_3.alerts) == 1
+    assert next(epoch_run_3.get_alert_details())["name"] == "accuracy_below_80_percent"
             
     
     
