@@ -20,7 +20,8 @@ def test_fds_connector(folder_setup, offline, monkeypatch):
     run_id = fds_example(folder_setup, offline)
     
     if offline:
-        sender(pathlib.Path(temp_d.name))
+        _id_mapping = sender(pathlib.Path(temp_d.name))
+        run_id = _id_mapping.get(run_id)
     
     client = simvue.Client()
     run_data = client.get_run(run_id)
