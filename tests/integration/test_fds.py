@@ -18,29 +18,30 @@ def test_fds_connector(folder_setup):
     events = [event["message"] for event in client.get_events(run_id)]
     
     # Check run description and tags from init have been added
-    assert run_data["description"] == "An example of using the FDSRun Connector to track an FDS simulation."
-    assert run_data["tags"] == ['fds', 'vents']
+    assert run_data.description == "An example of using the FDSRun Connector to track an FDS simulation."
+    assert run_data.tags == ['fds', 'vents']
     
     # Check alert has been added
-    assert "visibility_below_three_metres" in [alert["alert"]["name"] for alert in run_data["alerts"]]
+    assert "visibility_below_three_metres" in [alert["name"] for alert in run_data.alerts]
     
     # Check metadata from header
-    assert run_data["metadata"]["fds.mpi_processes"] == 1
+    assert run_data.metadata["fds.mpi_processes"] == '1'
     
     # Check metadata from input file
-    assert run_data["metadata"]["_grp_devc_1.id"] == "flow_volume_supply"
+    assert run_data.metadata["_grp_devc_1.id"] == "flow_volume_supply"
     
     # Check events from log
     assert "Time Step: 1, Simulation Time: 0.092 s" in events
     
     # Check events from DEVC/CTRL log
     assert "DEVC 'timer' has been set to 'True' at time 2.00296E+00s, when it reached a value of 2.00296E+00s." in events
-        
+    
+    metrics = dict(run_data.metrics)
     # Check metrics from HRR file
-    assert run_data["metrics"]["HRR"]["count"] > 0
+    assert metrics["HRR"]["count"] > 0
     
     # Check metrics from DEVC file
-    assert run_data["metrics"]["flow_volume_supply"]["count"] > 0
+    assert metrics["flow_volume_supply"]["count"] > 0
 
     temp_dir = tempfile.TemporaryDirectory()
     
