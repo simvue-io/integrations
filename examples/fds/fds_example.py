@@ -10,7 +10,7 @@ To run this example with Docker:
     - Pull the base FDS image: docker run -it ghcr.io/simvue-io/fds_example
     - Clone this repository: git clone https://github.com/simvue-io/integrations.git
     - Move into FDS examples directory: cd integrations/examples/fds
-    - Create a simvue.toml file, copying in your information from the Simvue server: vi simvue.toml
+    - Create a simvue.toml file, copying in your information from the Simvue server: nano simvue.toml
     - Install Poetry: pip install poetry
     - Install required modules: poetry install -E fds
     - Run the example script: poetry run python fds_example.py
@@ -31,10 +31,10 @@ import shutil
 import uuid
 from simvue_integrations.connectors.fds import FDSRun
 
-def fds_example(run_folder) -> None:
+def fds_example(run_folder, offline=False) -> None:
 
     # Initialise the FDSRun class as a context manager
-    with FDSRun() as run:
+    with FDSRun(mode="offline" if offline else "online") as run:
         # Initialise the run, providing a name for the run, and optionally extra information such as a folder, description, tags etc
         run.init(
             name="fds_simulation_vents-%s" % str(uuid.uuid4()),
