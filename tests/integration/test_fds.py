@@ -22,7 +22,7 @@ def test_fds_connector(folder_setup):
     assert run_data.tags == ['fds', 'vents']
     
     # Check alert has been added
-    assert "visibility_below_three_metres" in [alert["name"] for alert in run_data.alerts]
+    assert "visibility_below_three_metres" in [alert["name"] for alert in run_data.get_alert_details()]
     
     # Check metadata from header
     assert run_data.metadata["fds.mpi_processes"] == '1'
