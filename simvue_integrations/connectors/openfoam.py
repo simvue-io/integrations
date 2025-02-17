@@ -124,7 +124,7 @@ class OpenfoamRun(WrappedRun):
         )
         exp2: re.Pattern[str] = re.compile(r"^ExecutionTime = ([0-9.]+) s")
         metrics = {}
-        header_metadata = {}
+        header_metadata = {"openfoam": {}}
         title = False
         header = False
         solver_info = False
@@ -177,7 +177,7 @@ class OpenfoamRun(WrappedRun):
                 if key == "exec":
                     current_process = value
                 else:
-                    header_metadata[f"openfoam.{key}"] = value
+                    header_metadata["openfoam"][key] = value
 
             # Log events for any initial solver info
             if solver_info and line:

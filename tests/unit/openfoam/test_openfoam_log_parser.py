@@ -51,10 +51,10 @@ def test_openfoam_log_parser(folder_setup):
     client = simvue.Client()
     # Check metadata from header is uploaded correctly
     run_data = client.get_run(run_id)
-    assert run_data.metadata["openfoam.build"] == "10-e450dce21ea5"
-    assert run_data.metadata["openfoam.allowsystemoperations"] == "Allowing user-supplied system call operations"
+    assert run_data.metadata["openfoam"]["build"] == "10-e450dce21ea5"
+    assert run_data.metadata["openfoam"]["allowsystemoperations"] == "Allowing user-supplied system call operations"
     # Check that exec param is not uploaded as metadata - this is used in the events log
-    assert not run_data.metadata.get("openfoam.exec")
+    assert not run_data.metadata["openfoam"].get("exec")
     
     # Check pre-simulation messages correctly extracted from log and added as events
     events = client.get_events(run_id)
