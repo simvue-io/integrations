@@ -7,20 +7,16 @@ import simvue
 from simvue.sender import sender
 
 @pytest.mark.parametrize("offline", (True, False), ids=("offline", "online"))
-def test_fds_connector(folder_setup, offline, monkeypatch):
+def test_fds_connector(folder_setup, offline):
     try:
         subprocess.run("fds")
     except FileNotFoundError:
         pytest.skip("You are attempting to run FDS Integration Tests without having FDS installed in your path.")
-        
-    if offline:
-        temp_d =  tempfile.TemporaryDirectory()
-        monkeypatch.setenv("SIMVUE_OFFLINE_DIRECTORY", temp_d)
     
     run_id = fds_example(folder_setup, offline)
-    
+
     if offline:
-        _id_mapping = sender(pathlib.Path(temp_d.name))
+        _id_mapping = sender()
         run_id = _id_mapping.get(run_id)
     
     client = simvue.Client()

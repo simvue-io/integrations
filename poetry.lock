@@ -493,6 +493,22 @@ docs = ["ipython", "matplotlib", "numpydoc", "sphinx"]
 tests = ["pytest", "pytest-cov", "pytest-xdist"]
 
 [[package]]
+name = "deepmerge"
+version = "2.0"
+description = "A toolset for deeply merging Python dictionaries."
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+markers = "python_version <= \"3.11\" or python_version >= \"3.12\""
+files = [
+    {file = "deepmerge-2.0-py3-none-any.whl", hash = "sha256:6de9ce507115cff0bed95ff0ce9ecc31088ef50cbdf09bc90a09349a318b3d00"},
+    {file = "deepmerge-2.0.tar.gz", hash = "sha256:5c3d86081fbebd04dd5de03626a0607b809a98fb6ccba5770b62466fe940ff20"},
+]
+
+[package.extras]
+dev = ["black", "build", "mypy", "pytest", "pyupgrade", "twine", "validate-pyproject[all]"]
+
+[[package]]
 name = "dnspython"
 version = "2.7.0"
 description = "DNS toolkit"
@@ -2568,6 +2584,7 @@ develop = false
 [package.dependencies]
 click = ">=8.1.8,<9.0.0"
 codecarbon = ">=2.8.3,<3.0.0"
+deepmerge = ">=2.0,<3.0"
 email-validator = ">=2.2.0,<3.0.0"
 flatdict = ">=4.0.1,<5.0.0"
 gitpython = ">=3.1.44,<4.0.0"
@@ -2593,7 +2610,7 @@ plot = ["matplotlib (>=3.10.0,<4.0.0)", "plotly (>=6.0.0,<7.0.0)"]
 type = "git"
 url = "https://github.com/simvue-io/python-api.git"
 reference = "wk9874/offline_fixes"
-resolved_reference = "8d3d5474f32f50e7fe5c066b3e0f1ec1aa5febe5"
+resolved_reference = "48ad8eec21501fe978c1df9da96f13981112aa9b"
 
 [[package]]
 name = "six"
