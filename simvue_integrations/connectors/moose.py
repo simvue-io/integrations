@@ -138,7 +138,7 @@ class MooseRun(WrappedRun):
         file_lines = list(filter(None, file_lines))
 
         # Add the data from each line of the header into a dictionary as a key/value pair
-        header_data = {}
+        header_data = {"moose": {}}
         for line in file_lines:
             # Ignore blank lines and lines which don't contain a colon
             if not line.strip() or ":" not in line:
@@ -154,7 +154,7 @@ class MooseRun(WrappedRun):
             value = value.strip()
             if not value:
                 continue
-            header_data[f"moose.{key}"] = value
+            header_data["moose"][key] = value
 
         return {}, header_data
 

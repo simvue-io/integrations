@@ -26,12 +26,12 @@ def test_moose_connector(parallel):
     assert "avg_temp_above_500" in [alert["alert"]["name"] for alert in run_data["alerts"]]
     
     # Check metadata from MOOSE log header has been uploaded
-    assert run_data["metadata"]["moose.executioner"] == "Transient"
+    assert run_data["metadata"]["moose"]["executioner"] == "Transient"
     
     if parallel:
-        assert run_data["metadata"]["moose.num_processors"] == 2
+        assert run_data["metadata"]["moose"]["num_processors"] == 2
     else:
-        assert run_data["metadata"]["moose.num_processors"] == 1
+        assert run_data["metadata"]["moose"]["num_processors"] == 1
     
     # Check events uploaded from log
     assert "Time Step 1, time = 2, dt = 2" in events
