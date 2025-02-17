@@ -35,6 +35,11 @@ from simvue_integrations.connectors.moose import MooseRun
 MOOSE_APP_PATH = "/opt/moose/bin/moose-opt"
 
 def moose_example(moose_app_path, offline = False, parallel = False) -> None:
+    
+    # Delete old copies of results, if they exist:
+    if pathlib.Path("/tmp/simvue").exists():
+        shutil.rmtree(pathlib.Path("/tmp/simvue"))
+        
     # Initialise the MooseRun class as a context manager
     with MooseRun(mode="offline" if offline else "online") as run:
         
@@ -48,7 +53,7 @@ def moose_example(moose_app_path, offline = False, parallel = False) -> None:
         )
 
         # You can use any of the Simvue Run() methods to upload extra information before/after the simulation
-        run.create_metric_threhsold_alert(
+        run.create_metric_threshold_alert(
             name='avg_temp_above_500',
             metric='average_temerature',
             rule='is above',

@@ -330,8 +330,8 @@ class MooseRun(WrappedRun):
         # Log all results for this timestep as Metrics
         self.log_metrics(
             csv_data,
-            step=metric_step or self._step_num,
-            time=metric_time or self._step_time,
+            step=metric_step if metric_step is not None else self._step_num,
+            time=metric_time if metric_time is not None else self._step_time,
             timestamp=sim_metadata["timestamp"].replace(" ", "T"),
         )
 
