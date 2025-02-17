@@ -3,6 +3,7 @@ import uuid
 import simvue
 import pytest
 import pathlib
+from functools import reduce
 testdata = [
     (
         "example_input_1",
@@ -48,8 +49,7 @@ testdata = [
         {
             "example_input_4.Mesh.generated.type": "GeneratedMeshGenerator",
             "example_input_4.VectorPostprocessors.temps_line.points": "'0 0.5 0.5  1 0.5 0.5  2 0.5 0.5  3 0.5 0.5  4 0.5 0.5  5 0.5 0.5  6 0.5 0.5'",
-            "example_input_4.Postprocessors.temp_avg.block": 0,
-            "example_input_4.Postprocessors.temp_max.variable": "'T'",
+            "example_input_4.Postprocessors": {'temp.avg': {'type': 'ElementAverageValue', 'block': 0.0, 'variable': "'T'"}, 'temp.max': {'type': 'ElementExtremeValue', 'block': 0.0, 'variable': "'T'", 'value_type': 'max'}, 'temp.min': {'type': 'ElementExtremeValue', 'block': 0.0, 'variable': "'T'", 'value_type': 'min'}},
         },
         {
             "example_input_4.Postprocessors.temp.avg.block": "Shouldn't exist",
@@ -73,10 +73,15 @@ def test_moose_input_parser(folder_setup, file_name, expected_metadata, not_expe
         metadata = client.get_run(run_id).metadata
         # Check that keys and values parsed correctly
         for key, value in expected_metadata.items():
-            assert metadata.get(key) == value
+            # Have moved keys from being stored as dot notation to nested dict
+            # So unpack the dot separated keys as a list of keys, then use reduce to obtain values from nested metadata
+            assert reduce(lambda d, k: d.get(k, None), key.split("."), metadata) == value
     
         for key, value in not_expected_metadata.items():
-            assert metadata.get(key) != value
+            try:
+                assert reduce(lambda d, k: d.get(k, None), key.split("."), metadata) != value
+            except AttributeError: # Will get this if the key doesnt exist since it tries to get() on a None, but we are expecting that...
+                continue
             
         assert run._output_dir_path == "results"
         assert run._results_prefix == file_name

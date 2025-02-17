@@ -33,6 +33,10 @@ def test_moose_connector(parallel):
     else:
         assert run_data["metadata"]["moose"]["num_processors"] == 1
     
+    # Check metadata from MOOSE input file has been uploaded
+    assert run_data["metadata"]["thermal_bar"]["PostProcessors"]["average_temperature"]["type"] == "ElementAverageValue"
+    assert run_data["metadata"]["thermal_bar"]["BCs"]["hot"]["value"] == 1000
+    
     # Check events uploaded from log
     assert "Time Step 1, time = 2, dt = 2" in events
     
