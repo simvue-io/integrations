@@ -31,10 +31,10 @@ import subprocess
 import uuid
 from simvue_integrations.connectors.openfoam import OpenfoamRun
 
-def openfoam_example(run_folder):
+def openfoam_example(run_folder, offline=False):
     
     # Initialise the OpenFOAM class as a context manager
-    with OpenfoamRun() as run:
+    with OpenfoamRun(mode="offline" if offline else "online") as run:
         # Initialise the run, providing a name for the run, and optionally extra information such as a folder, description, tags etc
         run.init(
             name="openfoam_simulation_airfoil-%s" % str(uuid.uuid4()),
