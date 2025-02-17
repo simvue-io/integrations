@@ -31,10 +31,10 @@ def test_fds_connector(folder_setup, offline):
     assert "visibility_below_three_metres" in [alert["name"] for alert in run_data.get_alert_details()]
     
     # Check metadata from header
-    assert run_data.metadata["fds.mpi_processes"] == '1'
+    assert run_data.metadata["fds"]["mpi_processes"] == '1'
     
     # Check metadata from input file
-    assert run_data.metadata["_grp_devc_1.id"] == "flow_volume_supply"
+    assert run_data.metadata["input_file"]["_grp_devc_1"]["id"] == "flow_volume_supply"
     
     # Check events from log
     assert "Time Step: 1, Simulation Time: 0.092 s" in events
