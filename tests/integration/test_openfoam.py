@@ -8,8 +8,8 @@ from simvue.sender import sender
 @pytest.mark.parametrize("offline", (True, False), ids=("offline", "online"))
 def test_openfoam_connector(folder_setup, offline):
 
-    run_id = openfoam_example(folder_setup)
-    
+    run_id = openfoam_example(folder_setup, offline)
+        
     if offline:
         _id_mapping = sender()
         run_id = _id_mapping.get(run_id)
@@ -23,10 +23,10 @@ def test_openfoam_connector(folder_setup, offline):
     assert run_data.tags == ["openfoam", "airfoil"]
     
     # Check alert has been added
-    assert "ux_residuals_too_high" in [alert["alert"]["name"] for alert in run_data.get_alert_details()]
+    assert "ux_residuals_too_high" in [alert["name"] for alert in run_data.get_alert_details()]
     
     # Check metadata from Openfoam log header has been uploaded
-    assert run_data.metadata["openfoam"]["nprocs"] == 1
+    assert run_data.metadata["openfoam"]["nprocs"] == '1'
     
     # Check events uploaded from log
     assert "[simpleFoam]: Create mesh for time = 0" in events
