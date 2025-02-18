@@ -94,7 +94,9 @@ class OpenfoamRun(WrappedRun):
 
         if self.upload_as_zip:
             zip_file.close()
-            self.save_file(out_zip, file_type)                
+            self.save_file(out_zip, file_type)
+            if not self._sv_obj._offline:
+                pathlib.Path(out_zip).unlink()
 
     @mp_tail_parser.log_parser
     def _log_parser(
