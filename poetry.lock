@@ -2610,7 +2610,7 @@ plot = ["matplotlib (>=3.10.0,<4.0.0)", "plotly (>=6.0.0,<7.0.0)"]
 type = "git"
 url = "https://github.com/simvue-io/python-api.git"
 reference = "v2.0"
-resolved_reference = "12046afd108635906960c7ade40513483ea76229"
+resolved_reference = "010abe5d941a5d6be47f3884d18a070bf6c0f458"
 
 [[package]]
 name = "six"
