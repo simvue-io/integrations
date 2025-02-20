@@ -2575,11 +2575,13 @@ name = "simvue"
 version = "2.0.0a1"
 description = "Simulation tracking and monitoring"
 optional = false
-python-versions = ">=3.10,<3.14"
+python-versions = "<3.14,>=3.10"
 groups = ["main"]
 markers = "python_version <= \"3.11\" or python_version >= \"3.12\""
-files = []
-develop = false
+files = [
+    {file = "simvue-2.0.0a1-py3-none-any.whl", hash = "sha256:2fafe40df2ae72825f94bbbdece2f42ed7d6ce9de4717793cda3ffbd1b422ee4"},
+    {file = "simvue-2.0.0a1.tar.gz", hash = "sha256:77ed272fa238d069e166c725f74e1ee218feb4118f93db05315d97ac78101311"},
+]
 
 [package.dependencies]
 click = ">=8.1.8,<9.0.0"
@@ -2605,12 +2607,6 @@ typing-extensions = {version = ">=4.12.2,<5.0.0", markers = "python_version < \"
 
 [package.extras]
 plot = ["matplotlib (>=3.10.0,<4.0.0)", "plotly (>=6.0.0,<7.0.0)"]
-
-[package.source]
-type = "git"
-url = "https://github.com/simvue-io/python-api.git"
-reference = "v2.0"
-resolved_reference = "010abe5d941a5d6be47f3884d18a070bf6c0f458"
 
 [[package]]
 name = "six"
@@ -3160,4 +3156,4 @@ tensorflow = ["mnist", "tensorflow"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.13"
-content-hash = "e5e6d3f383b459a410e59ad2e609b3662f1c88cd6b7f6c9cf20710c008a570fa"
+content-hash = "41fca48cbd1781a4b3979071e68b77314f1c6c2101e023867eb5f2031183256c"
