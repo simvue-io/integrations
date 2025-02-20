@@ -39,10 +39,10 @@ def test_moose_header_parser(folder_setup):
         )
         
         client = simvue.Client()
-        metadata = client.get_run(run_id)['metadata']
+        metadata = client.get_run(run_id).metadata
         # Check that keys and values parsed correctly
-        assert metadata.get("moose.num_processors") == 1
-        assert metadata.get("moose.moose_preconditioner") == 'SMP (auto)'
+        assert metadata.get("moose").get("num_processors") == '1'
+        assert metadata.get("moose").get("moose_preconditioner") == 'SMP (auto)'
         
         # Check that entries with no values are not added
         assert metadata.get("libmesh_version") == None

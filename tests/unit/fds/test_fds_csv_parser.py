@@ -64,10 +64,10 @@ def test_fds_devc_parser(folder_setup):
         
     # Check that 9 metrics have been created, one for each metric in the CSV
     metrics_names = client.get_metrics_names(run_id)
-    assert len(metrics_names) == 9
+    assert sum(1 for name in metrics_names) == 9
     
     # Get all metrics from run, check last value of each matches last set of lines in file
-    metrics = client.get_run(run_id)["metrics"]
+    metrics = dict(client.get_run(run_id).metrics)
     csvFile = pandas.read_csv(pathlib.Path(__file__).parent.joinpath("example_data", "fds_devc.csv"))
 
     expected_metric_names = csvFile.iloc[0][1:].values.tolist()
@@ -75,7 +75,7 @@ def test_fds_devc_parser(folder_setup):
     expected_metric_last_values = csvFile.iloc[-1][1:].values.tolist()
     expected_metric_last_values = [float(val) for val in expected_metric_last_values]
     expected_metric_last_values.sort()
-    
+      
     actual_metric_names = [key for key in metrics.keys()]
     actual_metric_names.sort()
     actual_metric_last_values = [value["last"] for value in metrics.values()]
@@ -104,10 +104,10 @@ def test_fds_hrr_parser(folder_setup):
         
     # Check that 16 metrics have been created, one for each metric in the CSV
     metrics_names = client.get_metrics_names(run_id)
-    assert len(metrics_names) == 16
+    assert sum(1 for name in metrics_names) == 16
     
     # Get all metrics from run, check last value of each matches last set of lines in file
-    metrics = client.get_run(run_id)["metrics"]
+    metrics = dict(client.get_run(run_id).metrics)
     csvFile = pandas.read_csv(pathlib.Path(__file__).parent.joinpath("example_data", "fds_hrr.csv"))
 
     expected_metric_names = csvFile.iloc[0][1:].values.tolist()
@@ -145,9 +145,9 @@ def test_fds_ctrl_parser(folder_setup):
     # Check DEVC and CTRL events have been correctly added to events log
     events = [event['message'] for event in client.get_events(run_id)]
     assert "DEVC 'Ceiling_Thermocouple.Back_Right' has been set to 'True' at time 4.25244E+01s, when it reached a value of 2.00162E+02C." in events
-    assert "CTRL 'KILL_TEMP_TOO_HIGH' has been set to 'True' at time 4.25244E+01s" not in events
+    assert "CTRL 'KILL_TEMP_TOO_HIGH' has been set to 'True' at time 4.25244E+01s" in events
     
     # Check metadata has been added correctly
-    metadata = client.get_run(run_id)["metadata"]
+    metadata = client.get_run(run_id).metadata
     assert metadata.get('Ceiling_Thermocouple.Back_Right') == True
     assert metadata.get('KILL_TEMP_TOO_HIGH') == True

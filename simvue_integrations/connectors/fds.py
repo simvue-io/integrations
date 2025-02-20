@@ -178,7 +178,10 @@ class FDSRun(WrappedRun):
         metric_time = data.pop("time", None) or data.pop("Time", None)
         metric_step = data.pop("step", None)
         self.log_metrics(
-            data, timestamp=meta["timestamp"], time=metric_time, step=metric_step
+            data,
+            timestamp=meta["timestamp"].replace(" ", "T"),
+            time=metric_time,
+            step=metric_step,
         )
 
     @mp_file_parser.file_parser
@@ -204,29 +207,29 @@ class FDSRun(WrappedRun):
             _file_lines = in_f.readlines()
 
         _components_regex: dict[str, typing.Pattern[typing.AnyStr]] = {
-            "fds.revision": re.compile(r"^\s*Revision\s+\:\s*([\w\d\.\-\_][^\n]+)"),
-            "fds.revision_date": re.compile(
+            "revision": re.compile(r"^\s*Revision\s+\:\s*([\w\d\.\-\_][^\n]+)"),
+            "revision_date": re.compile(
                 r"^\s*Revision Date\s+\:\s*([\w\s\:\d\-][^\n]+)"
             ),
-            "fds.compiler": re.compile(
+            "compiler": re.compile(
                 r"^\s*Compiler\s+\:\s*([\w\d\-\_\(\)\s\.\[\]\,][^\n]+)"
             ),
-            "fds.compilation_date": re.compile(
+            "compilation_date": re.compile(
                 r"^\s*Compilation Date\s+\:\s*([\w\d\-\:\,\s][^\n]+)"
             ),
-            "fds.mpi_processes": re.compile(r"^\s*Number of MPI Processes:\s*(\d+)"),
-            "fds.mpi_version": re.compile(r"^\s*MPI version:\s*([\d\.]+)"),
-            "fds.mpi_library_version": re.compile(
+            "mpi_processes": re.compile(r"^\s*Number of MPI Processes:\s*(\d+)"),
+            "mpi_version": re.compile(r"^\s*MPI version:\s*([\d\.]+)"),
+            "mpi_library_version": re.compile(
                 r"^\s*MPI library version:\s*([\w\d\.\s\*\(\)\[\]\-\_][^\n]+)"
             ),
         }
 
-        _output_metadata: dict[str, str] = {}
+        _output_metadata: dict[str, str] = {"fds": {}}
 
         for line in _file_lines:
             for key, regex in _components_regex.items():
                 if search_res := regex.findall(line):
-                    _output_metadata[key] = search_res[0]
+                    _output_metadata["fds"][key] = search_res[0]
 
         return {}, _output_metadata
 
@@ -281,7 +284,7 @@ class FDSRun(WrappedRun):
         self.file_monitor.track(
             path_glob_exprs=str(self.fds_input_file_path),
             callback=lambda data, meta: self.update_metadata(
-                {k: v for k, v in data.items() if v}
+                {"input_file": {k: v for k, v in data.items() if v}}
             ),
             file_type="fortran",
             static=True,

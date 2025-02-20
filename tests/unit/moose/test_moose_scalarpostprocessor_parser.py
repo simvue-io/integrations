@@ -49,7 +49,7 @@ def test_scalar_pp_parser(folder_setup):
     
     # Check that 3 metrics have been created for each PostProcessor
     metrics_names = client.get_metrics_names(run_id)
-    assert len(metrics_names) == 3
+    assert sum(1 for i in metrics_names) == 3
     
     # Get metric 'handle_temp_avg', check that time values are correct
     sample_metric = client.get_metric_values(metric_names=["handle_temp_avg"], xaxis="time", output_format="dataframe", run_ids=[run_id])

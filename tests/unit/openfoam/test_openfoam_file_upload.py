@@ -1,5 +1,6 @@
 from simvue_integrations.connectors.openfoam import OpenfoamRun
 import simvue
+from simvue.api.objects import Run
 import tempfile
 from unittest.mock import patch
 import uuid
@@ -111,6 +112,7 @@ def abort():
     return True
     
 @patch.object(OpenfoamRun, 'add_process', mock_aborted_openfoam_process)
+@patch.object(Run, 'abort_trigger', abort)    
 def test_openfoam_file_upload_after_abort(folder_setup):
     """
     Check that outputs are uploaded if the simulation is aborted early by Simvue
@@ -121,7 +123,7 @@ def test_openfoam_file_upload_after_abort(folder_setup):
         
         run.init(name=name, folder=folder_setup)
         run._heartbeat_interval = 2
-        run._simvue.get_abort_status = abort
+        run._sv_obj.get_abort_status = abort
         run_id = run.id
         run.launch(
             openfoam_case_dir = pathlib.Path(__file__).parent.joinpath("example_data", "openfoam_case"),
@@ -132,7 +134,7 @@ def test_openfoam_file_upload_after_abort(folder_setup):
     client = simvue.Client()
     
     # Check that run was aborted correctly, and did not exist for longer than 10s
-    runtime = time.strptime(client.get_run(run_id)["runtime"], '%H:%M:%S.%f')
+    runtime = client.get_run(run_id).runtime
     assert runtime.tm_sec < 30
     
     # Pull artifacts, check system, constants, initial conditions, results have been uploaded (not as zip files)

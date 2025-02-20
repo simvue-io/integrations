@@ -22,7 +22,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint
 # Firstly we import our Tensorflow integration:
 import simvue_integrations.plugins.tensorflow as sv_tf
 
-def tensorflow_example(run_folder):
+def tensorflow_example(run_folder, offline=False):
     # Load the training and test data
     (img_train, label_train), (img_test, label_test) = keras.datasets.fashion_mnist.load_data()
 
@@ -57,6 +57,7 @@ def tensorflow_example(run_folder):
         run_folder=run_folder,
         run_description="A run to keep track of the training and validation of a Tensorflow model for recognising pieces of clothing.",
         run_tags=["tensorflow", "mnist_fashion"],
+        run_mode="offline" if offline else "online",
 
         # Can define alerts:
         alert_definitions={

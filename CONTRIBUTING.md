@@ -1,6 +1,6 @@
 # Contributing to Simvue Integrations
 
-Contributions to create new or enhance existing Connectors between _Simvue_ and external pieces of software are very welcome. Whether you are a user of software which you think would benefit from Simvue integration and wish to request new features, or a developer looking to help us add to the codebase, all contributions are useful! To start, please create a new Issue outlining the new fix, change or feature which you would like to see to allow for discussion within the community. Development should then be performed on its own feature branch, using the latest stable version of Python and the Simvue Python API where possible.
+Contributions to create new or enhance existing Connectors between _sv_obj_ and external pieces of software are very welcome. Whether you are a user of software which you think would benefit from Simvue integration and wish to request new features, or a developer looking to help us add to the codebase, all contributions are useful! To start, please create a new Issue outlining the new fix, change or feature which you would like to see to allow for discussion within the community. Development should then be performed on its own feature branch, using the latest stable version of Python and the Simvue Python API where possible.
 
 ## :memo: Issue Creation
 
@@ -63,8 +63,8 @@ All code within this repository makes use of Python's typing capability, this ha
 
 ### ✔️ Linting and Formatting
 
-_Simvue_ utilises the [Ruff](https://github.com/astral-sh/ruff) linter and formatter to ensure consistency, and this tool is included as part of the pre-commit hooks. Checking of styling/formatting is part of the CI pipeline.
+Simvue utilises the [Ruff](https://github.com/astral-sh/ruff) linter and formatter to ensure consistency, and this tool is included as part of the pre-commit hooks. Checking of styling/formatting is part of the CI pipeline.
 
 ## :book: Documentation
 
-To ensure functions, methods and classes are documented appropriately _Simvue_  follows the Numpy docstring convention. We also ask that if adding new features or Connectors you ensure these are mentioned within the official [documentation](https://github.com/simvue-io/docs).
+To ensure functions, methods and classes are documented appropriately, Simvue follows the Numpy docstring convention. We also ask that if adding new features or Connectors you ensure these are mentioned within the official [documentation](https://github.com/simvue-io/docs).

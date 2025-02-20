@@ -1,6 +1,7 @@
 from simvue_integrations.connectors.moose import MooseRun
+from simvue.api.objects.run import Run
 import pathlib
-from unittest.mock import patch
+from unittest.mock import patch, PropertyMock
 import tempfile
 import uuid
 import simvue
@@ -62,7 +63,8 @@ def abort():
     return True   
 
 @patch.object(MooseRun, '_moose_input_parser', mock_input_parser)
-@patch.object(MooseRun, 'add_process', mock_aborted_moose_process)    
+@patch.object(MooseRun, 'add_process', mock_aborted_moose_process)
+@patch.object(Run, 'abort_trigger', abort)    
 def test_moose_file_upload_after_abort(folder_setup):
     """
     Check that outputs are uploaded if the simulation is aborted early by Simvue
@@ -71,7 +73,6 @@ def test_moose_file_upload_after_abort(folder_setup):
     temp_dir = tempfile.TemporaryDirectory(prefix="moose_test")
     with MooseRun() as run:
         run.init(name=name, folder=folder_setup)
-        run._simvue.get_abort_status = abort
         run_id = run.id
         run.launch(
             moose_application_path=pathlib.Path(__file__),
@@ -80,7 +81,7 @@ def test_moose_file_upload_after_abort(folder_setup):
     
     client = simvue.Client()
     # Check that run was aborted correctly, and did not exist for longer than 10s
-    runtime = time.strptime(client.get_run(run_id)["runtime"], '%H:%M:%S.%f')
+    runtime = client.get_run(run_id).runtime
     assert runtime.tm_sec < 10
     
     # Check files correctly uploaded after an abort

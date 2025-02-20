@@ -1,6 +1,7 @@
 from simvue_integrations.connectors.fds import FDSRun
+from simvue.api.objects import Run
 import pathlib
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 import tempfile
 import uuid
 import simvue
@@ -96,25 +97,24 @@ def mock_aborted_fds_process(self, *_, **__):
     thread = threading.Thread(target=aborted_process, args=(self,))
     thread.start()
     
-def abort():
+def abort(self):
     """
     Instead of making an API call to the server, just sleep for 1s and return True to indicate an abort has been triggered
     """
     time.sleep(2)
     return True
     
-@patch.object(FDSRun, 'add_process', mock_aborted_fds_process)    
+@patch.object(FDSRun, 'add_process', mock_aborted_fds_process)
+@patch.object(Run, 'abort_trigger', abort) 
 def test_fds_file_upload_after_abort(folder_setup):
     """
     Check that outputs are uploaded if the simulation is aborted early by Simvue
-    """
-    
+    """    
     name = 'test_fds_file_upload_after_abort-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="fds_test")
     with FDSRun() as run:
         
         run.init(name=name, folder=folder_setup)
-        run._simvue.get_abort_status = abort
         run_id = run.id
         run.launch(
             fds_input_file_path = pathlib.Path(__file__).parent.joinpath("example_data", "fds_input.fds"),
@@ -124,7 +124,7 @@ def test_fds_file_upload_after_abort(folder_setup):
         client = simvue.Client()
         
     # Check that run was aborted correctly, and did not exist for longer than 10s
-    runtime = time.strptime(client.get_run(run_id)["runtime"], '%H:%M:%S.%f')
+    runtime = client.get_run(run_id).runtime
     assert runtime.tm_sec < 30
     
     # Retrieve all outputs from server and check all files exist and are the same

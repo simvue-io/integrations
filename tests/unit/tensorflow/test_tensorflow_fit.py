@@ -27,21 +27,24 @@ def test_fit_simulation_run(folder_setup, tensorflow_example_data):
     client = simvue.Client()
         
     # Check that one Simulation run and NO Epoch runs have been created
-    runs = client.get_runs(filters=[f'name contains {run_name}'], metrics=True, metadata=True)
+    runs = list(client.get_runs(filters=[f'name contains {run_name}'], metrics=True, metadata=True))
     assert len(runs) == 1
     
+    # Since this returns a tuple of ID and Run for each instance, but we just want the Run object
+    simulation_run = runs[0][1]
+    
     # Check simulation run contains metadata for epoch, steps
-    simulation_run = runs[0]
-    assert simulation_run["metadata"].get("epochs")
-    assert simulation_run["metadata"].get("steps")
+    assert simulation_run.metadata.get("epochs")
+    assert simulation_run.metadata.get("steps")
     
     # Check accuracy, loss, val_accuracy, val_loss exist, have 3 steps (1 per epoch)
+    metrics = dict(simulation_run.metrics)
     for metric_name in ('accuracy','loss','val_accuracy','val_loss'):
-        assert simulation_run["metrics"][metric_name]["count"] == 3
+        assert metrics[metric_name]["count"] == 3
         
     # Check final model saved as output
     temp_dir = tempfile.TemporaryDirectory(prefix="tensorflow_test")
-    client.get_artifacts_as_files(simulation_run["id"], "output", temp_dir.name)
+    client.get_artifacts_as_files(simulation_run.id, "output", temp_dir.name)
     assert pathlib.Path(temp_dir.name).joinpath("final_model.keras").exists()    
     
         
@@ -67,21 +70,24 @@ def test_fit_epoch_run(folder_setup, tensorflow_example_data):
     client = simvue.Client()
 
     # Check that one Simulation run and NO Epoch runs have been created
-    simulation_run = client.get_runs(filters=[f'name contains {run_name}_simulation'], metrics=True, metadata=True)
-    epoch_runs = client.get_runs(filters=[f'name contains {run_name}_epoch'], metrics=True, metadata=True)
+    simulation_run = list(client.get_runs(filters=[f'name contains {run_name}_simulation'], metrics=True, metadata=True))
+    epoch_runs = list(client.get_runs(filters=[f'name contains {run_name}_epoch'], metrics=True, metadata=True))
     assert len(simulation_run) == 1
     assert len(epoch_runs) == 3
     
     for epoch_run in epoch_runs:
+        # Since this returns a tuple of ID and Run for each instance, but we just want the Run object
+        epoch_run = epoch_run[1]
+        metrics = dict(epoch_run.metrics)
         for metric_name in ('accuracy','loss','val_accuracy','val_loss'):
             # Check accuracy, loss, val_accuracy, val_loss metrics exist
-            assert epoch_run["metrics"].get(metric_name)
+            assert metrics.get(metric_name)
             
             # Check metadata updated with final values of each
-            assert epoch_run['metadata'].get(f"final_{metric_name}")
+            assert epoch_run.metadata.get(f"final_{metric_name}")
         
         # Check training progress events are logged
-        events = [event['message'] for event in client.get_events(epoch_run['id'])]
+        events = [event['message'] for event in client.get_events(epoch_run.id)]
         assert f"Training is 90% complete." in events
         assert "Accuracy and Loss values after epoch training:" in events
         

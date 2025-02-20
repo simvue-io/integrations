@@ -86,7 +86,7 @@ class WrappedRun(simvue.Run):
         """
         self._trigger = multiprocessing.Event()
 
-        if not self._simvue:
+        if not self._sv_obj:
             self._error("Run must be initialized before launching the simulation.")
             return False
 
@@ -133,7 +133,6 @@ class WrappedRun(simvue.Run):
         with multiparser.FileMonitor(
             exception_callback=self.log_event,
             termination_trigger=self._trigger,
-            flatten_data=True,
         ) as self.file_monitor:
             self._during_simulation()
             self.file_monitor.run()

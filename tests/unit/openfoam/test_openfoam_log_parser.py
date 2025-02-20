@@ -51,10 +51,10 @@ def test_openfoam_log_parser(folder_setup):
     client = simvue.Client()
     # Check metadata from header is uploaded correctly
     run_data = client.get_run(run_id)
-    assert run_data["metadata"]["openfoam.build"] == "10-e450dce21ea5"
-    assert run_data["metadata"]["openfoam.allowsystemoperations"] == "Allowing user-supplied system call operations"
+    assert run_data.metadata["openfoam"]["build"] == "10-e450dce21ea5"
+    assert run_data.metadata["openfoam"]["allowsystemoperations"] == "Allowing user-supplied system call operations"
     # Check that exec param is not uploaded as metadata - this is used in the events log
-    assert not run_data["metadata"].get("openfoam.exec")
+    assert not run_data.metadata["openfoam"].get("exec")
     
     # Check pre-simulation messages correctly extracted from log and added as events
     events = client.get_events(run_id)
@@ -63,7 +63,7 @@ def test_openfoam_log_parser(folder_setup):
     # Check that residuals are correctly uploaded as metrics
     # Check that 12 metrics have been created (initial and final for the 6 variables being solved in the log)
     metrics_names = client.get_metrics_names(run_id)
-    assert len(metrics_names) == 12
+    assert sum(1 for i in metrics_names) == 12
     
     # Check residual times and values match those in log file
     sample_metric = client.get_metric_values(metric_names=["residuals.initial.p"], xaxis="time", output_format="dataframe", run_ids=[run_id])

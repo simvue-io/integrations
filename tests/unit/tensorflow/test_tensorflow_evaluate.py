@@ -31,13 +31,18 @@ def test_fit_evaluation_run(folder_setup, tensorflow_example_data):
     client = simvue.Client()
         
     # Check that one Evaluation run
-    runs = client.get_runs(filters=[f'name contains {run_name}'], metrics=True, metadata=True)
+    runs = list(client.get_runs(filters=[f'name contains {run_name}'], metrics=True, metadata=True))
+    
     assert len(runs) == 1
-    eval_run = runs[0]
+    
+    # Since this returns a tuple of ID and Run for each instance, but we just want the Run object, use [1]
+    eval_run = runs[0][1]
+    
+    metrics = dict(eval_run.metrics)
     
     # Check accuracy and loss metrics exist
     for metric_name in ('accuracy','loss'):
-        assert eval_run["metrics"].get(metric_name)
+        assert metrics.get(metric_name)
     
-    assert [eval_run["metrics"]["loss"]["last"], eval_run["metrics"]["accuracy"]["last"]] == results        
+    assert [metrics["loss"]["last"], metrics["accuracy"]["last"]] == results        
     

@@ -8,6 +8,7 @@ import pathlib
 import re
 import time
 import typing
+from functools import reduce
 
 import multiparser.parsing.file as mp_file_parser
 import multiparser.parsing.tail as mp_tail_parser
@@ -66,7 +67,8 @@ class MooseRun(WrappedRun):
         """
         input_metadata = {}
         prefix = input_file.name.split(".")[0]
-        key = prefix
+        # Will make a list of keys for each value to create a nested dict
+        keys = [prefix]
 
         with open(input_file, "r") as file:
             for line in file:
@@ -75,14 +77,14 @@ class MooseRun(WrappedRun):
                 # Could be similar to [] or [../] - so check for square brackets with any number of non alphanumeric chars between
                 if re.search(r"\[[^\w]*\]", line):
                     # Remove that block from the key - split at the last dot in the key and remove what comes after
-                    key = key.rsplit(".", 1)[0]
+                    keys.pop()
                 # Find lines which represent starts of new blocks
                 # Eg [Mesh] - so look for square brackets with any characters between (already screened out end blocks above)
                 elif new_key := re.search(r"\[.+\]", line):
                     # Add the title of the new block to the key, dot separated notation
                     # Remove './' from before the titles of blocks if present
                     # Replace a '.' with '_' to prevent issues with dot notation of keys, but still allow users to use dots in block names
-                    key += f".{new_key.group().strip('[]/').replace('./', '').replace('.', '_')}"
+                    keys.append(f"{new_key.group().strip('[]/').replace('./', '')}")
                 # Find lines which represent a key value pair, <key> = <value>
                 # Make sure to remove in line comments from the value
                 elif match := re.search(r"(\w*)\s*=\s*([^#]+)(#+.*)?", line):
@@ -94,20 +96,31 @@ class MooseRun(WrappedRun):
                         val = float(match.group(2).strip())
                     except ValueError:
                         val = match.group(2).strip()
-                    input_metadata[f"{key}.{match.group(1)}"] = val
+
+                    # Create nested dict by reducing list of keys and creating a nested dict if not already existing,
+                    # then set the final key: value pair as normal
+                    reduce(lambda d, key: d.setdefault(key, {}), keys, input_metadata)[
+                        match.group(1)
+                    ] = val
 
         self.update_metadata(input_metadata)
 
         # Try to retrieve some useful things
-        if file_base := input_metadata.get(f"{prefix}.Outputs.file_base", None):
+        try:
+            file_base = input_metadata[prefix]["Outputs"]["file_base"]
             self._output_dir_path, self._results_prefix = file_base.rsplit("/", 1)
-        else:
+        except KeyError:
             raise KeyError(
                 "Could not find file_base in your MOOSE file.\n"
                 "Please add 'file_base' to your Outputs section, in the form <results directory path>/<results file prefix>."
             )
 
-        if _dt := input_metadata.get(f"{prefix}.Executioner.dt", None):
+        if not input_metadata[prefix].get("Executioner", None):
+            print(
+                "No Executioner block detected in your MOOSE input file - falling back to log times and steps."
+            )
+
+        elif _dt := input_metadata[prefix]["Executioner"].get("dt", None):
             try:
                 self._dt = float(_dt)
             except ValueError:
@@ -138,7 +151,7 @@ class MooseRun(WrappedRun):
         file_lines = list(filter(None, file_lines))
 
         # Add the data from each line of the header into a dictionary as a key/value pair
-        header_data = {}
+        header_data = {"moose": {}}
         for line in file_lines:
             # Ignore blank lines and lines which don't contain a colon
             if not line.strip() or ":" not in line:
@@ -154,7 +167,7 @@ class MooseRun(WrappedRun):
             value = value.strip()
             if not value:
                 continue
-            header_data[f"moose.{key}"] = value
+            header_data["moose"][key] = value
 
         return {}, header_data
 
@@ -317,9 +330,9 @@ class MooseRun(WrappedRun):
         # Log all results for this timestep as Metrics
         self.log_metrics(
             csv_data,
-            step=metric_step or self._step_num,
-            time=metric_time or self._step_time,
-            timestamp=sim_metadata["timestamp"],
+            step=metric_step if metric_step is not None else self._step_num,
+            time=metric_time if metric_time is not None else self._step_time,
+            timestamp=sim_metadata["timestamp"].replace(" ", "T"),
         )
 
     def _pre_simulation(self):
@@ -327,9 +340,8 @@ class MooseRun(WrappedRun):
         super()._pre_simulation()
 
         # Add alert for a non converging step
-        self.create_alert(
+        self.create_event_alert(
             name="step_not_converged",
-            source="events",
             frequency=1,
             pattern=" Solve Did NOT Converge!",
             notification="email",
