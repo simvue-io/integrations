@@ -273,11 +273,7 @@ class FDSRun(WrappedRun):
         if platform.system() != "Windows":
             if self.ulimit == "unlimited" and platform.system() == "Darwin":
                 self.log_event(
-                    "Warning: Unlimited stack is not supported in MacOS - defaulting to suggested value of 65532 from FDS documentation."
-                )
-                resource.setrlimit(
-                    resource.RLIMIT_STACK,
-                    (65532, 65532),
+                    "Warning: Unlimited stack is not supported in MacOS - leaving unchanged."
                 )
             elif self.ulimit == "unlimited":
                 resource.setrlimit(
