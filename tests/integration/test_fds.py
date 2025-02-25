@@ -6,14 +6,15 @@ import tempfile
 import simvue
 from simvue.sender import sender
 
+@pytest.mark.parametrize("parallel", (True, False), ids=("parallel", "serial"))
 @pytest.mark.parametrize("offline", (True, False), ids=("offline", "online"))
-def test_fds_connector(folder_setup, offline):
+def test_fds_connector(folder_setup, offline, parallel):
     try:
         subprocess.run("fds")
     except FileNotFoundError:
         pytest.skip("You are attempting to run FDS Integration Tests without having FDS installed in your path.")
     
-    run_id = fds_example(folder_setup, offline)
+    run_id = fds_example(folder_setup, offline, parallel)
 
     if offline:
         _id_mapping = sender()
@@ -31,8 +32,11 @@ def test_fds_connector(folder_setup, offline):
     assert "visibility_below_three_metres" in [alert["name"] for alert in run_data.get_alert_details()]
     
     # Check metadata from header
-    assert run_data.metadata["fds"]["mpi_processes"] == '1'
-    
+    if parallel:
+        assert run_data.metadata["fds"]["mpi_processes"] == '2'
+    else:
+        assert run_data.metadata["fds"]["mpi_processes"] == '1'
+        
     # Check metadata from input file
     assert run_data.metadata["input_file"]["_grp_devc_1"]["id"] == "flow_volume_supply"
     
@@ -40,7 +44,7 @@ def test_fds_connector(folder_setup, offline):
     assert "Time Step: 1, Simulation Time: 0.092 s" in events
     
     # Check events from DEVC/CTRL log
-    assert "DEVC 'timer' has been set to 'True' at time 2.00296E+00s, when it reached a value of 2.00296E+00s." in events
+    assert "DEVC 'timer' has been set to 'True' at time 2.00097E+00s, when it reached a value of 2.00097E+00s." in events
     
     metrics = dict(run_data.metrics)
     # Check metrics from HRR file

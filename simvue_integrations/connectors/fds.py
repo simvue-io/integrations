@@ -10,12 +10,13 @@ import re
 import typing
 import click
 import f90nml
+import resource
 import multiparser.parsing.file as mp_file_parser
 import multiparser.parsing.tail as mp_tail_parser
 import pydantic
 import simvue
-
 from simvue_integrations.connectors.generic import WrappedRun
+from simvue_integrations.extras.create_command import format_command_env_vars
 
 
 class FDSRun(WrappedRun):
@@ -262,11 +263,17 @@ class FDSRun(WrappedRun):
         """Start the FDS process, using a bash script to set `fds_unlim` if on Linux."""
         super()._pre_simulation()
         self.log_event("Starting FDS simulation")
-
-        fds_unlim_path = (
-            pathlib.Path(__file__).parents[1].joinpath("extras", "fds_unlim")
-        )
-        executable = f"{fds_unlim_path}" if platform.system() != "Windows" else "fds"
+        
+        # Save the FDS input file for this run to the Simvue server
+        if pathlib.Path(self.fds_input_file_path).exists:
+            self.save_file(self.fds_input_file_path, "input")
+        
+        # Set stack limit - analogous to 'ulimit -s' recommended in FDS documentation
+        if platform.system() != "Windows":
+            if self.ulimit == "unlimited":
+                resource.setrlimit(resource.RLIMIT_STACK, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+            elif self.ulimit:
+                resource.setrlimit(resource.RLIMIT_STACK, (int(self.ulimit), int(self.ulimit)))
         
         def check_for_errors(status_code, std_out, std_err):
             """Need to check for 'ERROR' in logs, since FDS returns rc=0 even if it throws an error"""
@@ -282,17 +289,23 @@ class FDSRun(WrappedRun):
                 self.log_event(std_err)
                 self.kill_all_processes()
                 self._trigger.set()
-            
+                
+        command = []
+        if self.run_in_parallel:
+            command += ["mpiexec", "-n", str(self.num_processors)]
+            command += format_command_env_vars(self.mpiexec_env_vars)
+        command += [
+            "fds",
+            str(self.fds_input_file_path)
+        ]
+        command += format_command_env_vars(self.fds_env_vars)
 
         self.add_process(
             "fds_simulation",
-            executable=executable,
-            input_file=self.fds_input_file_path,
+            *command,
             cwd=self.workdir_path,
             completion_trigger=self._trigger,
             completion_callback=check_for_errors,
-            ulimit=self.ulimit,
-            **self.fds_env_vars,
         )
 
     def _during_simulation(self):
@@ -376,6 +389,9 @@ class FDSRun(WrappedRun):
         upload_files: list[str] = None,
         ulimit: typing.Union[str, int] = "unlimited",
         fds_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None,
+        run_in_parallel: bool = False,
+        num_processors: int = 1,
+        mpiexec_env_vars: typing.Optional[typing.Dict[str, typing.Any]] = None,
     ):
         """Command to launch the FDS simulation and track it with Simvue.
 
@@ -399,6 +415,12 @@ class FDSRun(WrappedRun):
             Value to set your stack size to (for Linux and MacOS), by default "unlimited"
         fds_env_vars : typing.Optional[typing.Dict[str, typing.Any]], optional
             Environment variables to provide to FDS when executed, by default None
+        run_in_parallel: bool, optional
+            Whether to run the FDS simulation in parallel, by default False
+        num_processors : int, optional
+            The number of processors to run a parallel FDS job across, by default 1
+        mpiexec_env_vars : typing.Optional[typing.Dict[str, typing.Any]]
+            Any environment variables to pass to mpiexec on startup if running in parallel, by default None
 
         """
         self.fds_input_file_path = fds_input_file_path
@@ -406,6 +428,9 @@ class FDSRun(WrappedRun):
         self.upload_files = upload_files
         self.ulimit = ulimit
         self.fds_env_vars = fds_env_vars or {}
+        self.run_in_parallel = run_in_parallel
+        self.num_processors = num_processors
+        self.mpiexec_env_vars = mpiexec_env_vars or {}
 
         self._activation_times = False
         self._activation_times_data = {}

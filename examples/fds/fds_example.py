@@ -31,7 +31,7 @@ import shutil
 import uuid
 from simvue_integrations.connectors.fds import FDSRun
 
-def fds_example(run_folder, offline=False) -> None:
+def fds_example(run_folder, offline=False, parallel=False) -> None:
     
     # Delete old copies of results, if they exist:
     if pathlib.Path(__file__).parent.joinpath("results").exists():
@@ -59,7 +59,10 @@ def fds_example(run_folder, offline=False) -> None:
         # Then call the .launch() method to start your FDS simulation, providing the path to the input file
         run.launch(
             fds_input_file_path = pathlib.Path(__file__).parent.joinpath("activate_vents.fds"),
-            workdir_path = str(pathlib.Path(__file__).parent.joinpath("results"))
+            workdir_path = str(pathlib.Path(__file__).parent.joinpath("results")),
+            # And you can choose whether to run it in parallel
+            run_in_parallel = parallel,
+            num_processors = 2,
         )
         
         # Once the simulation is complete, you can upload any final items to the Simvue run before it closes
