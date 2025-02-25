@@ -24,6 +24,7 @@ class WrappedRun(simvue.Run):
     """
 
     _terminated = False
+    _failed = False
 
     def __init__(
         self,
@@ -111,6 +112,8 @@ class WrappedRun(simvue.Run):
                 fg="red" if self._term_color else None,
                 bold=self._term_color,
             )
+        elif self._failed:
+            self.log_event("Simulation Failed!")
         else:
             self.log_event("Simulation Complete!")
 
@@ -120,6 +123,8 @@ class WrappedRun(simvue.Run):
         # If run was terminated, set the status to terminated at the very end so that users can continue to upload to the run as normal
         if self._terminated:
             self.set_status("terminated")
+        elif self._failed:
+            self.set_status("failed")
         return _out
 
     def launch(self):

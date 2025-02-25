@@ -8,7 +8,7 @@ import pathlib
 import platform
 import re
 import typing
-
+import click
 import f90nml
 import multiparser.parsing.file as mp_file_parser
 import multiparser.parsing.tail as mp_tail_parser
@@ -267,6 +267,22 @@ class FDSRun(WrappedRun):
             pathlib.Path(__file__).parents[1].joinpath("extras", "fds_unlim")
         )
         executable = f"{fds_unlim_path}" if platform.system() != "Windows" else "fds"
+        
+        def check_for_errors(status_code, std_out, std_err):
+            """Need to check for 'ERROR' in logs, since FDS returns rc=0 even if it throws an error"""
+            if "ERROR" in std_err:
+                click.secho(
+                    "[simvue] Run failed - FDS encountered an error: "
+                    f"{std_err}",
+                    fg="red" if self._term_color else None,
+                    bold=self._term_color,
+                )
+                self._failed = True
+                self.log_event("FDS encountered an error:")
+                self.log_event(std_err)
+                self.kill_all_processes()
+                self._trigger.set()
+            
 
         self.add_process(
             "fds_simulation",
@@ -274,6 +290,7 @@ class FDSRun(WrappedRun):
             input_file=self.fds_input_file_path,
             cwd=self.workdir_path,
             completion_trigger=self._trigger,
+            completion_callback=check_for_errors,
             ulimit=self.ulimit,
             **self.fds_env_vars,
         )
