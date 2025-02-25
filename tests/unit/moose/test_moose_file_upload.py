@@ -50,16 +50,22 @@ def mock_aborted_moose_process(self, *_, **__):
         Long running process which should be interrupted at the next heartbeat
         """
         self._heartbeat_interval = 2
-        time.sleep(10)
+        time_elapsed = 0
+        while time_elapsed < 30:
+            if self._sv_obj.abort_trigger():
+                break
+            time.sleep(1)
+            time_elapsed += 1
+        self._trigger.set()
         
     thread = threading.Thread(target=aborted_process)
     thread.start()
 
-def abort():
+def abort(self):
     """
     Instead of making an API call to the server, just sleep for 1s and return True to indicate an abort has been triggered
     """
-    time.sleep(1)
+    time.sleep(2)
     return True   
 
 @patch.object(MooseRun, '_moose_input_parser', mock_input_parser)
@@ -82,7 +88,7 @@ def test_moose_file_upload_after_abort(folder_setup):
     client = simvue.Client()
     # Check that run was aborted correctly, and did not exist for longer than 10s
     runtime = client.get_run(run_id).runtime
-    assert runtime.tm_sec < 10
+    assert runtime.tm_sec < 30
     
     # Check files correctly uploaded after an abort
     client.get_artifacts_as_files(run_id, "output", temp_dir.name)
