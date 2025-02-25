@@ -150,7 +150,6 @@ class FDSRun(WrappedRun):
 
             if "DEVICE Activation Times" in line:
                 self._activation_times = True
-                print("DEVICE Activation Times")
             elif self._activation_times and "Time Stepping" in line:
                 self._activation_times = False
             elif self._activation_times:
