@@ -259,7 +259,7 @@ class FDSRun(WrappedRun):
         self.update_metadata({data["ID"]: state})
 
     def _pre_simulation(self):
-        """Start the FDS process, using a bash script to set `fds_unlim` if on Linux."""
+        """Start the FDS process."""
         super()._pre_simulation()
         self.log_event("Starting FDS simulation")
         
