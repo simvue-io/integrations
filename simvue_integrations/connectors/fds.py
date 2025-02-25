@@ -271,7 +271,15 @@ class FDSRun(WrappedRun):
 
         # Set stack limit - analogous to 'ulimit -s' recommended in FDS documentation
         if platform.system() != "Windows":
-            if self.ulimit == "unlimited":
+            if self.ulimit == "unlimited" and platform.system() == "Darwin":
+                self.log_event(
+                    "Warning: Unlimited stack is not supported in MacOS - defaulting to suggested value of 65532 from FDS documentation."
+                )
+                resource.setrlimit(
+                    resource.RLIMIT_STACK,
+                    (65532, 65532),
+                )
+            elif self.ulimit == "unlimited":
                 resource.setrlimit(
                     resource.RLIMIT_STACK,
                     (resource.RLIM_INFINITY, resource.RLIM_INFINITY),
