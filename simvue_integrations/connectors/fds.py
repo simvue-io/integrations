@@ -7,14 +7,16 @@ import glob
 import pathlib
 import platform
 import re
+import resource
 import typing
+
 import click
 import f90nml
-import resource
 import multiparser.parsing.file as mp_file_parser
 import multiparser.parsing.tail as mp_tail_parser
 import pydantic
 import simvue
+
 from simvue_integrations.connectors.generic import WrappedRun
 from simvue_integrations.extras.create_command import format_command_env_vars
 
@@ -262,24 +264,32 @@ class FDSRun(WrappedRun):
         """Start the FDS process."""
         super()._pre_simulation()
         self.log_event("Starting FDS simulation")
-        
+
         # Save the FDS input file for this run to the Simvue server
         if pathlib.Path(self.fds_input_file_path).exists:
             self.save_file(self.fds_input_file_path, "input")
-        
+
         # Set stack limit - analogous to 'ulimit -s' recommended in FDS documentation
         if platform.system() != "Windows":
-            if self.ulimit == "unlimited":
-                resource.setrlimit(resource.RLIMIT_STACK, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+            if self.ulimit == "unlimited" and platform.system() == "Darwin":
+                self.log_event(
+                    "Warning: Unlimited stack is not supported in MacOS - leaving unchanged."
+                )
+            elif self.ulimit == "unlimited":
+                resource.setrlimit(
+                    resource.RLIMIT_STACK,
+                    (resource.RLIM_INFINITY, resource.RLIM_INFINITY),
+                )
             elif self.ulimit:
-                resource.setrlimit(resource.RLIMIT_STACK, (int(self.ulimit), int(self.ulimit)))
-        
+                resource.setrlimit(
+                    resource.RLIMIT_STACK, (int(self.ulimit), int(self.ulimit))
+                )
+
         def check_for_errors(status_code, std_out, std_err):
-            """Need to check for 'ERROR' in logs, since FDS returns rc=0 even if it throws an error"""
+            """Need to check for 'ERROR' in logs, since FDS returns rc=0 even if it throws an error."""
             if "ERROR" in std_err:
                 click.secho(
-                    "[simvue] Run failed - FDS encountered an error: "
-                    f"{std_err}",
+                    "[simvue] Run failed - FDS encountered an error: " f"{std_err}",
                     fg="red" if self._term_color else None,
                     bold=self._term_color,
                 )
@@ -288,15 +298,12 @@ class FDSRun(WrappedRun):
                 self.log_event(std_err)
                 self.kill_all_processes()
                 self._trigger.set()
-                
+
         command = []
         if self.run_in_parallel:
             command += ["mpiexec", "-n", str(self.num_processors)]
             command += format_command_env_vars(self.mpiexec_env_vars)
-        command += [
-            "fds",
-            str(self.fds_input_file_path)
-        ]
+        command += ["fds", str(self.fds_input_file_path)]
         command += format_command_env_vars(self.fds_env_vars)
 
         self.add_process(
