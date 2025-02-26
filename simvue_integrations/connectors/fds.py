@@ -142,6 +142,7 @@ class FDSRun(WrappedRun):
                 if match:
                     if pattern["name"] == "mesh":
                         _current_mesh = match.group(1)
+                        continue
 
                     if pattern["name"] == "step":
                         if _out_record:
