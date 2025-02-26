@@ -24,6 +24,7 @@ def test_openfoam_file_upload(folder_setup):
     name = 'test_openfoam_file_upload-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="openfoam_test")
     with OpenfoamRun() as run:
+        run.config(disable_resources_metrics=True)
         run.init(name=name, folder=folder_setup)
         run_id = run.id
         run.launch(
@@ -58,6 +59,7 @@ def test_openfoam_file_upload_zipped(folder_setup):
     name = 'test_openfoam_file_upload-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="openfoam_test")
     with OpenfoamRun() as run:
+        run.config(disable_resources_metrics=True)
         run.init(name=name, folder=folder_setup)
         run_id = run.id
         run.launch(
@@ -130,7 +132,7 @@ def test_openfoam_file_upload_after_abort(folder_setup):
     name = 'test_openfoam_file_upload_after_abort-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="openfoam_test")
     with OpenfoamRun() as run:
-        
+        run.config(disable_resources_metrics=True)
         run.init(name=name, folder=folder_setup)
         run._heartbeat_interval = 2
         run._sv_obj.get_abort_status = abort

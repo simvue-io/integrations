@@ -37,6 +37,7 @@ def test_moose_vectorpostprocessor_parser_no_positions(folder_setup):
     temp_dir = tempfile.TemporaryDirectory(prefix="moose_test")
     name = 'test_moose_vectorpostprocessor_parser-%s' % str(uuid.uuid4())
     with MooseRun() as run:
+        run.config(disable_resources_metrics=True)
         run.init(name=name, folder=folder_setup)
         run_id = run.id
         # Set these here instead of them being read from a MOOSE input file
@@ -77,6 +78,7 @@ def test_moose_vectorpostprocessor_parser_with_positions(folder_setup):
     name = 'test_moose_vectorpostprocessor_parser_positions-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="moose_test")
     with MooseRun() as run:
+        run.config(disable_resources_metrics=True)
         run.init(name=name, folder=folder_setup)
         run_id = run.id
         # Set these here instead of them being read from a MOOSE input file
@@ -116,6 +118,7 @@ def test_moose_vectorpostprocessor_disabled(folder_setup):
     name = 'test_moose_vectorpostprocessor_parser-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="moose_test")
     with MooseRun() as run:
+        run.config(disable_resources_metrics=True)
         run.init(name=name, folder=folder_setup)
         run_id = run.id
         # Set these here instead of them being read from a MOOSE input file
