@@ -103,6 +103,7 @@ class FDSRun(WrappedRun):
             ),
             "name": "radiation_loss_to_boundaries",
         },
+        {"pattern": re.compile(r"\s+Mesh\s+(\d+)"), "name": "mesh"},
     ]
 
     def _soft_abort(self):
@@ -133,17 +134,26 @@ class FDSRun(WrappedRun):
         """
         _out_data = []
         _out_record = {}
+        _current_mesh = None
 
         for line in file_content.split("\n"):
             for pattern in self._patterns:
                 match = pattern["pattern"].search(line)
                 if match:
+                    if pattern["name"] == "mesh":
+                        _current_mesh = match.group(1)
+
                     if pattern["name"] == "step":
                         if _out_record:
                             _out_data += [_out_record]
                         _out_record = {}
+                        _current_mesh = None
 
-                    _out_record[pattern["name"]] = match.group(1)
+                    _metric_name = pattern["name"]
+                    if _current_mesh:
+                        _metric_name = f"{_metric_name}.mesh.{_current_mesh}"
+
+                    _out_record[_metric_name] = match.group(1)
 
                     if pattern["name"] == "time":
                         self.log_event(
