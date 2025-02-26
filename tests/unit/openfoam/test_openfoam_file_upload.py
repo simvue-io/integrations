@@ -98,10 +98,20 @@ def mock_aborted_openfoam_process(self, *_, **__):
     """
     Mock a long running OpenFOAM process which is aborted by the server
     """
-    def long_process():
-        time.sleep(30)
-        return
-    thread = threading.Thread(target=long_process)
+    def aborted_process():
+        """
+        Long running process which should be interrupted at the next heartbeat
+        """
+        self._heartbeat_interval = 2
+        time_elapsed = 0
+        while time_elapsed < 30:
+            if self._alert_raised_trigger():
+                break
+            time.sleep(1)
+            time_elapsed += 1
+        self._trigger.set()
+        
+    thread = threading.Thread(target=aborted_process)
     thread.start()
     
 def abort():

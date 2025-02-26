@@ -52,7 +52,7 @@ def mock_aborted_moose_process(self, *_, **__):
         self._heartbeat_interval = 2
         time_elapsed = 0
         while time_elapsed < 30:
-            if self._sv_obj.abort_trigger():
+            if self._alert_raised_trigger():
                 break
             time.sleep(1)
             time_elapsed += 1
