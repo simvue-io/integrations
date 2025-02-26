@@ -103,7 +103,7 @@ class FDSRun(WrappedRun):
             ),
             "name": "radiation_loss_to_boundaries",
         },
-        {"pattern": re.compile(r"\s+Mesh\s+(\d+)"), "name": "mesh"},
+        {"pattern": re.compile(r"^\s+Mesh\s+(\d+)"), "name": "mesh"},
     ]
 
     def _soft_abort(self):
