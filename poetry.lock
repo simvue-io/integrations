@@ -2554,15 +2554,15 @@ files = [
 
 [[package]]
 name = "setuptools"
-version = "75.8.0"
+version = "75.8.1"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 optional = true
 python-versions = ">=3.9"
 groups = ["main"]
 markers = "(python_version <= \"3.11\" or python_version >= \"3.12\") and extra == \"tensorflow\""
 files = [
-    {file = "setuptools-75.8.0-py3-none-any.whl", hash = "sha256:e3982f444617239225d675215d51f6ba05f845d4eec313da4418fdbb56fb27e3"},
-    {file = "setuptools-75.8.0.tar.gz", hash = "sha256:c5afc8f407c626b8313a86e10311dd3f661c6cd9c09d4bf8c15c0e11f9f2b0e6"},
+    {file = "setuptools-75.8.1-py3-none-any.whl", hash = "sha256:3bc32c0b84c643299ca94e77f834730f126efd621de0cc1de64119e0e17dab1f"},
+    {file = "setuptools-75.8.1.tar.gz", hash = "sha256:65fb779a8f28895242923582eadca2337285f0891c2c9e160754df917c3d2530"},
 ]
 
 [package.extras]
@@ -2592,13 +2592,11 @@ name = "simvue"
 version = "2.0.0a1"
 description = "Simulation tracking and monitoring"
 optional = false
-python-versions = "<3.14,>=3.10"
+python-versions = ">=3.10,<3.14"
 groups = ["main"]
 markers = "python_version <= \"3.11\" or python_version >= \"3.12\""
-files = [
-    {file = "simvue-2.0.0a1-py3-none-any.whl", hash = "sha256:2fafe40df2ae72825f94bbbdece2f42ed7d6ce9de4717793cda3ffbd1b422ee4"},
-    {file = "simvue-2.0.0a1.tar.gz", hash = "sha256:77ed272fa238d069e166c725f74e1ee218feb4118f93db05315d97ac78101311"},
-]
+files = []
+develop = false
 
 [package.dependencies]
 click = ">=8.1.8,<9.0.0"
@@ -2624,6 +2622,12 @@ typing-extensions = {version = ">=4.12.2,<5.0.0", markers = "python_version < \"
 
 [package.extras]
 plot = ["matplotlib (>=3.10.0,<4.0.0)", "plotly (>=6.0.0,<7.0.0)"]
+
+[package.source]
+type = "git"
+url = "https://github.com/simvue-io/python-api.git"
+reference = "wk9874/2.0.0_a2"
+resolved_reference = "18923e72a888fd8dc0ac5ccbdcf6c57673918a41"
 
 [[package]]
 name = "six"
@@ -3173,4 +3177,4 @@ tensorflow = ["mnist", "tensorflow"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.13"
-content-hash = "41fca48cbd1781a4b3979071e68b77314f1c6c2101e023867eb5f2031183256c"
+content-hash = "127dd3469ad2f20526d7e55d38dfe3432839d26d0e681885b86c35825af2b76b"
