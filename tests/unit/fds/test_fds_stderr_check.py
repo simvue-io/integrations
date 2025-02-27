@@ -33,7 +33,7 @@ def test_fds_stderr_check(folder_setup, file_name):
             run_id = run._id
             run.launch(pathlib.Path(__file__).parent.joinpath("example_data", "fds_input.fds"))
             
-    time.sleep(1)
+    time.sleep(2)
     client = simvue.Client()
     run_data = client.get_run(run_id)
     events = [event["message"] for event in client.get_events(run_id)]
