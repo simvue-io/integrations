@@ -136,7 +136,7 @@ def test_fds_ctrl_parser(folder_setup):
     temp_dir = tempfile.TemporaryDirectory(prefix="fds_test")
     with FDSRun() as run:
         run.config(disable_resources_metrics=True)
-        run.init(name=name,) #folder=folder_setup)
+        run.init(name=name,folder=folder_setup)
         run_id = run.id
         run.launch(
             fds_input_file_path = pathlib.Path(__file__).parent.joinpath("example_data", "fds_input.fds"),
