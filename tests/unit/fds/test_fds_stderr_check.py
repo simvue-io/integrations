@@ -19,9 +19,9 @@ def test_fds_stderr_check(folder_setup, file_name):
         def mock_process(result=_result, completion_callback=args[3], trigger=args[4], file_name=file_name):
             while result.poll() is None:
                 time.sleep(1)
-            trigger.set()
             std_err = pathlib.Path(__file__).parent.joinpath("example_data", file_name).read_text()
             completion_callback(0, "", std_err)
+            trigger.set()
         thread = threading.Thread(target=mock_process)
         thread.start()
         return _result, thread
@@ -33,7 +33,7 @@ def test_fds_stderr_check(folder_setup, file_name):
             run_id = run._id
             run.launch(pathlib.Path(__file__).parent.joinpath("example_data", "fds_input.fds"))
             
-    time.sleep(2)
+    time.sleep(1)
     client = simvue.Client()
     run_data = client.get_run(run_id)
     events = [event["message"] for event in client.get_events(run_id)]
