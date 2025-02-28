@@ -142,7 +142,7 @@ class FDSRun(WrappedRun):
                 if match:
                     if pattern["name"] == "mesh":
                         _current_mesh = match.group(1)
-                        continue
+                        break
 
                     if pattern["name"] == "step":
                         if _out_record:
@@ -160,6 +160,7 @@ class FDSRun(WrappedRun):
                         self.log_event(
                             f"Time Step: {_out_record['step']}, Simulation Time: {_out_record['time']} s"
                         )
+                    break
 
             if "DEVICE Activation Times" in line:
                 self._activation_times = True
