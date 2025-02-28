@@ -33,6 +33,7 @@ def test_fds_file_deletion(folder_setup):
     shutil.copy(pathlib.Path(__file__).parent.joinpath("example_data", "fds_input.fds"), temp_dir.name)
     
     with FDSRun() as run:
+        run.config(disable_resources_metrics=True)
         run.init(name=name, folder=folder_setup)
         run_id = run.id
         run.launch(
@@ -61,6 +62,7 @@ def test_fds_no_file_deletion(folder_setup):
     shutil.copy(pathlib.Path(__file__).parent.joinpath("example_data", "fds_input.fds"), temp_dir.name)
     
     with FDSRun() as run:
+        run.config(disable_resources_metrics=True)
         run.init(name=name, folder=folder_setup)
         run_id = run.id
         run.launch(

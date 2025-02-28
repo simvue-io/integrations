@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  build_macos:
 
     runs-on: macos-latest
     timeout-minutes: 30

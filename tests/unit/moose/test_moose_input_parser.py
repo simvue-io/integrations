@@ -64,6 +64,7 @@ def test_moose_input_parser(folder_setup, file_name, expected_metadata, not_expe
     Check information from MOOSE input file is correctly uploaded as metadata
     """ 
     with MooseRun() as run:
+        run.config(disable_resources_metrics=True)
         run.init(name='test_moose_input_parser-%s' % str(uuid.uuid4()), folder=folder_setup)
         run_id = run.id
         run._moose_input_parser(pathlib.Path(__file__).parent.joinpath("example_data", f"{file_name}.i"))

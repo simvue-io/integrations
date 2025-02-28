@@ -27,6 +27,7 @@ def test_moose_file_upload(folder_setup):
     name = 'test_moose_file_upload-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="moose_test")
     with MooseRun() as run:
+        run.config(disable_resources_metrics=True)
         run.init(name=name, folder=folder_setup)
         run_id = run.id
         run.launch(
@@ -52,7 +53,7 @@ def mock_aborted_moose_process(self, *_, **__):
         self._heartbeat_interval = 2
         time_elapsed = 0
         while time_elapsed < 30:
-            if self._sv_obj.abort_trigger():
+            if self._alert_raised_trigger.is_set():
                 break
             time.sleep(1)
             time_elapsed += 1
@@ -78,6 +79,7 @@ def test_moose_file_upload_after_abort(folder_setup):
     name = 'test_moose_file_upload_after_abort-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="moose_test")
     with MooseRun() as run:
+        run.config(disable_resources_metrics=True)
         run.init(name=name, folder=folder_setup)
         run_id = run.id
         run.launch(

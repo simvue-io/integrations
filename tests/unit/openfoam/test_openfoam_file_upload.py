@@ -24,6 +24,7 @@ def test_openfoam_file_upload(folder_setup):
     name = 'test_openfoam_file_upload-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="openfoam_test")
     with OpenfoamRun() as run:
+        run.config(disable_resources_metrics=True)
         run.init(name=name, folder=folder_setup)
         run_id = run.id
         run.launch(
@@ -58,6 +59,7 @@ def test_openfoam_file_upload_zipped(folder_setup):
     name = 'test_openfoam_file_upload-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="openfoam_test")
     with OpenfoamRun() as run:
+        run.config(disable_resources_metrics=True)
         run.init(name=name, folder=folder_setup)
         run_id = run.id
         run.launch(
@@ -98,10 +100,20 @@ def mock_aborted_openfoam_process(self, *_, **__):
     """
     Mock a long running OpenFOAM process which is aborted by the server
     """
-    def long_process():
-        time.sleep(30)
-        return
-    thread = threading.Thread(target=long_process)
+    def aborted_process():
+        """
+        Long running process which should be interrupted at the next heartbeat
+        """
+        self._heartbeat_interval = 2
+        time_elapsed = 0
+        while time_elapsed < 30:
+            if self._alert_raised_trigger.is_set():
+                break
+            time.sleep(1)
+            time_elapsed += 1
+        self._trigger.set()
+        
+    thread = threading.Thread(target=aborted_process)
     thread.start()
     
 def abort():
@@ -120,7 +132,7 @@ def test_openfoam_file_upload_after_abort(folder_setup):
     name = 'test_openfoam_file_upload_after_abort-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="openfoam_test")
     with OpenfoamRun() as run:
-        
+        run.config(disable_resources_metrics=True)
         run.init(name=name, folder=folder_setup)
         run._heartbeat_interval = 2
         run._sv_obj.get_abort_status = abort
