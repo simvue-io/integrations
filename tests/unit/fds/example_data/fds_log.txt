@@ -1,3 +1,26 @@
+       Time Step        1   October 16, 2024  12:49:00
+       Step Size:    0.922E-01 s, Total Time:      0.092 s
+       Pressure Iterations: 1
+       Maximum Velocity Error:  0.15E-02 on Mesh 1 at (17,18,1)
+       Maximum Pressure Error:  0.29E-05 on Mesh 1 at (13,21,2)
+       ---------------------------------------------------------------
+       Max CFL number:  0.24E-01 at (13,18,4)
+       Max divergence: -0.25E-05 at (20,33,2)
+       Min divergence: -0.87E-03 at (13,21,2)
+       Max VN number:   0.23E-01 at (18,19,5)
+ 
+       Time Step        2   October 16, 2024  12:49:00
+       Step Size:    0.922E-01 s, Total Time:       0.18 s
+       Pressure Iterations: 1
+       Maximum Velocity Error:  0.50E-02 on Mesh 1 at (14,22,5)
+       Maximum Pressure Error:  0.84E-02 on Mesh 1 at (17,23,5)
+       ---------------------------------------------------------------
+       Max CFL number:  0.23E-01 at (22,11,21)
+       Max divergence:  0.34E+00 at (17,18,1)
+       Min divergence: -0.75E-03 at (19,30,29)
+       Max VN number:   0.23E-01 at (30,22,4)
+       Total Heat Release Rate:              9.399 kW
+ 
        Time Step        3   October 16, 2024  12:49:00
        Step Size:    0.922E-01 s, Total Time:       0.28 s
        Pressure Iterations: 1
