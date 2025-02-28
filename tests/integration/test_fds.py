@@ -52,6 +52,10 @@ def test_fds_connector(folder_setup, offline, parallel):
     
     # Check metrics from DEVC file
     assert metrics["flow_volume_supply"]["count"] > 0
+    
+    # Check metrics from log file
+    assert metrics["max_pressure_error"]["count"] > 0
+    assert metrics["max_divergence.mesh.2"]["count"] > 0
 
     temp_dir = tempfile.TemporaryDirectory()
     
