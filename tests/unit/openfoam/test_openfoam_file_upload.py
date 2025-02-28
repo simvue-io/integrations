@@ -107,7 +107,7 @@ def mock_aborted_openfoam_process(self, *_, **__):
         self._heartbeat_interval = 2
         time_elapsed = 0
         while time_elapsed < 30:
-            if self._alert_raised_trigger():
+            if self._alert_raised_trigger.is_set():
                 break
             time.sleep(1)
             time_elapsed += 1
