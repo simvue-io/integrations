@@ -36,6 +36,7 @@ def test_moose_log_parser(folder_setup):
     """
     name = 'test_moose_log_parser-%s' % str(uuid.uuid4())
     with MooseRun() as run:
+        run.config(disable_resources_metrics=True)
         run.init(name=name, folder=folder_setup)
         run_id = run.id
         run.launch(

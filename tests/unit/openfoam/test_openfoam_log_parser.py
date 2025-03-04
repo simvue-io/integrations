@@ -42,6 +42,7 @@ def test_openfoam_log_parser(folder_setup):
     name = 'test_openfoam_parser-%s' % str(uuid.uuid4())
     temp_dir = tempfile.TemporaryDirectory(prefix="openfoam_test")
     with OpenfoamRun() as run:
+        run.config(disable_resources_metrics=True)
         run.init(name=name, folder=folder_setup)
         run_id = run.id
         run.launch(
